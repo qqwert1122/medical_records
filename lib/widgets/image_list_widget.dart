@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:medical_records/services/app_size.dart';
+import 'package:medical_records/styles/app_size.dart';
 
 class ImageListWidget extends StatefulWidget {
   const ImageListWidget({super.key});
@@ -20,20 +20,12 @@ class _ImageListWidgetState extends State<ImageListWidget> {
         itemBuilder: (context, index) {
           return GestureDetector(
             onTap: () {
-              showDialog(
-                context: context,
-                builder:
-                    (context) =>
-                        Dialog(child: Image.asset('assets/images/sample.jpeg')),
-              );
+              showDialog(context: context, builder: (context) => Dialog(child: Image.asset('assets/images/sample.jpeg')));
             },
             child: Container(
               width: AppSize.hp(10),
               margin: EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(8),
-              ),
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(8)),
               child: Image.asset('assets/images/sample.jpeg'),
             ),
           );
