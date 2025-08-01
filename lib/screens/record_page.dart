@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medical_records/services/app_colors.dart';
 import 'package:medical_records/services/app_size.dart';
+import 'package:medical_records/widgets/image_list_widget.dart';
 
 class RecordPage extends StatefulWidget {
   @override
@@ -33,12 +34,7 @@ class _RecordPageState extends State<RecordPage> {
                 child: Center(child: Text('입 사진')),
               ),
               SizedBox(height: AppSize.hp(2)),
-              Container(
-                width: double.infinity,
-                height: AppSize.hp(10),
-                color: Colors.grey[200],
-                child: Center(child: Text('첨부 이미지 목록')),
-              ),
+              ImageListWidget(),
             ],
           ),
         ),
