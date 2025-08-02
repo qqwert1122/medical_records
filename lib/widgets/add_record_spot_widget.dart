@@ -15,7 +15,7 @@ class AddRecordSpotWidget extends StatefulWidget {
 }
 
 class AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
-  Map<String, dynamic>? selectedCategory;
+  Map<String, dynamic>? selectedSpot;
 
   @override
   void initState() {
@@ -23,15 +23,15 @@ class AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
     _loadInitialSpot();
   }
 
-  Map<String, dynamic>? getSelectedCategory() {
-    return selectedCategory;
+  Map<String, dynamic>? getSelectedSpot() {
+    return selectedSpot;
   }
 
   Future<void> _loadInitialSpot() async {
-    final categories = await DatabaseService().getCategories();
-    if (categories.isNotEmpty) {
+    final spots = await DatabaseService().getSpots();
+    if (spots.isNotEmpty) {
       setState(() {
-        selectedCategory = categories.first;
+        selectedSpot = spots.first;
       });
     }
   }
@@ -58,7 +58,7 @@ class AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
               child: Row(
                 children: [
                   Text(
-                    selectedCategory?['category_name'] ?? '위치를 선택하세요',
+                    selectedSpot?['spot_name'] ?? '위치를 선택하세요',
                     style: AppTextStyle.body,
                   ),
                   Spacer(),
@@ -79,11 +79,11 @@ class AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
   void _showSpotBottomSheet() async {
     final result = await SpotBottomSheet.show(
       context,
-      selectedCategory: selectedCategory,
+      selectedSpot: selectedSpot,
     );
     if (result != null) {
       setState(() {
-        selectedCategory = result;
+        selectedSpot = result;
       });
     }
   }

@@ -19,10 +19,7 @@ class _RecordState extends State<Record> {
         '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')}';
 
     return ListTile(
-      title: Text(
-        record['category_name'] ?? '기록',
-        style: AppTextStyle.subTitle,
-      ),
+      title: Text(record['spot_name'] ?? '기록', style: AppTextStyle.subTitle),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

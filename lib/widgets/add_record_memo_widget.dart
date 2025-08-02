@@ -28,7 +28,7 @@ class AddRecordMemoWidgetState extends State<AddRecordMemoWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('메모', style: AppTextStyle.subTitle),
+        Text('상세 메모', style: AppTextStyle.subTitle),
         SizedBox(height: context.hp(1)),
         TextField(
           controller: _controller,

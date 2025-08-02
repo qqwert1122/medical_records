@@ -26,22 +26,22 @@ class DatabaseService {
         record_id INTEGER PRIMARY KEY AUTOINCREMENT,
         memo TEXT,
         histories_id INTEGER,
-        category_id INTEGER NOT NULL,
-        category_name TEXT NOT NULL,
-        category_color TEXT NOT NULL, 
+        spot_id INTEGER NOT NULL,
+       spot_name TEXT NOT NULL,
+        spot_color TEXT NOT NULL, 
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         deleted_at TEXT,
         FOREIGN KEY (histories_id) REFERENCES histories (histories_id),
-        FOREIGN KEY (category_id) REFERENCES categories (category_id)
+        FOREIGN KEY (spot_id) REFERENCES categories (spot_id)
       )
     ''');
 
     await db.execute('''
-      CREATE TABLE categories (
-        category_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        category_name TEXT NOT NULL,
-        category_color TEXT NOT NULL,
+      CREATE TABLE spots (
+        spot_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        spot_name TEXT NOT NULL,
+        spot_color TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         last_used_at TEXT,
@@ -72,33 +72,33 @@ class DatabaseService {
       )
     ''');
 
-    await db.insert('categories', {
-      'category_name': '입술 주변',
-      'category_color': Colors.red.shade400.toARGB32().toString(),
+    await db.insert('spots', {
+      'spot_name': '입술 주변',
+      'spot_color': Colors.red.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
     });
 
-    await db.insert('categories', {
-      'category_name': '혓바닥',
-      'category_color': Colors.orange.shade400.toARGB32().toString(),
+    await db.insert('spots', {
+      'spot_name': '혓바닥',
+      'spot_color': Colors.orange.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
     });
 
-    await db.insert('categories', {
-      'category_name': '입 천장',
-      'category_color': Colors.blue.shade400.toARGB32().toString(),
+    await db.insert('spots', {
+      'spot_name': '입 천장',
+      'spot_color': Colors.blue.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
     });
 
-    await db.insert('categories', {
-      'category_name': '목구멍',
-      'category_color': Colors.indigo.shade400.toARGB32().toString(),
+    await db.insert('spots', {
+      'spot_name': '목구멍',
+      'spot_color': Colors.indigo.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
@@ -106,22 +106,22 @@ class DatabaseService {
   }
 
   // Categories CRUD
-  Future<List<Map<String, dynamic>>> getCategories() async {
+  Future<List<Map<String, dynamic>>> getSpots() async {
     final db = await database;
     return await db.query(
-      'categories',
+      'spots',
       where: 'deleted_at IS NULL',
       orderBy: 'count, last_used_at DESC',
     );
   }
 
-  Future<int> createCategory(String name, String color) async {
+  Future<int> createSpot(String name, String color) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
 
-    return await db.insert('categories', {
-      'category_name': name,
-      'category_color': color,
+    return await db.insert('spots', {
+      'spot_name': name,
+      'spot_color': color,
       'created_at': now,
       'updated_at': now,
       'last_used_at': null,
@@ -130,52 +130,52 @@ class DatabaseService {
     });
   }
 
-  Future<void> updateCategory(int categoryId, String name, String color) async {
+  Future<void> updateSpot(int spotId, String name, String color) async {
     final db = await database;
     await db.update(
-      'categories',
+      'spots',
       {
-        'category_name': name,
-        'category_color': color,
+        'spot_name': name,
+        'spot_color': color,
         'updated_at': DateTime.now().toIso8601String(),
       },
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
+      where: 'spot_id = ?',
+      whereArgs: [spotId],
     );
   }
 
-  Future<void> updateCategoryUsage(int categoryId) async {
+  Future<void> updateSpotUsage(int spotId) async {
     final db = await database;
     await db.update(
-      'categories',
+      'spots',
       {
         'last_used_at': DateTime.now().toIso8601String(),
         'count': '(count + 1)',
       },
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
+      where: 'spot_id = ?',
+      whereArgs: [spotId],
     );
   }
 
-  Future<void> deleteCategory(int categoryId) async {
+  Future<void> deleteSpot(int spotId) async {
     final db = await database;
     await db.update(
-      'categories',
+      'spots',
       {'deleted_at': DateTime.now().toIso8601String()},
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
+      where: 'spot_id = ?',
+      whereArgs: [spotId],
     );
   }
 
   // Records CRUD
-  Future<List<Map<String, dynamic>>> getRecords({int? categoryId}) async {
+  Future<List<Map<String, dynamic>>> getRecords({int? spotId}) async {
     final db = await database;
     String where = 'deleted_at IS NULL';
     List<dynamic> whereArgs = [];
 
-    if (categoryId != null) {
-      where += ' AND category_id = ?';
-      whereArgs.add(categoryId);
+    if (spotId != null) {
+      where += ' AND spot_id = ?';
+      whereArgs.add(spotId);
     }
 
     return await db.query(
@@ -188,18 +188,18 @@ class DatabaseService {
 
   Future<int> createRecord({
     required String memo,
-    required int categoryId,
-    required String categoryName,
-    required String categoryColor,
+    required int spotId,
+    required String spotName,
+    required String spotColor,
     int? historiesId,
   }) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
     return await db.insert('records', {
       'memo': memo,
-      'category_id': categoryId,
-      'category_name': categoryName,
-      'category_color': categoryColor,
+      'spot_id': spotId,
+      'spot_name': spotName,
+      'spot_color': spotColor,
       'histories_id': historiesId,
       'created_at': now,
       'updated_at': now,

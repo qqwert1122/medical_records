@@ -21,12 +21,12 @@ class _AddRecordPageState extends State<AddRecordPage> {
   final GlobalKey<AddRecordImageWidgetState> _imageKey = GlobalKey();
 
   void saveRecord() async {
-    final category = _spotKey.currentState?.getSelectedCategory();
+    final spot = _spotKey.currentState?.getSelectedSpot();
     final date = _dateKey.currentState?.getSelectedDate();
     final memo = _memoKey.currentState?.getMemo();
     final imagePaths = _imageKey.currentState?.getSelectedImagePaths();
 
-    if (category == null) {
+    if (spot == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('위치를 선택해주세요.')));
@@ -36,9 +36,9 @@ class _AddRecordPageState extends State<AddRecordPage> {
     try {
       final recordId = await DatabaseService().createRecord(
         memo: memo ?? '',
-        categoryId: category['category_id'],
-        categoryName: category['category_name'],
-        categoryColor: category['category_color'],
+        spotId: spot['spot_id'],
+        spotName: spot['spot_name'],
+        spotColor: spot['spot_color'],
         historiesId: null,
       );
 

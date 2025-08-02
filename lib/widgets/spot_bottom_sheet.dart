@@ -10,17 +10,17 @@ import 'package:medical_records/utils/time_format.dart';
 import 'package:shimmer/shimmer.dart';
 
 class SpotBottomSheet extends StatefulWidget {
-  final Map<String, dynamic>? selectedCategory;
+  final Map<String, dynamic>? selectedSpot;
 
-  const SpotBottomSheet({super.key, this.selectedCategory});
+  const SpotBottomSheet({super.key, this.selectedSpot});
 
   static Future<Map<String, dynamic>?> show(
     BuildContext context, {
-    Map<String, dynamic>? selectedCategory,
+    Map<String, dynamic>? selectedSpot,
   }) {
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      builder: (context) => SpotBottomSheet(selectedCategory: selectedCategory),
+      builder: (context) => SpotBottomSheet(selectedSpot: selectedSpot),
     );
   }
 
@@ -29,29 +29,29 @@ class SpotBottomSheet extends StatefulWidget {
 }
 
 class _SpotBottomSheetState extends State<SpotBottomSheet> {
-  List<Map<String, dynamic>> categories = [];
+  List<Map<String, dynamic>> spots = [];
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _loadSpots();
   }
 
-  Future<void> _loadCategories() async {
+  Future<void> _loadSpots() async {
     final db = await DatabaseService().database;
-    final result = await db.query('categories', where: 'deleted_at IS NULL');
+    final result = await db.query('spots', where: 'deleted_at IS NULL');
     setState(() {
-      categories = result;
+      spots = result;
     });
   }
 
-  void _showCategoryDialog({Map<String, dynamic>? category}) {
-    String categoryName = category?['category_name'] ?? '';
+  void _showSpotDialog({Map<String, dynamic>? spot}) {
+    String spotName = spot?['spot_name'] ?? '';
     Color selectedColor =
-        category != null
-            ? Color(int.parse(category['category_color']))
+        spot != null
+            ? Color(int.parse(spot['spot_color']))
             : Colors.red.shade200;
-    bool isEdit = category != null;
+    bool isEdit = spot != null;
 
     showDialog(
       context: context,
@@ -70,12 +70,12 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                     children: [
                       Text('위치 이름', style: AppTextStyle.subTitle),
                       TextField(
-                        controller: TextEditingController(text: categoryName),
+                        controller: TextEditingController(text: spotName),
                         decoration: InputDecoration(
                           hintText: '이름',
                           hintStyle: AppTextStyle.hint,
                         ),
-                        onChanged: (value) => categoryName = value,
+                        onChanged: (value) => spotName = value,
                       ),
                       SizedBox(height: context.hp(4)),
                       Text('선택된 색깔', style: AppTextStyle.subTitle),
@@ -134,7 +134,8 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                       },
                                       child: AnimatedContainer(
                                         duration: Duration(milliseconds: 150),
-                                        width: selectedColor == color ? 80 : 40,
+                                        width:
+                                            selectedColor == color ? 120 : 40,
                                         height: 40,
                                         decoration: BoxDecoration(color: color),
                                       ),
@@ -158,19 +159,19 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                     ),
                     TextButton(
                       onPressed: () async {
-                        if (categoryName.isNotEmpty) {
+                        if (spotName.isNotEmpty) {
                           if (isEdit) {
-                            await _updateCategory(
-                              category['category_id'],
-                              categoryName,
+                            await _updateSpot(
+                              spot['spot_id'],
+                              spotName,
                               selectedColor,
                             );
                           } else {
-                            await _saveCategory(categoryName, selectedColor);
+                            await _saveSpot(spotName, selectedColor);
                           }
                           HapticFeedback.lightImpact();
                           Navigator.pop(context);
-                          _loadCategories();
+                          _loadSpots();
                         }
                       },
                       child: Text(
@@ -187,21 +188,21 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
     );
   }
 
-  Future<void> _saveCategory(String name, Color color) async {
-    await DatabaseService().createCategory(name, color.toARGB32().toString());
+  Future<void> _saveSpot(String name, Color color) async {
+    await DatabaseService().createSpot(name, color.toARGB32().toString());
   }
 
-  Future<void> _updateCategory(int categoryId, String name, Color color) async {
-    await DatabaseService().updateCategory(
-      categoryId,
+  Future<void> _updateSpot(int spotId, String name, Color color) async {
+    await DatabaseService().updateSpot(
+      spotId,
       name,
       color.toARGB32().toString(),
     );
   }
 
-  Future<void> _deleteCategory(int categoryId) async {
-    await DatabaseService().deleteCategory(categoryId);
-    _loadCategories();
+  Future<void> _deleteSpot(int spotId) async {
+    await DatabaseService().deleteSpot(spotId);
+    _loadSpots();
   }
 
   @override
@@ -225,7 +226,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                 ElevatedButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    _showCategoryDialog();
+                    _showSpotDialog();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
@@ -253,7 +254,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
           ),
           Expanded(
             child:
-                categories.isEmpty
+                spots.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -270,18 +271,18 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                       ),
                     )
                     : ListView.builder(
-                      itemCount: categories.length,
+                      itemCount: spots.length,
                       itemBuilder: (context, index) {
-                        final category = categories[index];
+                        final spot = spots[index];
                         return Slidable(
-                          key: ValueKey(category['category_id']),
+                          key: ValueKey(spot['spot_id']),
                           endActionPane: ActionPane(
                             motion: const ScrollMotion(),
                             children: [
                               SlidableAction(
                                 onPressed: (context) {
                                   HapticFeedback.lightImpact();
-                                  _showCategoryDialog(category: category);
+                                  _showSpotDialog(spot: spot);
                                 },
                                 backgroundColor: Colors.blueAccent,
                                 foregroundColor: Colors.white,
@@ -291,7 +292,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                               SlidableAction(
                                 onPressed: (context) {
                                   HapticFeedback.lightImpact();
-                                  _deleteCategory(category['category_id']);
+                                  _deleteSpot(spot['spot_id']);
                                 },
                                 backgroundColor: Colors.redAccent,
                                 foregroundColor: Colors.white,
@@ -303,8 +304,8 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  widget.selectedCategory?['category_name'] ==
-                                          category['category_name']
+                                  widget.selectedSpot?['spot_name'] ==
+                                          spot['spot_name']
                                       ? Colors.pink.shade200.withValues(
                                         alpha: 0.1,
                                       )
@@ -319,18 +320,18 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                     height: 20,
                                     decoration: BoxDecoration(
                                       color: Color(
-                                        int.parse(category['category_color']),
+                                        int.parse(spot['spot_color']),
                                       ),
                                       borderRadius: BorderRadius.circular(8.0),
                                     ),
                                   ),
                                   SizedBox(width: context.wp(4)),
                                   Text(
-                                    category['category_name'],
+                                    spot['spot_name'],
                                     style: AppTextStyle.body.copyWith(
                                       color:
-                                          widget.selectedCategory?['category_name'] ==
-                                                  category['category_name']
+                                          widget.selectedSpot?['spot_name'] ==
+                                                  spot['spot_name']
                                               ? Colors.pink
                                               : AppColors.grey,
                                       fontWeight: FontWeight.w900,
@@ -339,7 +340,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                   Spacer(),
                                   Text(
                                     TimeFormat.getRelativeTime(
-                                      category['last_used_at'],
+                                      spot['last_used_at'],
                                     ),
                                     style: AppTextStyle.caption.copyWith(
                                       color: AppColors.grey,
@@ -349,7 +350,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                               ),
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                Navigator.pop(context, category);
+                                Navigator.pop(context, spot);
                               },
                             ),
                           ),
