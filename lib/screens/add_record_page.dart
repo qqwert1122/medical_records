@@ -8,6 +8,7 @@ import 'package:medical_records/widgets/add_record_date_widget.dart';
 import 'package:medical_records/widgets/add_record_image_widget.dart';
 import 'package:medical_records/widgets/add_record_memo_widget.dart';
 import 'package:medical_records/widgets/add_record_spot_widget.dart';
+import 'package:medical_records/widgets/add_record_symptom_widget.dart';
 
 class AddRecordPage extends StatefulWidget {
   @override
@@ -16,12 +17,14 @@ class AddRecordPage extends StatefulWidget {
 
 class _AddRecordPageState extends State<AddRecordPage> {
   final GlobalKey<AddRecordSpotWidgetState> _spotKey = GlobalKey();
+  final GlobalKey<AddRecordSymptomWidgetState> _symptomKey = GlobalKey();
   final GlobalKey<AddRecordDateWidgetState> _dateKey = GlobalKey();
   final GlobalKey<AddRecordMemoWidgetState> _memoKey = GlobalKey();
   final GlobalKey<AddRecordImageWidgetState> _imageKey = GlobalKey();
 
   void saveRecord() async {
     final spot = _spotKey.currentState?.getSelectedSpot();
+    final symtpom = _symptomKey.currentState?.getSelectedSymptom();
     final date = _dateKey.currentState?.getSelectedDate();
     final memo = _memoKey.currentState?.getMemo();
     final imagePaths = _imageKey.currentState?.getSelectedImagePaths();
@@ -74,6 +77,8 @@ class _AddRecordPageState extends State<AddRecordPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AddRecordSpotWidget(key: _spotKey),
+              SizedBox(height: context.hp(2)),
+              AddRecordSymptomWidget(key: _symptomKey),
               SizedBox(height: context.hp(2)),
               AddRecordDateWidget(key: _dateKey),
               SizedBox(height: context.hp(2)),

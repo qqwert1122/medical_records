@@ -1,57 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/utils/time_format.dart';
-import 'package:shimmer/shimmer.dart';
 
-class SpotBottomSheet extends StatefulWidget {
-  final Map<String, dynamic>? selectedSpot;
+class SymptomBottomSheet extends StatefulWidget {
+  final Map<String, dynamic>? selectedSymptom;
 
-  const SpotBottomSheet({super.key, this.selectedSpot});
+  const SymptomBottomSheet({super.key, this.selectedSymptom});
 
   static Future<Map<String, dynamic>?> show(
     BuildContext context, {
-    Map<String, dynamic>? selectedSpot,
+    Map<String, dynamic>? selectedSymptom,
   }) {
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      builder: (context) => SpotBottomSheet(selectedSpot: selectedSpot),
+      builder:
+          (context) => SymptomBottomSheet(selectedSymptom: selectedSymptom),
     );
   }
 
   @override
-  State<SpotBottomSheet> createState() => _SpotBottomSheetState();
+  State<SymptomBottomSheet> createState() => _SymptomBottomSheetState();
 }
 
-class _SpotBottomSheetState extends State<SpotBottomSheet> {
-  List<Map<String, dynamic>> spots = [];
+class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
+  List<Map<String, dynamic>> symptoms = [];
 
   @override
   void initState() {
     super.initState();
-    _loadSpots();
+    _loadSymptoms();
   }
 
-  Future<void> _loadSpots() async {
+  Future<void> _loadSymptoms() async {
     final db = await DatabaseService().database;
-    final result = await db.query('spots', where: 'deleted_at IS NULL');
+    final result = await db.query('symptoms', where: 'deleted_at IS NULL');
     setState(() {
-      spots = result;
+      symptoms = result;
     });
   }
 
-  void _showSpotDialog({Map<String, dynamic>? spot}) {
-    String spotName = spot?['spot_name'] ?? '';
-    Color selectedColor =
-        spot != null
-            ? Color(int.parse(spot['spot_color']))
-            : Colors.red.shade200;
-    bool isEdit = spot != null;
+  void _showSymptomDialog({Map<String, dynamic>? symptom}) {
+    String symptomName = symptom?['symptom_name'] ?? '';
+    bool isEdit = symptom != null;
 
     showDialog(
       context: context,
@@ -61,88 +56,21 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                 (context, setDialogState) => AlertDialog(
                   backgroundColor: AppColors.background,
                   title: Text(
-                    isEdit ? '위치 수정' : '위치 추가',
+                    isEdit ? '증상 수정' : '증상 추가',
                     style: AppTextStyle.title,
                   ),
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('위치 이름', style: AppTextStyle.subTitle),
+                      Text('증상 이름', style: AppTextStyle.subTitle),
                       TextField(
-                        controller: TextEditingController(text: spotName),
+                        controller: TextEditingController(text: symptomName),
                         decoration: InputDecoration(
                           hintText: '이름',
                           hintStyle: AppTextStyle.hint,
                         ),
-                        onChanged: (value) => spotName = value,
-                      ),
-                      SizedBox(height: context.hp(4)),
-                      Text('선택된 색깔', style: AppTextStyle.subTitle),
-                      SizedBox(height: context.hp(1)),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(color: selectedColor),
-                      ),
-                      SizedBox(height: context.hp(2)),
-                      Text('색깔 팔레트', style: AppTextStyle.subTitle),
-                      SizedBox(height: context.hp(1)),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children:
-                              [
-                                    Colors.red.shade200,
-                                    Colors.red.shade400,
-                                    Colors.red.shade600,
-                                    Colors.red.shade800,
-                                    Colors.pink.shade50,
-                                    Colors.pink.shade100,
-                                    Colors.pink.shade200,
-                                    Colors.pink.shade300,
-                                    Colors.pink.shade400,
-                                    Colors.pink.shade500,
-                                    Colors.orange.shade200,
-                                    Colors.orange.shade400,
-                                    Colors.orange.shade600,
-                                    Colors.orange.shade800,
-                                    Colors.yellow.shade200,
-                                    Colors.yellow.shade400,
-                                    Colors.yellow.shade600,
-                                    Colors.yellow.shade800,
-                                    Colors.green.shade200,
-                                    Colors.green.shade400,
-                                    Colors.green.shade600,
-                                    Colors.green.shade800,
-                                    Colors.blue.shade200,
-                                    Colors.blue.shade400,
-                                    Colors.blue.shade600,
-                                    Colors.blue.shade800,
-                                    Colors.indigo.shade200,
-                                    Colors.indigo.shade400,
-                                    Colors.indigo.shade600,
-                                    Colors.indigo.shade800,
-                                  ]
-                                  .map(
-                                    (color) => GestureDetector(
-                                      onTap: () {
-                                        HapticFeedback.lightImpact();
-                                        setDialogState(
-                                          () => selectedColor = color,
-                                        );
-                                      },
-                                      child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 150),
-                                        width:
-                                            selectedColor == color ? 120 : 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(color: color),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                        ),
+                        onChanged: (value) => symptomName = value,
                       ),
                     ],
                   ),
@@ -159,19 +87,18 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                     ),
                     TextButton(
                       onPressed: () async {
-                        if (spotName.isNotEmpty) {
+                        if (symptomName.isNotEmpty) {
                           if (isEdit) {
-                            await _updateSpot(
-                              spot['spot_id'],
-                              spotName,
-                              selectedColor,
+                            await _updateSymptom(
+                              symptom['symptom_id'],
+                              symptomName,
                             );
                           } else {
-                            await _saveSpot(spotName, selectedColor);
+                            await _saveSymptom(symptomName);
                           }
                           HapticFeedback.lightImpact();
                           Navigator.pop(context);
-                          _loadSpots();
+                          _loadSymptoms();
                         }
                       },
                       child: Text(
@@ -188,21 +115,17 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
     );
   }
 
-  Future<void> _saveSpot(String name, Color color) async {
-    await DatabaseService().createSpot(name, color.toARGB32().toString());
+  Future<void> _saveSymptom(String name) async {
+    await DatabaseService().createSymptom(name);
   }
 
-  Future<void> _updateSpot(int spotId, String name, Color color) async {
-    await DatabaseService().updateSpot(
-      spotId,
-      name,
-      color.toARGB32().toString(),
-    );
+  Future<void> _updateSymptom(int symptomId, String name) async {
+    await DatabaseService().updateSymptom(symptomId, name);
   }
 
-  Future<void> _deleteSpot(int spotId) async {
-    await DatabaseService().deleteSpot(spotId);
-    _loadSpots();
+  Future<void> _deleteSymptom(int symptomId) async {
+    await DatabaseService().deleteSpot(symptomId);
+    _loadSymptoms();
   }
 
   @override
@@ -226,7 +149,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                 ElevatedButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    _showSpotDialog();
+                    _showSymptomDialog();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
@@ -254,7 +177,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
           ),
           Expanded(
             child:
-                spots.isEmpty
+                symptoms.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -266,23 +189,23 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                             color: AppColors.grey,
                           ),
                           SizedBox(height: context.hp(2)),
-                          Text('저장된 위치가 없습니다', style: AppTextStyle.hint),
+                          Text('저장된 증상이 없습니다', style: AppTextStyle.hint),
                         ],
                       ),
                     )
                     : ListView.builder(
-                      itemCount: spots.length,
+                      itemCount: symptoms.length,
                       itemBuilder: (context, index) {
-                        final spot = spots[index];
+                        final symptom = symptoms[index];
                         return Slidable(
-                          key: ValueKey(spot['spot_id']),
+                          key: ValueKey(symptom['symptom_id']),
                           endActionPane: ActionPane(
                             motion: const ScrollMotion(),
                             children: [
                               SlidableAction(
                                 onPressed: (context) {
                                   HapticFeedback.lightImpact();
-                                  _showSpotDialog(spot: spot);
+                                  _showSymptomDialog(symptom: symptom);
                                 },
                                 backgroundColor: Colors.blueAccent,
                                 foregroundColor: Colors.white,
@@ -292,7 +215,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                               SlidableAction(
                                 onPressed: (context) {
                                   HapticFeedback.lightImpact();
-                                  _deleteSpot(spot['spot_id']);
+                                  _deleteSymptom(symptom['symptom_id']);
                                 },
                                 backgroundColor: Colors.redAccent,
                                 foregroundColor: Colors.white,
@@ -304,8 +227,8 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  widget.selectedSpot?['spot_name'] ==
-                                          spot['spot_name']
+                                  widget.selectedSymptom?['symptom_name'] ==
+                                          symptom['symptom_name']
                                       ? Colors.pink.shade200.withValues(
                                         alpha: 0.1,
                                       )
@@ -315,23 +238,12 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                             child: ListTile(
                               title: Row(
                                 children: [
-                                  Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                      color: Color(
-                                        int.parse(spot['spot_color']),
-                                      ),
-                                      borderRadius: BorderRadius.circular(8.0),
-                                    ),
-                                  ),
-                                  SizedBox(width: context.wp(4)),
                                   Text(
-                                    spot['spot_name'],
+                                    symptom['symptom_name'],
                                     style: AppTextStyle.body.copyWith(
                                       color:
-                                          widget.selectedSpot?['spot_name'] ==
-                                                  spot['spot_name']
+                                          widget.selectedSymptom?['symptom_name'] ==
+                                                  symptom['symptom_name']
                                               ? Colors.pink
                                               : AppColors.grey,
                                       fontWeight: FontWeight.w900,
@@ -340,7 +252,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                   Spacer(),
                                   Text(
                                     TimeFormat.getRelativeTime(
-                                      spot['last_used_at'],
+                                      symptom['last_used_at'],
                                     ),
                                     style: AppTextStyle.caption.copyWith(
                                       color: AppColors.grey,
@@ -350,7 +262,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                               ),
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                Navigator.pop(context, spot);
+                                Navigator.pop(context, symptom);
                               },
                             ),
                           ),

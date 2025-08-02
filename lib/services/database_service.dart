@@ -51,6 +51,18 @@ class DatabaseService {
     ''');
 
     await db.execute('''
+      CREATE TABLE symptoms (
+        symptom_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symptom_name TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        last_used_at TEXT,
+        deleted_at TEXT,
+        count INTEGER
+      )
+    ''');
+
+    await db.execute('''
       CREATE TABLE histories (
         histories_id INTEGER PRIMARY KEY AUTOINCREMENT,
         history_id TEXT NOT NULL,
@@ -103,9 +115,23 @@ class DatabaseService {
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
     });
+
+    await db.insert('symptoms', {
+      'symptom_name': '입병',
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'count': 0,
+    });
+
+    await db.insert('symptoms', {
+      'symptom_name': '염증',
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'count': 0,
+    });
   }
 
-  // Categories CRUD
+  // spots CRUD
   Future<List<Map<String, dynamic>>> getSpots() async {
     final db = await database;
     return await db.query(
@@ -164,6 +190,63 @@ class DatabaseService {
       {'deleted_at': DateTime.now().toIso8601String()},
       where: 'spot_id = ?',
       whereArgs: [spotId],
+    );
+  }
+
+  // symptoms CRUD
+  Future<List<Map<String, dynamic>>> getSymptoms() async {
+    final db = await database;
+    return await db.query(
+      'symptoms',
+      where: 'deleted_at IS NULL',
+      orderBy: 'count, last_used_at DESC',
+    );
+  }
+
+  Future<int> createSymptom(String name) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    return await db.insert('symptoms', {
+      'symptom_name': name,
+      'created_at': now,
+      'updated_at': now,
+      'last_used_at': null,
+      'deleted_at': null,
+      'count': 0,
+    });
+  }
+
+  Future<void> updateSymptom(int symptomId, String name) async {
+    final db = await database;
+    await db.update(
+      'spots',
+      {'symptom_name': name, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'symptom_id = ?',
+      whereArgs: [symptomId],
+    );
+  }
+
+  Future<void> updateSymptomUsage(int symptomId) async {
+    final db = await database;
+    await db.update(
+      'spots',
+      {
+        'last_used_at': DateTime.now().toIso8601String(),
+        'count': '(count + 1)',
+      },
+      where: 'symptom_id = ?',
+      whereArgs: [symptomId],
+    );
+  }
+
+  Future<void> deleteSymptom(int symptomId) async {
+    final db = await database;
+    await db.update(
+      'symptoms',
+      {'deleted_at': DateTime.now().toIso8601String()},
+      where: 'symptom_id = ?',
+      whereArgs: [symptomId],
     );
   }
 
