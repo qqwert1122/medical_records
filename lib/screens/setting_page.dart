@@ -11,9 +11,9 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('설정', style: AppTextStyle.title), backgroundColor: AppColors.surface),
+      appBar: AppBar(title: Text('설정', style: AppTextStyle.title), backgroundColor: AppColors.background),
       body: Container(
-        decoration: BoxDecoration(color: AppColors.surface),
+        decoration: BoxDecoration(color: AppColors.background),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
