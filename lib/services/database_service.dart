@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -23,10 +24,11 @@ class DatabaseService {
     await db.execute('''
       CREATE TABLE records (
         record_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        images TEXT,
         memo TEXT,
         histories_id INTEGER,
-        category_id INTEGER,
+        category_id INTEGER NOT NULL,
+        category_name TEXT NOT NULL,
+        category_color TEXT NOT NULL, 
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         deleted_at TEXT,
@@ -65,10 +67,42 @@ class DatabaseService {
         record_id INTEGER,
         image_url TEXT NOT NULL,
         created_at TEXT NOT NULL,
-        deleted_at TEXT NOT NULL,
+        deleted_at TEXT,
         FOREIGN KEY (record_id) REFERENCES records (record_id)
       )
     ''');
+
+    await db.insert('categories', {
+      'category_name': '입술 주변',
+      'category_color': Colors.red.shade400.toARGB32().toString(),
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'count': 0,
+    });
+
+    await db.insert('categories', {
+      'category_name': '혓바닥',
+      'category_color': Colors.orange.shade400.toARGB32().toString(),
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'count': 0,
+    });
+
+    await db.insert('categories', {
+      'category_name': '입 천장',
+      'category_color': Colors.blue.shade400.toARGB32().toString(),
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'count': 0,
+    });
+
+    await db.insert('categories', {
+      'category_name': '목구멍',
+      'category_color': Colors.indigo.shade400.toARGB32().toString(),
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'count': 0,
+    });
   }
 
   // Categories CRUD
@@ -152,19 +186,47 @@ class DatabaseService {
     );
   }
 
-  Future<int> createRecord(
-    String memo,
-    int categoryId,
+  Future<int> createRecord({
+    required String memo,
+    required int categoryId,
+    required String categoryName,
+    required String categoryColor,
     int? historiesId,
-  ) async {
+  }) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
     return await db.insert('records', {
       'memo': memo,
       'category_id': categoryId,
+      'category_name': categoryName,
+      'category_color': categoryColor,
       'histories_id': historiesId,
       'created_at': now,
       'updated_at': now,
     });
+  }
+
+  // Image CRUD
+  Future<void> saveImages(int recordId, List<String> imagePaths) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    for (String path in imagePaths) {
+      await db.insert('images', {
+        'record_id': recordId,
+        'image_url': path,
+        'created_at': now,
+        'deleted_at': null,
+      });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getImages(int recordId) async {
+    final db = await database;
+    return await db.query(
+      'images',
+      where: 'record_id = ? AND deleted_at IS NULL',
+      whereArgs: [recordId],
+    );
   }
 }

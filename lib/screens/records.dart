@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/screens/add_record_page.dart';
+import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/widgets/record.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
@@ -15,7 +16,28 @@ class Records extends StatefulWidget {
 }
 
 class _RecordsState extends State<Records> {
-  String spot = '혓바닥';
+  List<Map<String, dynamic>> records = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecords();
+  }
+
+  Future<void> _loadRecords() async {
+    try {
+      final data = await DatabaseService().getRecords();
+      setState(() {
+        records = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,58 +50,33 @@ class _RecordsState extends State<Records> {
         decoration: BoxDecoration(color: AppColors.background),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GestureDetector(
-                onTap: () async {
-                  final result = await SpotBottomSheet.show(context) ?? '혓바닥';
-                  setState(() {
-                    spot = result;
-                  });
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  padding: EdgeInsets.all(12.0),
-                  child: Row(
-                    children: [
-                      Icon(LucideIcons.mapPin, size: context.xl),
-                      SizedBox(width: context.wp(2)),
-                      Text(spot, style: AppTextStyle.body),
-                      Spacer(),
-                      Icon(
-                        LucideIcons.chevronDown,
-                        size: context.xl,
-                        color: AppColors.grey,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
             Expanded(
-              child: ListView.builder(
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  return Record();
-                },
-              ),
+              child:
+                  isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : records.isEmpty
+                      ? Center(child: Text('기록이 없습니다.'))
+                      : ListView.builder(
+                        itemCount: records.length,
+                        itemBuilder: (context, index) {
+                          return Record(recordData: records[index]);
+                        },
+                      ),
             ),
           ],
         ),
       ),
+
       floatingActionButton: FloatingActionButton(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.background,
-
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddRecordPage()),
           );
+          _loadRecords();
         },
         child: Icon(LucideIcons.plus, size: context.xl),
       ),

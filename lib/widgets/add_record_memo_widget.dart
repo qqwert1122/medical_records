@@ -7,10 +7,22 @@ class AddRecordMemoWidget extends StatefulWidget {
   const AddRecordMemoWidget({super.key});
 
   @override
-  State<AddRecordMemoWidget> createState() => _AddRecordMemoWidgetState();
+  State<AddRecordMemoWidget> createState() => AddRecordMemoWidgetState();
 }
 
-class _AddRecordMemoWidgetState extends State<AddRecordMemoWidget> {
+class AddRecordMemoWidgetState extends State<AddRecordMemoWidget> {
+  final TextEditingController _controller = TextEditingController();
+
+  String getMemo() {
+    return _controller.text;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -19,6 +31,7 @@ class _AddRecordMemoWidgetState extends State<AddRecordMemoWidget> {
         Text('메모', style: AppTextStyle.subTitle),
         SizedBox(height: context.hp(1)),
         TextField(
+          controller: _controller,
           decoration: InputDecoration(
             hintText: '(선택) 증상에 대해 자세히 기록해주세요',
             hintStyle: AppTextStyle.hint,

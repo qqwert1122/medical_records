@@ -10,14 +10,17 @@ import 'package:medical_records/utils/time_format.dart';
 import 'package:shimmer/shimmer.dart';
 
 class SpotBottomSheet extends StatefulWidget {
-  final String? selectedSpot;
+  final Map<String, dynamic>? selectedCategory;
 
-  const SpotBottomSheet({super.key, this.selectedSpot});
+  const SpotBottomSheet({super.key, this.selectedCategory});
 
-  static Future<String?> show(BuildContext context, {String? selectedSpot}) {
-    return showModalBottomSheet<String>(
+  static Future<Map<String, dynamic>?> show(
+    BuildContext context, {
+    Map<String, dynamic>? selectedCategory,
+  }) {
+    return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      builder: (context) => SpotBottomSheet(selectedSpot: selectedSpot),
+      builder: (context) => SpotBottomSheet(selectedCategory: selectedCategory),
     );
   }
 
@@ -300,7 +303,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  widget.selectedSpot ==
+                                  widget.selectedCategory?['category_name'] ==
                                           category['category_name']
                                       ? Colors.pink.shade200.withValues(
                                         alpha: 0.1,
@@ -326,7 +329,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                     category['category_name'],
                                     style: AppTextStyle.body.copyWith(
                                       color:
-                                          widget.selectedSpot ==
+                                          widget.selectedCategory?['category_name'] ==
                                                   category['category_name']
                                               ? Colors.pink
                                               : AppColors.grey,
@@ -346,10 +349,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                               ),
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                Navigator.pop(
-                                  context,
-                                  category['category_name'],
-                                );
+                                Navigator.pop(context, category);
                               },
                             ),
                           ),

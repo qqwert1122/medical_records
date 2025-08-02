@@ -11,11 +11,11 @@ class AddRecordSpotWidget extends StatefulWidget {
   const AddRecordSpotWidget({super.key});
 
   @override
-  State<AddRecordSpotWidget> createState() => _AddRecordSpotWidgetState();
+  State<AddRecordSpotWidget> createState() => AddRecordSpotWidgetState();
 }
 
-class _AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
-  String selectedSpot = '';
+class AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
+  Map<String, dynamic>? selectedCategory;
 
   @override
   void initState() {
@@ -23,15 +23,15 @@ class _AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
     _loadInitialSpot();
   }
 
+  Map<String, dynamic>? getSelectedCategory() {
+    return selectedCategory;
+  }
+
   Future<void> _loadInitialSpot() async {
     final categories = await DatabaseService().getCategories();
     if (categories.isNotEmpty) {
       setState(() {
-        selectedSpot = categories.first['category_name'];
-      });
-    } else {
-      setState(() {
-        selectedSpot = '위치를 선택하세요';
+        selectedCategory = categories.first;
       });
     }
   }
@@ -57,7 +57,10 @@ class _AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
               padding: EdgeInsets.all(12.0),
               child: Row(
                 children: [
-                  Text(selectedSpot, style: AppTextStyle.body),
+                  Text(
+                    selectedCategory?['category_name'] ?? '위치를 선택하세요',
+                    style: AppTextStyle.body,
+                  ),
                   Spacer(),
                   Icon(
                     LucideIcons.chevronDown,
@@ -76,10 +79,12 @@ class _AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
   void _showSpotBottomSheet() async {
     final result = await SpotBottomSheet.show(
       context,
-      selectedSpot: selectedSpot,
+      selectedCategory: selectedCategory,
     );
     if (result != null) {
-      setState(() => selectedSpot = result);
+      setState(() {
+        selectedCategory = result;
+      });
     }
   }
 }
