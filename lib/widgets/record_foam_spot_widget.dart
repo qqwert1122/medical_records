@@ -7,14 +7,16 @@ import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/widgets/spot_bottom_sheet.dart';
 
-class AddRecordSpotWidget extends StatefulWidget {
-  const AddRecordSpotWidget({super.key});
+class RecordFoamSpotWidget extends StatefulWidget {
+  final int? initialSpotId;
+
+  const RecordFoamSpotWidget({super.key, this.initialSpotId});
 
   @override
-  State<AddRecordSpotWidget> createState() => AddRecordSpotWidgetState();
+  State<RecordFoamSpotWidget> createState() => RecordFoamSpotWidgetState();
 }
 
-class AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
+class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
   Map<String, dynamic>? selectedSpot;
 
   @override
@@ -29,10 +31,31 @@ class AddRecordSpotWidgetState extends State<AddRecordSpotWidget> {
 
   Future<void> _loadInitialSpot() async {
     final spots = await DatabaseService().getSpots();
-    if (spots.isNotEmpty) {
-      setState(() {
-        selectedSpot = spots.first;
-      });
+
+    if (widget.initialSpotId != null) {
+      // 수정 모드: 특정 spot_id로 찾기
+      try {
+        final spot = spots.firstWhere(
+          (spot) => spot['spot_id'] == widget.initialSpotId,
+        );
+        setState(() {
+          selectedSpot = spot;
+        });
+      } catch (e) {
+        // 해당 spot을 찾지 못한 경우 첫 번째 spot 선택
+        if (spots.isNotEmpty) {
+          setState(() {
+            selectedSpot = spots.first;
+          });
+        }
+      }
+    } else {
+      // 추가 모드: 첫 번째 spot 선택
+      if (spots.isNotEmpty) {
+        setState(() {
+          selectedSpot = spots.first;
+        });
+      }
     }
   }
 

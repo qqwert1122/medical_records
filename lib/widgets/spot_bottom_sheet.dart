@@ -77,73 +77,6 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                         ),
                         onChanged: (value) => spotName = value,
                       ),
-                      SizedBox(height: context.hp(4)),
-                      Text('선택된 색깔', style: AppTextStyle.subTitle),
-                      SizedBox(height: context.hp(1)),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(color: selectedColor),
-                      ),
-                      SizedBox(height: context.hp(2)),
-                      Text('색깔 팔레트', style: AppTextStyle.subTitle),
-                      SizedBox(height: context.hp(1)),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children:
-                              [
-                                    Colors.red.shade200,
-                                    Colors.red.shade400,
-                                    Colors.red.shade600,
-                                    Colors.red.shade800,
-                                    Colors.pink.shade50,
-                                    Colors.pink.shade100,
-                                    Colors.pink.shade200,
-                                    Colors.pink.shade300,
-                                    Colors.pink.shade400,
-                                    Colors.pink.shade500,
-                                    Colors.orange.shade200,
-                                    Colors.orange.shade400,
-                                    Colors.orange.shade600,
-                                    Colors.orange.shade800,
-                                    Colors.yellow.shade200,
-                                    Colors.yellow.shade400,
-                                    Colors.yellow.shade600,
-                                    Colors.yellow.shade800,
-                                    Colors.green.shade200,
-                                    Colors.green.shade400,
-                                    Colors.green.shade600,
-                                    Colors.green.shade800,
-                                    Colors.blue.shade200,
-                                    Colors.blue.shade400,
-                                    Colors.blue.shade600,
-                                    Colors.blue.shade800,
-                                    Colors.indigo.shade200,
-                                    Colors.indigo.shade400,
-                                    Colors.indigo.shade600,
-                                    Colors.indigo.shade800,
-                                  ]
-                                  .map(
-                                    (color) => GestureDetector(
-                                      onTap: () {
-                                        HapticFeedback.lightImpact();
-                                        setDialogState(
-                                          () => selectedColor = color,
-                                        );
-                                      },
-                                      child: AnimatedContainer(
-                                        duration: Duration(milliseconds: 150),
-                                        width:
-                                            selectedColor == color ? 120 : 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(color: color),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                        ),
-                      ),
                     ],
                   ),
                   actions: [
@@ -315,17 +248,6 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                             child: ListTile(
                               title: Row(
                                 children: [
-                                  Container(
-                                    width: 20,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                      color: Color(
-                                        int.parse(spot['spot_color']),
-                                      ),
-                                      borderRadius: BorderRadius.circular(8.0),
-                                    ),
-                                  ),
-                                  SizedBox(width: context.wp(4)),
                                   Text(
                                     spot['spot_name'],
                                     style: AppTextStyle.body.copyWith(

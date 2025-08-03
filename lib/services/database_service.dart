@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medical_records/services/file_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -24,24 +25,28 @@ class DatabaseService {
     await db.execute('''
       CREATE TABLE records (
         record_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        history_id INTEGER NOT NULL,
         memo TEXT,
-        histories_id INTEGER,
+        color TEXT NOT NULL, 
         spot_id INTEGER NOT NULL,
-       spot_name TEXT NOT NULL,
-        spot_color TEXT NOT NULL, 
+        spot_name TEXT NOT NULL,
+        symptom_id INTEGER NOT NULL,
+        symptom_name TEXT NOT NULL,
+        date TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         deleted_at TEXT,
-        FOREIGN KEY (histories_id) REFERENCES histories (histories_id),
-        FOREIGN KEY (spot_id) REFERENCES categories (spot_id)
+        FOREIGN KEY (spot_id) REFERENCES spots (spot_id)
       )
     ''');
+
+    // type = ['INITIAL','PROGRESS','TREATMENT','COMPLETE']
 
     await db.execute('''
       CREATE TABLE spots (
         spot_id INTEGER PRIMARY KEY AUTOINCREMENT,
         spot_name TEXT NOT NULL,
-        spot_color TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         last_used_at TEXT,
@@ -63,17 +68,6 @@ class DatabaseService {
     ''');
 
     await db.execute('''
-      CREATE TABLE histories (
-        histories_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        history_id TEXT NOT NULL,
-        memo TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        deleted_at TEXT
-      )
-    ''');
-
-    await db.execute('''
       CREATE TABLE images (
         image_id INTEGER PRIMARY KEY AUTOINCREMENT,
         record_id INTEGER,
@@ -86,7 +80,6 @@ class DatabaseService {
 
     await db.insert('spots', {
       'spot_name': '입술 주변',
-      'spot_color': Colors.red.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
@@ -94,7 +87,6 @@ class DatabaseService {
 
     await db.insert('spots', {
       'spot_name': '혓바닥',
-      'spot_color': Colors.orange.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
@@ -102,7 +94,6 @@ class DatabaseService {
 
     await db.insert('spots', {
       'spot_name': '입 천장',
-      'spot_color': Colors.blue.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
@@ -110,7 +101,6 @@ class DatabaseService {
 
     await db.insert('spots', {
       'spot_name': '목구멍',
-      'spot_color': Colors.indigo.shade400.toARGB32().toString(),
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
       'count': 0,
@@ -147,7 +137,6 @@ class DatabaseService {
 
     return await db.insert('spots', {
       'spot_name': name,
-      'spot_color': color,
       'created_at': now,
       'updated_at': now,
       'last_used_at': null,
@@ -160,11 +149,7 @@ class DatabaseService {
     final db = await database;
     await db.update(
       'spots',
-      {
-        'spot_name': name,
-        'spot_color': color,
-        'updated_at': DateTime.now().toIso8601String(),
-      },
+      {'spot_name': name, 'updated_at': DateTime.now().toIso8601String()},
       where: 'spot_id = ?',
       whereArgs: [spotId],
     );
@@ -270,23 +255,64 @@ class DatabaseService {
   }
 
   Future<int> createRecord({
+    required String type,
+    required String historyId,
     required String memo,
+    required String color,
     required int spotId,
     required String spotName,
-    required String spotColor,
-    int? historiesId,
+    required int symptomId,
+    required String symptomName,
+    required String date,
   }) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
     return await db.insert('records', {
+      'type': type,
+      'history_id': historyId,
       'memo': memo,
+      'color': color,
       'spot_id': spotId,
       'spot_name': spotName,
-      'spot_color': spotColor,
-      'histories_id': historiesId,
+      'symptom_id': symptomId,
+      'symptom_name': symptomName,
       'created_at': now,
       'updated_at': now,
+      'date': date,
     });
+  }
+
+  Future<int> updateRecord({
+    required int recordId,
+    required String type,
+    required String historyId,
+    required String memo,
+    required String color,
+    required int spotId,
+    required String spotName,
+    required int symptomId,
+    required String symptomName,
+    required String date,
+  }) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    return await db.update(
+      'records',
+      {
+        'type': type,
+        'history_id': historyId,
+        'memo': memo,
+        'color': color,
+        'spot_id': spotId,
+        'spot_name': spotName,
+        'symptom_id': symptomId,
+        'symptom_name': symptomName,
+        'updated_at': now,
+        'date': date,
+      },
+      where: 'record_id = ?',
+      whereArgs: [recordId],
+    );
   }
 
   // Image CRUD
@@ -311,5 +337,35 @@ class DatabaseService {
       where: 'record_id = ? AND deleted_at IS NULL',
       whereArgs: [recordId],
     );
+  }
+
+  Future<Map<String, dynamic>?> getImageById(int imageId) async {
+    final db = await database;
+    final result = await db.query(
+      'images',
+      where: 'image_id = ? AND deleted_at IS NULL',
+      whereArgs: [imageId],
+      limit: 1,
+    );
+
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<void> deleteImage(int imageId) async {
+    // 파일도 완전 삭제
+    print('imageId: $imageId');
+    final image = await getImageById(imageId);
+    if (image != null) {
+      await FileService().deleteImage(image['image_url']);
+    }
+
+    // DB에서 완전 삭제
+    final db = await database;
+    await db.delete('images', where: 'image_id = ?', whereArgs: [imageId]);
+  }
+
+  Future<void> deleteAllImagesByRecordId(int recordId) async {
+    final db = await database;
+    await db.delete('images', where: 'record_id = ?', whereArgs: [recordId]);
   }
 }

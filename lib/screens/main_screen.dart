@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/screens/records.dart';
 import 'package:medical_records/screens/photo_page.dart';
-import 'package:medical_records/screens/add_record_page.dart';
+import 'package:medical_records/screens/record_foam_page.dart';
 import 'package:medical_records/screens/setting_page.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';

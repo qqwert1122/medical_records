@@ -145,7 +145,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('위치', style: AppTextStyle.subTitle),
+                Text('증상', style: AppTextStyle.subTitle),
                 ElevatedButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();

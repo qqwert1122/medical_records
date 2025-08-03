@@ -3,24 +3,32 @@ import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 
-class AddRecordMemoWidget extends StatefulWidget {
-  const AddRecordMemoWidget({super.key});
+class RecordFoamMemoWidget extends StatefulWidget {
+  final String? initialMemo;
+
+  const RecordFoamMemoWidget({super.key, this.initialMemo});
 
   @override
-  State<AddRecordMemoWidget> createState() => AddRecordMemoWidgetState();
+  State<RecordFoamMemoWidget> createState() => RecordFoamMemoWidgetState();
 }
 
-class AddRecordMemoWidgetState extends State<AddRecordMemoWidget> {
+class RecordFoamMemoWidgetState extends State<RecordFoamMemoWidget> {
   final TextEditingController _controller = TextEditingController();
 
-  String getMemo() {
-    return _controller.text;
+  @override
+  void initState() {
+    super.initState();
+    _controller.text = widget.initialMemo ?? '';
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  String getMemo() {
+    return _controller.text;
   }
 
   @override

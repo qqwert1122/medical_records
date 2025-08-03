@@ -8,14 +8,17 @@ import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/widgets/spot_bottom_sheet.dart';
 import 'package:medical_records/widgets/symptom_bottom_sheet.dart';
 
-class AddRecordSymptomWidget extends StatefulWidget {
-  const AddRecordSymptomWidget({super.key});
+class RecordFoamSymptomWidget extends StatefulWidget {
+  final int? initialSymptomId;
+
+  const RecordFoamSymptomWidget({super.key, this.initialSymptomId});
 
   @override
-  State<AddRecordSymptomWidget> createState() => AddRecordSymptomWidgetState();
+  State<RecordFoamSymptomWidget> createState() =>
+      RecordFoamSymptomWidgetState();
 }
 
-class AddRecordSymptomWidgetState extends State<AddRecordSymptomWidget> {
+class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
   Map<String, dynamic>? selectedSymptom;
 
   @override
@@ -30,10 +33,31 @@ class AddRecordSymptomWidgetState extends State<AddRecordSymptomWidget> {
 
   Future<void> _loadInitialSymptom() async {
     final symptoms = await DatabaseService().getSymptoms();
-    if (symptoms.isNotEmpty) {
-      setState(() {
-        selectedSymptom = symptoms.first;
-      });
+
+    if (widget.initialSymptomId != null) {
+      // 수정 모드: 특정 symptom_id로 찾기
+      try {
+        final symptom = symptoms.firstWhere(
+          (symptom) => symptom['symptom_id'] == widget.initialSymptomId,
+        );
+        setState(() {
+          selectedSymptom = symptom;
+        });
+      } catch (e) {
+        // 해당 symptom을 찾지 못한 경우 첫 번째 symptom 선택
+        if (symptoms.isNotEmpty) {
+          setState(() {
+            selectedSymptom = symptoms.first;
+          });
+        }
+      }
+    } else {
+      // 추가 모드: 첫 번째 symptom 선택
+      if (symptoms.isNotEmpty) {
+        setState(() {
+          selectedSymptom = symptoms.first;
+        });
+      }
     }
   }
 

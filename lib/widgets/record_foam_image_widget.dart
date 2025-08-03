@@ -9,19 +9,41 @@ import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 
-class AddRecordImageWidget extends StatefulWidget {
-  const AddRecordImageWidget({super.key});
+class RecordFoamImageWidget extends StatefulWidget {
+  final List<String>? initialImagePaths;
+
+  const RecordFoamImageWidget({super.key, this.initialImagePaths});
 
   @override
-  State<AddRecordImageWidget> createState() => AddRecordImageWidgetState();
+  State<RecordFoamImageWidget> createState() => RecordFoamImageWidgetState();
 }
 
-class AddRecordImageWidgetState extends State<AddRecordImageWidget> {
-  List<XFile> _selectedImages = [];
+class RecordFoamImageWidgetState extends State<RecordFoamImageWidget> {
+  List<String> _allImagePaths = [];
   bool _isPickingImages = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _updateImagePaths();
+  }
+
+  @override
+  void didUpdateWidget(RecordFoamImageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialImagePaths != widget.initialImagePaths) {
+      _updateImagePaths();
+    }
+  }
+
+  void _updateImagePaths() {
+    setState(() {
+      _allImagePaths = List.from(widget.initialImagePaths ?? []);
+    });
+  }
+
   List<String> getSelectedImagePaths() {
-    return _selectedImages.map((image) => image.path).toList();
+    return _allImagePaths;
   }
 
   Future<void> _pickImages() async {
@@ -35,7 +57,7 @@ class AddRecordImageWidgetState extends State<AddRecordImageWidget> {
       final picker = ImagePicker();
       final images = await picker.pickMultiImage();
       setState(() {
-        _selectedImages = images;
+        _allImagePaths.addAll(images.map((image) => image.path));
       });
     } finally {
       setState(() {
@@ -44,9 +66,9 @@ class AddRecordImageWidgetState extends State<AddRecordImageWidget> {
     }
   }
 
-  void _removeImage(XFile image) {
+  void _removeImage(String imagePath) {
     setState(() {
-      _selectedImages.remove(image);
+      _allImagePaths.remove(imagePath);
     });
   }
 
@@ -61,9 +83,9 @@ class AddRecordImageWidgetState extends State<AddRecordImageWidget> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              if (_selectedImages.isNotEmpty) ...[
-                ...(_selectedImages.map(
-                  (image) => Stack(
+              if (_allImagePaths.isNotEmpty) ...[
+                ...(_allImagePaths.map(
+                  (imagePath) => Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Container(
@@ -83,7 +105,7 @@ class AddRecordImageWidgetState extends State<AddRecordImageWidget> {
                               ),
                             ],
                             image: DecorationImage(
-                              image: FileImage(File(image.path)),
+                              image: FileImage(File(imagePath)),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -93,7 +115,7 @@ class AddRecordImageWidgetState extends State<AddRecordImageWidget> {
                         top: 4,
                         right: 8,
                         child: GestureDetector(
-                          onTap: () => _removeImage(image),
+                          onTap: () => _removeImage(imagePath),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.redAccent,
@@ -111,7 +133,7 @@ class AddRecordImageWidgetState extends State<AddRecordImageWidget> {
                   ),
                 )),
               ],
-              if (_selectedImages.isNotEmpty) SizedBox(width: 8),
+              if (_allImagePaths.isNotEmpty) SizedBox(width: 8),
               DottedBorder(
                 options: RoundedRectDottedBorderOptions(
                   color: AppColors.grey,

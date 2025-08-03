@@ -6,15 +6,23 @@ import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/widgets/date_picker_bottom_sheet.dart';
 
-class AddRecordDateWidget extends StatefulWidget {
-  const AddRecordDateWidget({super.key});
+class RecordFoamDateWidget extends StatefulWidget {
+  final DateTime? initialDate;
+
+  const RecordFoamDateWidget({super.key, this.initialDate});
 
   @override
-  State<AddRecordDateWidget> createState() => AddRecordDateWidgetState();
+  State<RecordFoamDateWidget> createState() => RecordFoamDateWidgetState();
 }
 
-class AddRecordDateWidgetState extends State<AddRecordDateWidget> {
-  DateTime _selectedDate = DateTime.now();
+class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate ?? DateTime.now();
+  }
 
   DateTime getSelectedDate() {
     return _selectedDate;
