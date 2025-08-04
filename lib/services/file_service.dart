@@ -57,6 +57,24 @@ class FileService {
     return savedPaths;
   }
 
+  Future<List<String>> getStoredImageNames() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final dir = Directory(directory.path);
+    final files =
+        dir
+            .listSync(recursive: true)
+            .where(
+              (file) =>
+                  file is File &&
+                  (file.path.endsWith('.jpg') ||
+                      file.path.endsWith('.png') ||
+                      file.path.endsWith('.jpeg')),
+            )
+            .map((file) => path.basename(file.path))
+            .toList();
+    return files;
+  }
+
   // 이미지 파일 삭제
   Future<bool> deleteImage(String imagePath) async {
     try {

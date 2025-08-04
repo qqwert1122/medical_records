@@ -16,4 +16,12 @@ class AppColors {
     primary = newPrimary;
     accent = newAccent;
   }
+
+  static Color getTextColor(Color backgroundColor) {
+    // 배경색의 밝기 계산 (0.0 ~ 1.0)
+    double luminance = backgroundColor.computeLuminance();
+
+    // 밝기가 0.5보다 크면 어두운 텍스트(검정), 작으면 밝은 텍스트(흰색)
+    return luminance > 0.5 ? Colors.black : Colors.white;
+  }
 }

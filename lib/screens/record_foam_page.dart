@@ -41,15 +41,19 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
   }
 
   Future<void> _loadData() async {
-    print('isEditMode: $isEditMode');
     if (isEditMode) {
-      print('record_id: ${widget.recordData!['record_id']}');
       _existingImages = await _getExistingImages();
-      print('loaded images: $_existingImages');
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Future<List<String>> _getExistingImages() async {
@@ -91,7 +95,6 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
         // 수정 모드
         recordId = widget.recordData!['record_id'];
 
-        // 1. 먼저 현재 선택된 이미지들을 처리 (저장할 최종 이미지 목록)
         List<String> finalImagePaths = [];
 
         if (imagePaths != null && imagePaths.isNotEmpty) {
@@ -109,16 +112,6 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
           }
         }
 
-        // 2. 기존 이미지 중 최종 목록에 없는 것들만 삭제
-        final existingImages = await DatabaseService().getImages(recordId);
-        for (var img in existingImages) {
-          if (!finalImagePaths.contains(img['image_url'])) {
-            await DatabaseService().deleteImage(img['image_id']);
-            await FileService().deleteImage(img['image_url']);
-          }
-        }
-
-        // 3. 레코드 업데이트
         await DatabaseService().updateRecord(
           recordId: recordId,
           type: 'INITIAL',
@@ -132,7 +125,6 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
           date: strDate,
         );
 
-        // 4. 이미지 DB 레코드 정리 후 새로 저장
         await DatabaseService().deleteAllImagesByRecordId(recordId);
         if (finalImagePaths.isNotEmpty) {
           await DatabaseService().saveImages(recordId, finalImagePaths);
@@ -176,6 +168,20 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.white,
+        appBar: AppBar(
+          title: Text(
+            isEditMode ? '기록 수정' : '기록 추가',
+            style: AppTextStyle.title,
+          ),
+          backgroundColor: AppColors.background,
+        ),
+        body: Center(child: CircularProgressIndicator(color: AppColors.black)),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditMode ? '기록 수정' : '기록 추가', style: AppTextStyle.title),
