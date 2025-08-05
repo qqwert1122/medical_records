@@ -49,8 +49,11 @@ class _RecordState extends State<Record> {
   Widget build(BuildContext context) {
     final record = widget.recordData;
     final date = DateTime.parse(record['date']);
+    final now = DateTime.now();
     final formattedDate =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+        date.year == now.year
+            ? '${date.month}월 ${date.day}일'
+            : '${date.year}년 ${date.month}월 ${date.day}일';
 
     return InkWell(
       onTap: () async {
@@ -64,81 +67,136 @@ class _RecordState extends State<Record> {
         widget.onRecordUpdated?.call();
       },
       child: Container(
-        height: 100,
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              width: 35,
-              height: 35,
-              decoration: BoxDecoration(
-                color: Color(int.parse(record['color'])),
-                borderRadius: BorderRadius.circular(50),
-              ),
-              child: Center(
-                child: Text(
-                  record['symptom_name'].substring(0, 2),
-                  style: AppTextStyle.caption.copyWith(
-                    color: AppColors.getTextColor(
-                      Color(int.parse(record['color'])),
-                    ),
-                    fontSize: context.sm,
-                  ),
-                ),
-              ),
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        padding: context.paddingXS,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
-            SizedBox(width: context.wp(4)),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        record['symptom_name'] ?? '',
-                        style: AppTextStyle.subTitle.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: context.wp(1)),
-                      Text(
-                        record['spot_name'] ?? '기록',
-                        style: AppTextStyle.body,
-                      ),
-                      SizedBox(width: context.wp(2)),
-
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isCompleted ? Colors.grey : Colors.blueAccent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          isCompleted ? '완료' : '진행중',
-                          style: AppTextStyle.caption.copyWith(
-                            color: Colors.white,
-                            fontSize: 10,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 45,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              color: Color(int.parse(record['color'])),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/icons/mouth_nobg.png',
+                                width: 30,
+                                height: 30,
+                              ),
+                            ),
                           ),
-                        ),
+                          SizedBox(width: context.wp(2)),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  formattedDate,
+                                  style: AppTextStyle.caption.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        record['symptom_name'] ?? '',
+                                        style: AppTextStyle.body.copyWith(
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    SizedBox(width: context.wp(0.5)),
+                                    Text(
+                                      '|',
+                                      style: AppTextStyle.caption.copyWith(
+                                        color: AppColors.grey,
+                                      ),
+                                    ),
+                                    SizedBox(width: context.wp(0.5)),
+                                    Flexible(
+                                      child: Text(
+                                        record['spot_name'] ?? '기록',
+                                        style: AppTextStyle.body.copyWith(
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.grey,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    SizedBox(width: context.wp(1)),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            isCompleted
+                                                ? AppColors.grey
+                                                : Colors.blueAccent,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        isCompleted ? '완료' : '진행중',
+                                        style: AppTextStyle.caption.copyWith(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [],
                       ),
                     ],
                   ),
-                  Text(
-                    formattedDate,
-                    style: AppTextStyle.caption.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
+                ),
+                if (imagePaths.isNotEmpty) _buildImageStack(),
+              ],
+            ),
+            SizedBox(height: context.hp(1)),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                record['memo'],
+                style: AppTextStyle.caption.copyWith(),
               ),
             ),
-            // 우측 이미지들
-            if (imagePaths.isNotEmpty) _buildImageStack(),
+            SizedBox(height: context.hp(2)),
+            _buildButtons(),
           ],
         ),
       ),
@@ -147,7 +205,7 @@ class _RecordState extends State<Record> {
 
   Widget _buildImageStack() {
     const double imageSize = 50;
-    const double overlap = 20;
+    const double overlap = 30;
 
     return SizedBox(
       width:
@@ -240,6 +298,55 @@ class _RecordState extends State<Record> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              // 경과 기록 로직
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              '경과 기록',
+              style: AppTextStyle.body.copyWith(fontWeight: FontWeight.w900),
+            ),
+          ),
+        ),
+        SizedBox(width: context.wp(2)),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              // 종료 로직
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              backgroundColor: Colors.grey,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              '종료',
+              style: AppTextStyle.body.copyWith(fontWeight: FontWeight.w900),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
