@@ -8,17 +8,17 @@ import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'dart:io';
 
-class Record extends StatefulWidget {
+class Record2 extends StatefulWidget {
   final Map<String, dynamic> recordData;
   final VoidCallback? onRecordUpdated;
 
-  const Record({super.key, required this.recordData, this.onRecordUpdated});
+  const Record2({super.key, required this.recordData, this.onRecordUpdated});
 
   @override
-  State<Record> createState() => _RecordState();
+  State<Record2> createState() => _Record2State();
 }
 
-class _RecordState extends State<Record> {
+class _Record2State extends State<Record2> {
   bool isCompleted = false;
   List<String> imagePaths = [];
 
@@ -67,10 +67,10 @@ class _RecordState extends State<Record> {
         widget.onRecordUpdated?.call();
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         padding: context.paddingXS,
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16.0),
           boxShadow: [
             BoxShadow(
@@ -92,22 +92,6 @@ class _RecordState extends State<Record> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 45,
-                            height: 45,
-                            decoration: BoxDecoration(
-                              color: Color(int.parse(record['color'])),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Center(
-                              child: Image.asset(
-                                'assets/icons/mouth_nobg.png',
-                                width: 45,
-                                height: 45,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: context.wp(2)),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

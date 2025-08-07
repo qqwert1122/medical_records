@@ -12,6 +12,8 @@ class AppColors {
   static const Color grey = Color(0xFFBBBBBB);
   static const Color white = Colors.white;
 
+  static const Color textPrimary = Colors.black;
+
   static void changeTheme(Color newPrimary, Color newAccent) {
     primary = newPrimary;
     accent = newAccent;

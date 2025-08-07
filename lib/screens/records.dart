@@ -6,6 +6,7 @@ import 'package:medical_records/widgets/record.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
+import 'package:medical_records/widgets/record_version_2.dart';
 
 class Records extends StatefulWidget {
   const Records({super.key});
@@ -63,7 +64,7 @@ class _RecordsState extends State<Records> {
         backgroundColor: AppColors.background,
       ),
       body: Container(
-        decoration: BoxDecoration(color: AppColors.background),
+        decoration: BoxDecoration(color: AppColors.surface),
         child: Column(
           children: [
             Expanded(
