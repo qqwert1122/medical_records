@@ -68,6 +68,12 @@ class CalendarDayCell extends StatelessWidget {
                   hasImage
                       ? Icon(Icons.image, size: 20, color: AppColors.grey)
                       : null,
+
+              // Image.asset(
+              //   'assets/icons/bone_nobg.png',
+              //   width: 45,
+              //   height: 45,
+              // ),
             ),
           ),
         ],

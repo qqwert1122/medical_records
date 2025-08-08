@@ -7,9 +7,13 @@ import 'package:medical_records/styles/app_text_style.dart';
 
 class MonthPickerBottomSheet extends StatefulWidget {
   final DateTime initialDate;
+  final bool isMonthlyView;
 
-  const MonthPickerBottomSheet({Key? key, required this.initialDate})
-    : super(key: key);
+  const MonthPickerBottomSheet({
+    Key? key,
+    required this.initialDate,
+    this.isMonthlyView = true,
+  }) : super(key: key);
 
   @override
   State<MonthPickerBottomSheet> createState() => _MonthPickerBottomSheetState();
@@ -47,7 +51,10 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
             ),
           ),
           SizedBox(height: context.hp(1)),
-          Text('월 선택', style: AppTextStyle.subTitle),
+          Text(
+            widget.isMonthlyView ? '월 선택' : '연도 선택',
+            style: AppTextStyle.subTitle,
+          ),
           SizedBox(height: context.hp(1)),
           Expanded(
             child: Column(
@@ -86,37 +93,39 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
                           }),
                         ),
                       ),
-                      SizedBox(width: context.wp(5)),
-                      // 월 피커
-                      SizedBox(
-                        width: context.wp(40),
-                        child: CupertinoPicker(
-                          scrollController: FixedExtentScrollController(
-                            initialItem: tempDate.month - 1,
-                          ),
-                          itemExtent: 40,
-                          onSelectedItemChanged: (index) {
-                            HapticFeedback.lightImpact();
-                            setState(() {
-                              tempDate = DateTime(tempDate.year, index + 1);
-                            });
-                          },
-                          children: List.generate(12, (index) {
-                            bool isSelected = index == tempDate.month - 1;
-                            return Center(
-                              child: Text(
-                                '${index + 1}월',
-                                style: AppTextStyle.body.copyWith(
-                                  color:
-                                      isSelected
-                                          ? AppColors.primary
-                                          : Colors.grey,
+                      if (widget.isMonthlyView) ...[
+                        SizedBox(width: context.wp(5)),
+                        // 월 피커
+                        SizedBox(
+                          width: context.wp(40),
+                          child: CupertinoPicker(
+                            scrollController: FixedExtentScrollController(
+                              initialItem: tempDate.month - 1,
+                            ),
+                            itemExtent: 40,
+                            onSelectedItemChanged: (index) {
+                              HapticFeedback.lightImpact();
+                              setState(() {
+                                tempDate = DateTime(tempDate.year, index + 1);
+                              });
+                            },
+                            children: List.generate(12, (index) {
+                              bool isSelected = index == tempDate.month - 1;
+                              return Center(
+                                child: Text(
+                                  '${index + 1}월',
+                                  style: AppTextStyle.body.copyWith(
+                                    color:
+                                        isSelected
+                                            ? AppColors.primary
+                                            : Colors.grey,
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

@@ -7,6 +7,8 @@ import 'package:medical_records/calendar/widgets/month_selector_widget.dart';
 import 'package:medical_records/calendar/widgets/montly_calendar.dart';
 import 'package:medical_records/calendar/widgets/view_toggle_widget.dart';
 import 'package:medical_records/calendar/widgets/yearly_calendar.dart';
+import 'package:medical_records/calendar/widgets/yearly_selector_widget.dart';
+import 'package:medical_records/screens/record_foam_page.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -43,11 +45,15 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
-  void _showMonthPicker() async {
+  void _showMonthPicker({bool isMonthlyView = true}) async {
     final selectedDate = await showModalBottomSheet<DateTime>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => MonthPickerBottomSheet(initialDate: _focusedDay),
+      builder:
+          (context) => MonthPickerBottomSheet(
+            initialDate: _focusedDay,
+            isMonthlyView: isMonthlyView,
+          ),
     );
 
     if (selectedDate != null) {
@@ -73,7 +79,9 @@ class _CalendarPageState extends State<CalendarPage> {
                 child: Column(
                   children: [
                     _buildViewToggle(),
-                    _isMonthlyView ? _buildMonthSelector() : SizedBox(),
+                    _isMonthlyView
+                        ? _buildMonthSelector()
+                        : _buildYearSelector(),
                   ],
                 ),
               ),
@@ -93,8 +101,11 @@ class _CalendarPageState extends State<CalendarPage> {
               bottom: context.hp(12),
               child: FloatingActionButton(
                 shape: const CircleBorder(),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RecordFoamPage()),
+                  );
                 },
                 backgroundColor: Colors.pinkAccent,
                 child: const Icon(LucideIcons.plus, color: Colors.white),
@@ -125,7 +136,20 @@ class _CalendarPageState extends State<CalendarPage> {
           _focusedDay = newDate;
         });
       },
-      onMonthTap: _showMonthPicker,
+      onMonthTap: () => _showMonthPicker(isMonthlyView: true),
+    );
+  }
+
+  Widget _buildYearSelector() {
+    return YearlySelectorWidget(
+      selectedDate: _focusedDay,
+      onDateChanged: (newDate) {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _focusedDay = newDate;
+        });
+      },
+      onDateTap: () => _showMonthPicker(isMonthlyView: false),
     );
   }
 

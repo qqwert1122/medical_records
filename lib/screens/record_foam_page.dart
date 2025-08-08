@@ -173,7 +173,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
         backgroundColor: AppColors.white,
         appBar: AppBar(
           title: Text(
-            isEditMode ? '기록 수정' : '기록 추가',
+            isEditMode ? '증상 수정' : '증상 추가',
             style: AppTextStyle.title,
           ),
           backgroundColor: AppColors.background,
@@ -210,22 +210,22 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
                           isEditMode ? widget.recordData!['symptom_id'] : null,
                     ),
                     SizedBox(height: context.hp(2)),
-                    RecordFoamDateWidget(
-                      key: _dateKey,
-                      initialDate:
-                          isEditMode
-                              ? DateTime.parse(widget.recordData!['date'])
-                              : null,
-                    ),
-                    SizedBox(height: context.hp(2)),
-                    RecordFoamColorWidget(
-                      key: _colorKey,
-                      initialColor:
-                          isEditMode
-                              ? Color(int.parse(widget.recordData!['color']))
-                              : null,
-                    ),
-                    SizedBox(height: context.hp(2)),
+                    // RecordFoamDateWidget(
+                    //   key: _dateKey,
+                    //   initialDate:
+                    //       isEditMode
+                    //           ? DateTime.parse(widget.recordData!['date'])
+                    //           : null,
+                    // ),
+                    // SizedBox(height: context.hp(2)),
+                    // RecordFoamColorWidget(
+                    //   key: _colorKey,
+                    //   initialColor:
+                    //       isEditMode
+                    //           ? Color(int.parse(widget.recordData!['color']))
+                    //           : null,
+                    // ),
+                    // SizedBox(height: context.hp(2)),
                     RecordFoamMemoWidget(
                       key: _memoKey,
                       initialMemo:
@@ -259,7 +259,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Colors.grey,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -280,7 +280,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.blueAccent,
+              backgroundColor: Colors.pinkAccent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
