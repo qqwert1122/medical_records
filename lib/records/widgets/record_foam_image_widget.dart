@@ -200,6 +200,37 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                   ),
                 ),
               ),
+              // 추가 버튼
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      _pickImages();
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.textPrimary,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        LucideIcons.plus,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               // 페이지 인디케이터
               Positioned(
                 bottom: 10,
@@ -238,8 +269,8 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
   Widget _buildEmptyState() {
     return Center(
       child: Transform.rotate(
-        angle:
-            (_random.nextDouble() - 0.5) * 6 * (math.pi / 180), // 빈 상태도 살짝 틸트
+        angle: 0,
+        // (_random.nextDouble() - 0.5) * 6 * (math.pi / 180), // 빈 상태도 살짝 틸트
         child: DottedBorder(
           options: RoundedRectDottedBorderOptions(
             color: AppColors.grey,
@@ -254,11 +285,7 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
             },
             child: Container(
               width: context.wp(80),
-              height: context.hp(40),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.grey.withValues(alpha: 0.05),
-              ),
+              decoration: BoxDecoration(),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -267,15 +294,15 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                     size: 56,
                     color: AppColors.grey.withValues(alpha: 0.6),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: context.hp(3)),
                   Text(
                     '사진을 추가해주세요',
                     style: AppTextStyle.subTitle.copyWith(
                       color: AppColors.grey.withValues(alpha: 0.8),
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: context.hp(1)),
                   Text(
                     '여기를 탭하여 갤러리에서 선택',
                     style: AppTextStyle.caption.copyWith(
@@ -291,84 +318,14 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
     );
   }
 
-  Widget _buildDotIndicator() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
-        math.min(_allImagePaths.length, 10), // 최대 10개까지만 표시
-        (index) {
-          final isActive = index == (_currentIndex % _allImagePaths.length);
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            height: isActive ? 10 : 6,
-            width: isActive ? 10 : 6,
-            decoration: BoxDecoration(
-              color:
-                  isActive
-                      ? AppColors.primary
-                      : AppColors.grey.withValues(alpha: 0.3),
-              shape: BoxShape.circle,
-              boxShadow:
-                  isActive
-                      ? [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.4),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                      : null,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 헤더
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('사진', style: AppTextStyle.subTitle),
-            if (_allImagePaths.isNotEmpty)
-              TextButton.icon(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  _pickImages();
-                },
-                icon: Icon(
-                  LucideIcons.plus,
-                  size: 16,
-                  color: Colors.pinkAccent,
-                ),
-                label: Text(
-                  '추가',
-                  style: AppTextStyle.body.copyWith(
-                    color: Colors.pinkAccent,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        SizedBox(height: context.hp(2)),
-
         // 카드 스와이퍼
         Container(
-          height: context.hp(45), // 화면 높이의 45%
+          height: context.hp(40),
           child:
               _allImagePaths.isEmpty
                   ? _buildEmptyState()
@@ -418,20 +375,6 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                     threshold: 40, // 스와이프 감도
                   ),
         ),
-
-        // 안내 텍스트
-        if (_allImagePaths.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Center(
-              child: Text(
-                '카드를 스와이프하여 모든 사진을 확인하세요',
-                style: AppTextStyle.caption.copyWith(
-                  color: AppColors.grey.withValues(alpha: 0.7),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

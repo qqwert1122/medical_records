@@ -52,12 +52,12 @@ class _DatePickerBottomSheetState extends State<DatePickerBottomSheet> {
 
   Widget _buildDragHandle() {
     return Container(
-      width: context.wp(20),
-      height: context.hp(0.8),
-      margin: const EdgeInsets.only(bottom: 16),
+      width: context.wp(15),
+      height: context.hp(1),
+      margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
       decoration: BoxDecoration(
-        color: AppColors.grey,
-        borderRadius: BorderRadius.circular(2),
+        color: Colors.pinkAccent.shade100,
+        borderRadius: BorderRadius.circular(16),
       ),
     );
   }
@@ -73,7 +73,7 @@ class _DatePickerBottomSheetState extends State<DatePickerBottomSheet> {
           height: context.hp(50),
           child: TableCalendar<dynamic>(
             firstDay: DateTime(2020),
-            lastDay: DateTime.now(),
+            lastDay: DateTime(2030),
             focusedDay: focusedDay,
             selectedDayPredicate: (day) => isSameDay(selectedDate, day),
             calendarFormat: CalendarFormat.month,
@@ -126,7 +126,7 @@ class _DatePickerBottomSheetState extends State<DatePickerBottomSheet> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Colors.grey.shade400,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -147,7 +147,7 @@ class _DatePickerBottomSheetState extends State<DatePickerBottomSheet> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.blueAccent,
+              backgroundColor: Colors.pinkAccent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

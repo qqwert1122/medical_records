@@ -7,7 +7,7 @@ class MonthlyCalendar extends StatelessWidget {
   final DateTime focusedDay;
   final DateTime? selectedDay;
   final CalendarFormat calendarFormat;
-  final Map<DateTime, String> dayImages;
+  final Map<DateTime, List<Color>> dayRecords;
   final Function(DateTime, DateTime) onDaySelected;
   final Function(DateTime) onPageChanged;
 
@@ -16,13 +16,15 @@ class MonthlyCalendar extends StatelessWidget {
     required this.focusedDay,
     required this.selectedDay,
     required this.calendarFormat,
-    required this.dayImages,
+    required this.dayRecords,
     required this.onDaySelected,
     required this.onPageChanged,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    print('dayrecords in montlycalendar : $dayRecords');
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.wp(2)),
       child: TableCalendar(
@@ -41,14 +43,26 @@ class MonthlyCalendar extends StatelessWidget {
             return CalendarDayCell(
               day: day,
               isSelected: false,
-              hasImage: dayImages.containsKey(day),
+              recordColors:
+                  dayRecords[DateTime(
+                    day.toLocal().year,
+                    day.toLocal().month,
+                    day.toLocal().day,
+                  )] ??
+                  [],
             );
           },
           selectedBuilder: (context, day, focusedDay) {
             return CalendarDayCell(
               day: day,
               isSelected: true,
-              hasImage: dayImages.containsKey(day),
+              recordColors:
+                  dayRecords[DateTime(
+                    day.toLocal().year,
+                    day.toLocal().month,
+                    day.toLocal().day,
+                  )] ??
+                  [],
             );
           },
           todayBuilder: (context, day, focusedDay) {
@@ -56,7 +70,13 @@ class MonthlyCalendar extends StatelessWidget {
               day: day,
               isSelected: false,
               isToday: true,
-              hasImage: dayImages.containsKey(day),
+              recordColors:
+                  dayRecords[DateTime(
+                    day.toLocal().year,
+                    day.toLocal().month,
+                    day.toLocal().day,
+                  )] ??
+                  [],
             );
           },
         ),

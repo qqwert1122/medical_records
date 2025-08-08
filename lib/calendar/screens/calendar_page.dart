@@ -8,7 +8,8 @@ import 'package:medical_records/calendar/widgets/montly_calendar.dart';
 import 'package:medical_records/calendar/widgets/view_toggle_widget.dart';
 import 'package:medical_records/calendar/widgets/yearly_calendar.dart';
 import 'package:medical_records/calendar/widgets/yearly_selector_widget.dart';
-import 'package:medical_records/screens/record_foam_page.dart';
+import 'package:medical_records/records/screens/record_foam_page.dart';
+import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -26,7 +27,7 @@ class _CalendarPageState extends State<CalendarPage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   bool _isMonthlyView = true;
   double _bottomSheetHeight = 0.08;
-
+  final Map<DateTime, List<Color>> _dayRecords = {};
   final Map<DateTime, String> _dayImages = {};
 
   @override
@@ -34,6 +35,39 @@ class _CalendarPageState extends State<CalendarPage> {
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
+    _loadRecords();
+  }
+
+  Future<void> _loadRecords() async {
+    final startOfMonth = DateTime(_focusedDay.year, _focusedDay.month, 1);
+    final endOfMonth = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
+
+    final records = await DatabaseService().getRecordsByDateRange(
+      startDate: startOfMonth,
+      endDate: endOfMonth,
+    );
+
+    setState(() {
+      _dayRecords.clear();
+
+      for (final record in records) {
+        final startDate = DateTime.parse(record['start_date']).toLocal();
+        final dateKey = DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+        );
+
+        final colorString = record['color'] as String;
+        final color = Color(int.parse(colorString));
+
+        if (_dayRecords.containsKey(dateKey)) {
+          _dayRecords[dateKey]!.add(color);
+        } else {
+          _dayRecords[dateKey] = [color];
+        }
+      }
+    });
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -102,9 +136,14 @@ class _CalendarPageState extends State<CalendarPage> {
               child: FloatingActionButton(
                 shape: const CircleBorder(),
                 onPressed: () async {
+                  HapticFeedback.mediumImpact();
                   await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => RecordFoamPage()),
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              RecordFoamPage(selectedDate: _selectedDay),
+                    ),
                   );
                 },
                 backgroundColor: Colors.pinkAccent,
@@ -158,13 +197,14 @@ class _CalendarPageState extends State<CalendarPage> {
       focusedDay: _focusedDay,
       selectedDay: _selectedDay,
       calendarFormat: _calendarFormat,
-      dayImages: _dayImages,
+      dayRecords: _dayRecords,
       onDaySelected: _onDaySelected,
       onPageChanged: (focusedDay) {
         HapticFeedback.lightImpact();
         setState(() {
           _focusedDay = focusedDay;
         });
+        _loadRecords();
       },
     );
   }

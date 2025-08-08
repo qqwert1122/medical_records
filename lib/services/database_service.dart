@@ -33,7 +33,8 @@ class DatabaseService {
         spot_name TEXT NOT NULL,
         symptom_id INTEGER NOT NULL,
         symptom_name TEXT NOT NULL,
-        date TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         deleted_at TEXT,
@@ -131,7 +132,7 @@ class DatabaseService {
     );
   }
 
-  Future<int> createSpot(String name, String color) async {
+  Future<int> createSpot({required String name}) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
 
@@ -145,7 +146,7 @@ class DatabaseService {
     });
   }
 
-  Future<void> updateSpot(int spotId, String name, String color) async {
+  Future<void> updateSpot({required int spotId, required String name}) async {
     final db = await database;
     await db.update(
       'spots',
@@ -263,7 +264,7 @@ class DatabaseService {
     required String spotName,
     required int symptomId,
     required String symptomName,
-    required String date,
+    required String startDate,
   }) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
@@ -278,7 +279,7 @@ class DatabaseService {
       'symptom_name': symptomName,
       'created_at': now,
       'updated_at': now,
-      'date': date,
+      'start_date': startDate,
     });
   }
 
@@ -292,7 +293,7 @@ class DatabaseService {
     required String spotName,
     required int symptomId,
     required String symptomName,
-    required String date,
+    required String startDate,
   }) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
@@ -308,7 +309,7 @@ class DatabaseService {
         'symptom_id': symptomId,
         'symptom_name': symptomName,
         'updated_at': now,
-        'date': date,
+        'start_date': startDate,
       },
       where: 'record_id = ?',
       whereArgs: [recordId],
@@ -367,5 +368,22 @@ class DatabaseService {
   Future<void> deleteAllImagesByRecordId(int recordId) async {
     final db = await database;
     await db.delete('images', where: 'record_id = ?', whereArgs: [recordId]);
+  }
+
+  //
+  // stats
+  //
+
+  Future<List<Map<String, dynamic>>> getRecordsByDateRange({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final db = await database;
+    return await db.query(
+      'records',
+      where: 'deleted_at IS NULL AND start_date >= ? AND start_date <= ?',
+      whereArgs: [startDate.toIso8601String(), endDate.toIso8601String()],
+      orderBy: 'start_date DESC',
+    );
   }
 }

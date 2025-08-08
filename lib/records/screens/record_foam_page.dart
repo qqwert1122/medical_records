@@ -5,18 +5,19 @@ import 'package:medical_records/services/file_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
-import 'package:medical_records/widgets/record_foam_color_widget.dart';
-import 'package:medical_records/widgets/record_foam_date_widget.dart';
-import 'package:medical_records/widgets/record_foam_image_widget.dart';
-import 'package:medical_records/widgets/record_foam_memo_widget.dart';
-import 'package:medical_records/widgets/record_foam_spot_widget.dart';
-import 'package:medical_records/widgets/record_foam_symptom_widget.dart';
+import 'package:medical_records/records/widgets/record_foam_color_widget.dart';
+import 'package:medical_records/records/widgets/record_foam_date_widget.dart';
+import 'package:medical_records/records/widgets/record_foam_image_widget.dart';
+import 'package:medical_records/records/widgets/record_foam_memo_widget.dart';
+import 'package:medical_records/records/widgets/record_foam_spot_widget.dart';
+import 'package:medical_records/records/widgets/record_foam_symptom_widget.dart';
 import 'package:uuid/uuid.dart';
 
 class RecordFoamPage extends StatefulWidget {
   final Map<String, dynamic>? recordData;
+  final DateTime? selectedDate;
 
-  const RecordFoamPage({super.key, this.recordData});
+  const RecordFoamPage({super.key, this.recordData, this.selectedDate});
 
   @override
   _RecordFoamPageState createState() => _RecordFoamPageState();
@@ -67,12 +68,12 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
   void saveRecord() async {
     final spot = _spotKey.currentState?.getSelectedSpot();
     final symptom = _symptomKey.currentState?.getSelectedSymptom();
-    final date = _dateKey.currentState?.getSelectedDate();
+    final start_date = _dateKey.currentState?.getSelectedDate();
     final color = _colorKey.currentState?.getSelectedColor();
     final memo = _memoKey.currentState?.getMemo();
     final imagePaths = _imageKey.currentState?.getSelectedImagePaths();
     final historyId = const Uuid().v4();
-    final strDate = date!.toIso8601String();
+    final strDate = start_date!.toIso8601String();
 
     if (spot == null) {
       ScaffoldMessenger.of(
@@ -122,7 +123,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
           spotName: spot['spot_name'],
           symptomId: symptom['symptom_id'],
           symptomName: symptom['symptom_name'],
-          date: strDate,
+          startDate: strDate,
         );
 
         await DatabaseService().deleteAllImagesByRecordId(recordId);
@@ -140,7 +141,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
           spotName: spot['spot_name'],
           symptomId: symptom['symptom_id'],
           symptomName: symptom['symptom_name'],
-          date: strDate,
+          startDate: strDate,
         );
 
         if (imagePaths != null && imagePaths.isNotEmpty) {
@@ -188,54 +189,66 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
         backgroundColor: AppColors.background,
       ),
       body: Container(
+        height: double.infinity,
         decoration: BoxDecoration(color: AppColors.background),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Stack(
             children: [
               SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: 80), // 버튼 높이만큼 패딩
+                padding: EdgeInsets.only(bottom: 70), // 버튼 높이만큼 패딩
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 이미지
+                    RecordFoamImageWidget(
+                      key: _imageKey,
+                      initialImagePaths: _existingImages,
+                    ),
+                    SizedBox(height: context.hp(2)),
+                    Row(
+                      children: [
+                        // 날짜
+                        RecordFoamDateWidget(
+                          key: _dateKey,
+                          initialDate:
+                              isEditMode
+                                  ? DateTime.parse(widget.recordData!['date'])
+                                  : widget.selectedDate ?? widget.selectedDate,
+                        ),
+                        SizedBox(width: context.wp(4)),
+                        RecordFoamColorWidget(
+                          key: _colorKey,
+                          initialColor:
+                              isEditMode
+                                  ? Color(
+                                    int.parse(widget.recordData!['color']),
+                                  )
+                                  : null,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: context.hp(1)),
                     RecordFoamSpotWidget(
                       key: _spotKey,
                       initialSpotId:
                           isEditMode ? widget.recordData!['spot_id'] : null,
                     ),
-                    SizedBox(height: context.hp(2)),
+                    SizedBox(height: context.hp(1)),
                     RecordFoamSymptomWidget(
                       key: _symptomKey,
                       initialSymptomId:
                           isEditMode ? widget.recordData!['symptom_id'] : null,
                     ),
-                    SizedBox(height: context.hp(2)),
-                    // RecordFoamDateWidget(
-                    //   key: _dateKey,
-                    //   initialDate:
-                    //       isEditMode
-                    //           ? DateTime.parse(widget.recordData!['date'])
-                    //           : null,
-                    // ),
-                    // SizedBox(height: context.hp(2)),
-                    // RecordFoamColorWidget(
-                    //   key: _colorKey,
-                    //   initialColor:
-                    //       isEditMode
-                    //           ? Color(int.parse(widget.recordData!['color']))
-                    //           : null,
-                    // ),
-                    // SizedBox(height: context.hp(2)),
+                    SizedBox(height: context.hp(1)),
                     RecordFoamMemoWidget(
                       key: _memoKey,
                       initialMemo:
                           isEditMode ? widget.recordData!['memo'] : null,
                     ),
+
+                    // SizedBox(height: context.hp(2)),
                     SizedBox(height: context.hp(2)),
-                    RecordFoamImageWidget(
-                      key: _imageKey,
-                      initialImagePaths: _existingImages,
-                    ),
                   ],
                 ),
               ),

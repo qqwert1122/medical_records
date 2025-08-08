@@ -5,55 +5,57 @@ import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
-import 'package:medical_records/widgets/spot_bottom_sheet.dart';
+import 'package:medical_records/records/widgets/spot_bottom_sheet.dart';
+import 'package:medical_records/records/widgets/symptom_bottom_sheet.dart';
 
-class RecordFoamSpotWidget extends StatefulWidget {
-  final int? initialSpotId;
+class RecordFoamSymptomWidget extends StatefulWidget {
+  final int? initialSymptomId;
 
-  const RecordFoamSpotWidget({super.key, this.initialSpotId});
+  const RecordFoamSymptomWidget({super.key, this.initialSymptomId});
 
   @override
-  State<RecordFoamSpotWidget> createState() => RecordFoamSpotWidgetState();
+  State<RecordFoamSymptomWidget> createState() =>
+      RecordFoamSymptomWidgetState();
 }
 
-class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
-  Map<String, dynamic>? selectedSpot;
+class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
+  Map<String, dynamic>? selectedSymptom;
 
   @override
   void initState() {
     super.initState();
-    _loadInitialSpot();
+    _loadInitialSymptom();
   }
 
-  Map<String, dynamic>? getSelectedSpot() {
-    return selectedSpot;
+  Map<String, dynamic>? getSelectedSymptom() {
+    return selectedSymptom;
   }
 
-  Future<void> _loadInitialSpot() async {
-    final spots = await DatabaseService().getSpots();
+  Future<void> _loadInitialSymptom() async {
+    final symptoms = await DatabaseService().getSymptoms();
 
-    if (widget.initialSpotId != null) {
-      // 수정 모드: 특정 spot_id로 찾기
+    if (widget.initialSymptomId != null) {
+      // 수정 모드: 특정 symptom_id로 찾기
       try {
-        final spot = spots.firstWhere(
-          (spot) => spot['spot_id'] == widget.initialSpotId,
+        final symptom = symptoms.firstWhere(
+          (symptom) => symptom['symptom_id'] == widget.initialSymptomId,
         );
         setState(() {
-          selectedSpot = spot;
+          selectedSymptom = symptom;
         });
       } catch (e) {
-        // 해당 spot을 찾지 못한 경우 첫 번째 spot 선택
-        if (spots.isNotEmpty) {
+        // 해당 symptom을 찾지 못한 경우 첫 번째 symptom 선택
+        if (symptoms.isNotEmpty) {
           setState(() {
-            selectedSpot = spots.first;
+            selectedSymptom = symptoms.first;
           });
         }
       }
     } else {
-      // 추가 모드: 첫 번째 spot 선택
-      if (spots.isNotEmpty) {
+      // 추가 모드: 첫 번째 symptom 선택
+      if (symptoms.isNotEmpty) {
         setState(() {
-          selectedSpot = spots.first;
+          selectedSymptom = symptoms.first;
         });
       }
     }
@@ -64,13 +66,13 @@ class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('위치', style: AppTextStyle.subTitle),
+        Text('증상', style: AppTextStyle.subTitle),
         SizedBox(width: context.wp(4)),
         Flexible(
           child: GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
-              _showSpotBottomSheet();
+              _showSymptomBottomSheet();
             },
             child: Container(
               decoration: BoxDecoration(
@@ -81,7 +83,7 @@ class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
               child: Row(
                 children: [
                   Text(
-                    selectedSpot?['spot_name'] ?? '위치를 선택하세요',
+                    selectedSymptom?['symptom_name'] ?? '증상을 선택하세요',
                     style: AppTextStyle.body,
                   ),
                   Spacer(),
@@ -99,14 +101,14 @@ class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
     );
   }
 
-  void _showSpotBottomSheet() async {
-    final result = await SpotBottomSheet.show(
+  void _showSymptomBottomSheet() async {
+    final result = await SymptomBottomSheet.show(
       context,
-      selectedSpot: selectedSpot,
+      selectedSymptom: selectedSymptom,
     );
     if (result != null) {
       setState(() {
-        selectedSpot = result;
+        selectedSymptom = result;
       });
     }
   }

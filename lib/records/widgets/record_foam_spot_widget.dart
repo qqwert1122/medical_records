@@ -5,57 +5,55 @@ import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
-import 'package:medical_records/widgets/spot_bottom_sheet.dart';
-import 'package:medical_records/widgets/symptom_bottom_sheet.dart';
+import 'package:medical_records/records/widgets/spot_bottom_sheet.dart';
 
-class RecordFoamSymptomWidget extends StatefulWidget {
-  final int? initialSymptomId;
+class RecordFoamSpotWidget extends StatefulWidget {
+  final int? initialSpotId;
 
-  const RecordFoamSymptomWidget({super.key, this.initialSymptomId});
+  const RecordFoamSpotWidget({super.key, this.initialSpotId});
 
   @override
-  State<RecordFoamSymptomWidget> createState() =>
-      RecordFoamSymptomWidgetState();
+  State<RecordFoamSpotWidget> createState() => RecordFoamSpotWidgetState();
 }
 
-class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
-  Map<String, dynamic>? selectedSymptom;
+class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
+  Map<String, dynamic>? selectedSpot;
 
   @override
   void initState() {
     super.initState();
-    _loadInitialSymptom();
+    _loadInitialSpot();
   }
 
-  Map<String, dynamic>? getSelectedSymptom() {
-    return selectedSymptom;
+  Map<String, dynamic>? getSelectedSpot() {
+    return selectedSpot;
   }
 
-  Future<void> _loadInitialSymptom() async {
-    final symptoms = await DatabaseService().getSymptoms();
+  Future<void> _loadInitialSpot() async {
+    final spots = await DatabaseService().getSpots();
 
-    if (widget.initialSymptomId != null) {
-      // 수정 모드: 특정 symptom_id로 찾기
+    if (widget.initialSpotId != null) {
+      // 수정 모드: 특정 spot_id로 찾기
       try {
-        final symptom = symptoms.firstWhere(
-          (symptom) => symptom['symptom_id'] == widget.initialSymptomId,
+        final spot = spots.firstWhere(
+          (spot) => spot['spot_id'] == widget.initialSpotId,
         );
         setState(() {
-          selectedSymptom = symptom;
+          selectedSpot = spot;
         });
       } catch (e) {
-        // 해당 symptom을 찾지 못한 경우 첫 번째 symptom 선택
-        if (symptoms.isNotEmpty) {
+        // 해당 spot을 찾지 못한 경우 첫 번째 spot 선택
+        if (spots.isNotEmpty) {
           setState(() {
-            selectedSymptom = symptoms.first;
+            selectedSpot = spots.first;
           });
         }
       }
     } else {
-      // 추가 모드: 첫 번째 symptom 선택
-      if (symptoms.isNotEmpty) {
+      // 추가 모드: 첫 번째 spot 선택
+      if (spots.isNotEmpty) {
         setState(() {
-          selectedSymptom = symptoms.first;
+          selectedSpot = spots.first;
         });
       }
     }
@@ -66,13 +64,13 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('증상', style: AppTextStyle.subTitle),
+        Text('위치', style: AppTextStyle.subTitle),
         SizedBox(width: context.wp(4)),
         Flexible(
           child: GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
-              _showSymptomBottomSheet();
+              _showSpotBottomSheet();
             },
             child: Container(
               decoration: BoxDecoration(
@@ -83,7 +81,7 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
               child: Row(
                 children: [
                   Text(
-                    selectedSymptom?['symptom_name'] ?? '증상을 선택하세요',
+                    selectedSpot?['spot_name'] ?? '위치를 선택하세요',
                     style: AppTextStyle.body,
                   ),
                   Spacer(),
@@ -101,14 +99,14 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
     );
   }
 
-  void _showSymptomBottomSheet() async {
-    final result = await SymptomBottomSheet.show(
+  void _showSpotBottomSheet() async {
+    final result = await SpotBottomSheet.show(
       context,
-      selectedSymptom: selectedSymptom,
+      selectedSpot: selectedSpot,
     );
     if (result != null) {
       setState(() {
-        selectedSymptom = result;
+        selectedSpot = result;
       });
     }
   }

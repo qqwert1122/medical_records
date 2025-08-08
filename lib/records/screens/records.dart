@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:medical_records/screens/record_foam_page.dart';
+import 'package:medical_records/records/screens/record_foam_page.dart';
 import 'package:medical_records/services/database_service.dart';
-import 'package:medical_records/widgets/record.dart';
+import 'package:medical_records/records/widgets/record.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
-import 'package:medical_records/widgets/record_version_2.dart';
 
 class Records extends StatefulWidget {
   const Records({super.key});

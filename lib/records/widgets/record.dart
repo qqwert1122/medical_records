@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:medical_records/screens/record_foam_page.dart';
+import 'package:medical_records/records/screens/record_foam_page.dart';
 import 'package:medical_records/services/analysis_service.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';

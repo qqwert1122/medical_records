@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:medical_records/screens/main_screen.dart';
+import 'package:medical_records/main_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
