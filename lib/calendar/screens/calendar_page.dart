@@ -46,11 +46,12 @@ class _CalendarPageState extends State<CalendarPage> {
       startDate: startOfMonth,
       endDate: endOfMonth,
     );
-
     setState(() {
       _dayRecords.clear();
 
-      for (final record in records) {
+      for (final record
+          in records.toList()
+            ..sort((a, b) => a['record_id'].compareTo(b['record_id']))) {
         final startDate = DateTime.parse(record['start_date']).toLocal();
         final dateKey = DateTime(
           startDate.year,

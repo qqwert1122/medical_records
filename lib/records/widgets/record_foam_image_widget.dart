@@ -290,7 +290,7 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    LucideIcons.camera,
+                    LucideIcons.image,
                     size: 56,
                     color: AppColors.grey.withValues(alpha: 0.6),
                   ),

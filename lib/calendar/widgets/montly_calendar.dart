@@ -23,8 +23,6 @@ class MonthlyCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('dayrecords in montlycalendar : $dayRecords');
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.wp(2)),
       child: TableCalendar(
@@ -37,7 +35,8 @@ class MonthlyCalendar extends StatelessWidget {
         onPageChanged: onPageChanged,
         headerVisible: false,
         daysOfWeekHeight: context.hp(3.5),
-        rowHeight: context.hp(8),
+        rowHeight: context.hp(9),
+
         calendarBuilders: CalendarBuilders(
           defaultBuilder: (context, day, focusedDay) {
             return CalendarDayCell(
@@ -82,7 +81,8 @@ class MonthlyCalendar extends StatelessWidget {
         ),
         calendarStyle: const CalendarStyle(
           outsideDaysVisible: false,
-          weekendTextStyle: TextStyle(color: Colors.red),
+          weekendTextStyle: TextStyle(color: Colors.redAccent),
+          cellMargin: EdgeInsets.all(0),
         ),
         locale: 'ko_KR',
       ),

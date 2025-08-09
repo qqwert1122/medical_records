@@ -17,162 +17,140 @@ class CalendarDayCell extends StatelessWidget {
   }) : super(key: key);
 
   Widget _buildRecordIndicator() {
-    if (recordColors.isEmpty) return Container();
+    // 항상 고정된 크기의 Container를 반환
+    return Container(
+      height: 24, // 최대 높이로 고정
+      width: 24, // 최대 너비로 고정
+      alignment: Alignment.center,
+      child: _buildIndicatorContent(),
+    );
+  }
+
+  Widget _buildIndicatorContent() {
+    if (recordColors.isEmpty) return const SizedBox();
 
     if (recordColors.length == 1) {
-      return Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[0],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 1),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(child: Container(color: Colors.transparent)),
-                SizedBox(width: 1),
-                Expanded(child: Container(color: Colors.transparent)),
-              ],
-            ),
-          ),
-        ],
+      return Container(
+        height: 16,
+        width: 16,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: recordColors[0],
+        ),
       );
     } else if (recordColors.length == 2) {
-      return Column(
+      return Stack(
+        alignment: Alignment.center,
         children: [
-          Expanded(
+          Transform.translate(
+            offset: Offset(4, 4),
             child: Container(
-              margin: EdgeInsets.all(1),
+              height: 16,
+              width: 16,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                color: recordColors[0],
+                shape: BoxShape.circle,
+                color: recordColors[1],
               ),
             ),
           ),
-          SizedBox(width: 1),
-          Expanded(
+          Transform.translate(
+            offset: Offset(-4, -4),
             child: Container(
-              margin: EdgeInsets.all(1),
+              height: 16,
+              width: 16,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                color: recordColors[1],
+                shape: BoxShape.circle,
+                color: recordColors[0],
               ),
             ),
           ),
         ],
       );
     } else if (recordColors.length == 3) {
-      return Column(
+      return Stack(
+        alignment: Alignment.center,
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[0],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 1),
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[1],
-                    ),
-                  ),
-                ),
-              ],
+          Transform.translate(
+            offset: Offset(8, 0),
+            child: Container(
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recordColors[2],
+              ),
             ),
           ),
-          SizedBox(height: 1),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[2],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 1),
-                Expanded(child: Container(color: Colors.transparent)),
-              ],
+          Transform.translate(
+            offset: Offset(0, 0),
+            child: Container(
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recordColors[1],
+              ),
+            ),
+          ),
+          Transform.translate(
+            offset: Offset(-8, 0),
+            child: Container(
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recordColors[0],
+              ),
             ),
           ),
         ],
       );
     } else {
-      return Column(
+      return Stack(
+        alignment: Alignment.center,
         children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[0],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 1),
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[1],
-                    ),
-                  ),
-                ),
-              ],
+          Transform.translate(
+            offset: Offset(5, 5),
+            child: Container(
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recordColors[3],
+              ),
             ),
           ),
-          SizedBox(height: 1),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[2],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 1),
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: recordColors[3],
-                    ),
-                  ),
-                ),
-              ],
+          Transform.translate(
+            offset: Offset(-5, 5),
+            child: Container(
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recordColors[2],
+              ),
+            ),
+          ),
+          Transform.translate(
+            offset: Offset(5, -5),
+            child: Container(
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recordColors[1],
+              ),
+            ),
+          ),
+          Transform.translate(
+            offset: Offset(-5, -5),
+            child: Container(
+              height: 16,
+              width: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: recordColors[0],
+              ),
             ),
           ),
         ],
@@ -190,14 +168,7 @@ class CalendarDayCell extends StatelessWidget {
         color:
             isSelected
                 ? Colors.pinkAccent.withValues(alpha: 0.1)
-                : AppColors.surface,
-        border: Border.all(
-          color:
-              isSelected
-                  ? Colors.pinkAccent.withValues(alpha: 0.1)
-                  : Colors.transparent,
-          width: isSelected ? 2 : 0,
-        ),
+                : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -220,13 +191,7 @@ class CalendarDayCell extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.all(2),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
-              child: _buildRecordIndicator(),
-            ),
-          ),
+          Expanded(child: Center(child: _buildRecordIndicator())),
         ],
       ),
     );
