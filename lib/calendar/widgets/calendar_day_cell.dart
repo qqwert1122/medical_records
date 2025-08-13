@@ -160,8 +160,6 @@ class CalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('day: $day, recordColors: $recordColors');
-
     return Container(
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(

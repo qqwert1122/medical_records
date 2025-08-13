@@ -26,7 +26,7 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
   bool _isMonthlyView = true;
-  double _bottomSheetHeight = 0.08;
+  double _bottomSheetHeight = 0;
   final Map<DateTime, List<Color>> _dayRecords = {};
   final Map<DateTime, String> _dayImages = {};
 
@@ -76,8 +76,9 @@ class _CalendarPageState extends State<CalendarPage> {
     setState(() {
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
-      _bottomSheetHeight = 0.7;
+      _bottomSheetHeight = 0.4;
     });
+    _loadRecords();
   }
 
   void _showMonthPicker({bool isMonthlyView = true}) async {
@@ -104,7 +105,6 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.background),
       body: Stack(
         children: [
           Column(
@@ -130,7 +130,7 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
           _buildBottomSheet(screenHeight),
 
-          if (_bottomSheetHeight <= 0.08)
+          if (_bottomSheetHeight <= 0.1)
             Positioned(
               right: 16,
               bottom: context.hp(12),
@@ -218,7 +218,7 @@ class _CalendarPageState extends State<CalendarPage> {
       onDaySelected: (date) {
         setState(() {
           _selectedDay = date;
-          _bottomSheetHeight = 0.7;
+          _bottomSheetHeight = 0.4;
         });
       },
     );
@@ -228,7 +228,6 @@ class _CalendarPageState extends State<CalendarPage> {
     return CalendarBottomSheet(
       bottomSheetHeight: _bottomSheetHeight,
       selectedDay: _selectedDay,
-      dayImages: _dayImages,
       onHeightChanged: (newHeight) {
         setState(() {
           _bottomSheetHeight = newHeight;
