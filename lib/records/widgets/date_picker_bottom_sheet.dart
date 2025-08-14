@@ -28,7 +28,7 @@ class _DatePickerBottomSheetState extends State<DatePickerBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: context.hp(80),
+      height: context.hp(70),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: const BorderRadius.only(
@@ -36,7 +36,7 @@ class _DatePickerBottomSheetState extends State<DatePickerBottomSheet> {
           topRight: Radius.circular(20),
         ),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: context.paddingHorizSM,
       child: Column(
         children: [
           _buildDragHandle(),
@@ -53,7 +53,7 @@ class _DatePickerBottomSheetState extends State<DatePickerBottomSheet> {
   Widget _buildDragHandle() {
     return Container(
       width: context.wp(15),
-      height: context.hp(1),
+      height: context.hp(0.5),
       margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
       decoration: BoxDecoration(
         color: Colors.pinkAccent.shade100,

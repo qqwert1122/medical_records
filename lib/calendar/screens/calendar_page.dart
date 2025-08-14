@@ -51,7 +51,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
       for (final record
           in records.toList()
-            ..sort((a, b) => a['record_id'].compareTo(b['record_id']))) {
+            ..sort((a, b) => a['start_date'].compareTo(b['start_date']))) {
         final startDate = DateTime.parse(record['start_date']).toLocal();
         final dateKey = DateTime(
           startDate.year,
@@ -133,7 +133,7 @@ class _CalendarPageState extends State<CalendarPage> {
           if (_bottomSheetHeight <= 0.1)
             Positioned(
               right: 16,
-              bottom: context.hp(12),
+              bottom: 16,
               child: FloatingActionButton(
                 shape: const CircleBorder(),
                 onPressed: () async {

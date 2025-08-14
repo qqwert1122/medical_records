@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/calendar/screens/calendar_page.dart';
-import 'package:medical_records/records/screens/records.dart';
-import 'package:medical_records/records/screens/record_foam_page.dart';
-import 'package:medical_records/records/screens/setting_page.dart';
-import 'package:medical_records/styles/app_colors.dart';
-import 'package:medical_records/styles/app_size.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

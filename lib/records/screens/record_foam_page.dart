@@ -272,7 +272,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.grey,
+              backgroundColor: AppColors.surface,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -293,7 +293,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.pinkAccent,
+              backgroundColor: Colors.pinkAccent.shade100,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

@@ -183,9 +183,7 @@ class CalendarDayCell extends StatelessWidget {
                         ? Colors.pinkAccent
                         : isToday
                         ? Colors.blueAccent
-                        : recordColors.isNotEmpty
-                        ? AppColors.textPrimary
-                        : AppColors.grey,
+                        : AppColors.black,
               ),
             ),
           ),

@@ -43,7 +43,7 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
         children: [
           Container(
             width: context.wp(15),
-            height: context.hp(1),
+            height: context.hp(0.5),
             margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
             decoration: BoxDecoration(
               color: Colors.pinkAccent.shade100,
