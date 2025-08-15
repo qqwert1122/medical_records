@@ -18,6 +18,7 @@ class CalendarBottomSheet extends StatefulWidget {
   final DateTime? selectedDay;
   final Function(double) onHeightChanged;
   final Function(DateTime) onDateChanged;
+  final VoidCallback? onDataChanged;
 
   const CalendarBottomSheet({
     Key? key,
@@ -25,18 +26,17 @@ class CalendarBottomSheet extends StatefulWidget {
     required this.selectedDay,
     required this.onHeightChanged,
     required this.onDateChanged,
+    this.onDataChanged,
   }) : super(key: key);
 
   @override
-  State<CalendarBottomSheet> createState() => _CalendarBottomSheetState();
+  State<CalendarBottomSheet> createState() => CalendarBottomSheetState();
 }
 
-class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
+class CalendarBottomSheetState extends State<CalendarBottomSheet> {
   List<Map<String, dynamic>> _dayRecords = [];
   Map<String, dynamic>? _selectedRecord;
-  List<Map<String, dynamic>> _recordImages = [];
   bool _isLoading = false;
-  bool _showDetail = false;
 
   // PageView 관련 변수
   late PageController _pageController;
@@ -55,22 +55,62 @@ class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
   @override
   void didUpdateWidget(CalendarBottomSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.bottomSheetHeight == 0 && widget.bottomSheetHeight > 0) {
+      // 바텀시트가 다시 열렸을 때 상태 초기화
+      setState(() {
+        _selectedRecord = null;
+        _currentPageIndex = 0;
+      });
+      _resetToListView();
+
+      if (widget.selectedDay != null) {
+        _loadDayRecords();
+      }
+    }
+
     if (widget.selectedDay != oldWidget.selectedDay &&
         widget.selectedDay != null) {
+      print('새로운 날짜가 클릭 됐어요');
       _loadDayRecords();
       setState(() {
-        _showDetail = false;
         _selectedRecord = null;
-        _recordImages = [];
+        _currentPageIndex = 0;
       });
       _resetToListView();
     }
+    print('기존 날짜가 클릭 됐어요');
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void refreshData() {
+    print('bottom sheet refresh data');
+    _loadDayRecords();
+    // 현재 선택된 레코드가 있다면 해당 레코드도 다시 로드
+    if (_selectedRecord != null) {
+      _refreshSelectedRecord();
+    }
+  }
+
+  Future<void> _refreshSelectedRecord() async {
+    if (_selectedRecord == null) return;
+
+    try {
+      final recordId = _selectedRecord!['record_id'];
+      final updatedRecord = await DatabaseService().getRecord(recordId);
+
+      if (mounted && updatedRecord != null) {
+        setState(() {
+          _selectedRecord = updatedRecord;
+        });
+      }
+    } catch (e) {
+      print('레코드 새로고침 실패: $e');
+    }
   }
 
   Future<void> _loadDayRecords() async {
@@ -115,31 +155,19 @@ class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
     }
   }
 
-  Future<void> _loadRecordImages(int recordId) async {
-    try {
-      final images = await DatabaseService().getImages(recordId);
-      if (mounted) {
-        setState(() {
-          _recordImages = images;
-        });
-      }
-    } catch (e) {
-      print('이미지 로드 실패: $e');
-    }
-  }
-
   // pageView 관련
   void _resetToListView() {
+    setState(() {
+      _selectedRecord = null;
+      _currentPageIndex = 0;
+    });
     if (_currentPageIndex != 0) {
       _navigateToPage(0);
-      setState(() {
-        _selectedRecord = null;
-      });
     }
   }
 
   void _navigateToPage(int pageIndex) {
-    if (_isAnimating) return;
+    if (_isAnimating || !_pageController.hasClients) return;
 
     setState(() {
       _isAnimating = true;
@@ -173,6 +201,12 @@ class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
     _navigateToPage(0);
   }
 
+  Future<void> _onRecordUpdated() async {
+    await _loadDayRecords();
+    await _refreshSelectedRecord();
+    widget.onDataChanged?.call(); // 부모 위젯에 알림
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -204,16 +238,19 @@ class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
             CalendarBottomSheetHandle(
               dayRecords: _dayRecords,
               selectedDay: widget.selectedDay,
+              selectedRecord: _selectedRecord,
+              currentPageIndex: _currentPageIndex,
               currentHeight: widget.bottomSheetHeight,
               onHeightChanged: widget.onHeightChanged,
-              isDetailView: _showDetail,
+              onBackPressed: _onBackToList,
+              onRecordUpdated: _onRecordUpdated,
             ),
             Divider(color: AppColors.surface),
             if (widget.bottomSheetHeight > 0.1 && widget.selectedDay != null)
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(), // 스와이프 비활성화
+                  physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (index) {
                     setState(() {
                       _currentPageIndex = index;
@@ -240,37 +277,6 @@ class _CalendarBottomSheetState extends State<CalendarBottomSheet> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildRecordsList() {
-    return CalendarRecordsList(
-      dayRecords: _dayRecords,
-      isLoading: _isLoading,
-      onHeightChanged: widget.onHeightChanged,
-      onRecordTap: (record) async {
-        HapticFeedback.lightImpact();
-        await _loadRecordImages(record['record_id']);
-        setState(() {
-          _selectedRecord = record;
-          _showDetail = true;
-        });
-      },
-    );
-  }
-
-  Widget _buildRecordDetail() {
-    if (_selectedRecord == null) return Container();
-
-    return CalendarRecordDetail(
-      record: _selectedRecord!,
-      onBackPressed: () {
-        setState(() {
-          _showDetail = false;
-          _selectedRecord = null;
-          _recordImages = [];
-        });
-      },
     );
   }
 }

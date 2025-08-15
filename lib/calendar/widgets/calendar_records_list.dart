@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
@@ -46,6 +47,31 @@ class CalendarRecordsList extends StatelessWidget {
                           '기록된 증상이 없어요',
                           style: AppTextStyle.body.copyWith(
                             color: AppColors.grey,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(context.wp(4)),
+                          child: GestureDetector(
+                            onTap: () {
+                              // TODOLIST 레코드 페이지 이동, onDataChanged 콜백함수 호출
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.pinkAccent,
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: Text(
+                                '증상 기록하기',
+                                style: AppTextStyle.body.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],

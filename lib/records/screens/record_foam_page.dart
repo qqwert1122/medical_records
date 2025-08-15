@@ -68,12 +68,12 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
   void saveRecord() async {
     final spot = _spotKey.currentState?.getSelectedSpot();
     final symptom = _symptomKey.currentState?.getSelectedSymptom();
-    final start_date = _dateKey.currentState?.getSelectedDate();
+    final startDate = _dateKey.currentState?.getSelectedDate();
     final color = _colorKey.currentState?.getSelectedColor();
     final memo = _memoKey.currentState?.getMemo();
     final imagePaths = _imageKey.currentState?.getSelectedImagePaths();
     final historyId = const Uuid().v4();
-    final strDate = start_date!.toIso8601String();
+    final strDate = startDate!.toIso8601String();
 
     if (spot == null) {
       ScaffoldMessenger.of(
@@ -158,7 +158,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
         SnackBar(content: Text(isEditMode ? '기록이 수정되었습니다.' : '기록이 저장되었습니다.')),
       );
 
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
     } catch (e) {
       print('저장 중 오류가 발생했습니다: $e');
       ScaffoldMessenger.of(
@@ -213,8 +213,10 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
                           key: _dateKey,
                           initialDate:
                               isEditMode
-                                  ? DateTime.parse(widget.recordData!['date'])
-                                  : widget.selectedDate ?? widget.selectedDate,
+                                  ? DateTime.parse(
+                                    widget.recordData!['start_date'],
+                                  )
+                                  : widget.selectedDate,
                         ),
                         SizedBox(width: context.wp(4)),
                         RecordFoamColorWidget(

@@ -35,6 +35,15 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
     _loadRecordImages();
   }
 
+  @override
+  void didUpdateWidget(CalendarRecordDetail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.record['record_id'] != oldWidget.record['record_id'] ||
+        widget.record['updated_at'] != oldWidget.record['updated_at']) {
+      _loadRecordImages();
+    }
+  }
+
   Future<void> _loadRecordImages() async {
     setState(() => _isLoadingImages = true);
 
@@ -46,6 +55,7 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
         setState(() {
           _recordImages = images;
           _isLoadingImages = false;
+          _currentImageIndex = 0;
         });
       }
     } catch (e) {
@@ -58,7 +68,6 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(int.parse(widget.record['color']));
     final localStartDate =
         DateTime.parse(widget.record['start_date']).toLocal();
     final localCreateDate =
@@ -68,28 +77,6 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
 
     return Column(
       children: [
-        // 뒤로가기 버튼과 제목
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: context.wp(2)),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              IconButton(
-                icon: Icon(LucideIcons.chevronLeft, size: context.xl),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  widget.onBackPressed();
-                },
-              ),
-              Text(
-                widget.record['symptom_name'] ?? '증상 없음',
-                style: AppTextStyle.subTitle,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ],
-          ),
-        ),
         // 컨텐츠
         Expanded(
           child: SingleChildScrollView(
@@ -99,8 +86,11 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
               children: [
                 // 이미지 갤러리
                 if (_isLoadingImages) ...[
-                  const Center(
-                    child: CircularProgressIndicator(color: AppColors.black),
+                  SizedBox(
+                    height: context.hp(50),
+                    child: const Center(
+                      child: CircularProgressIndicator(color: AppColors.black),
+                    ),
                   ),
                 ] else if (_recordImages.isNotEmpty) ...[
                   _buildImageGallery(),

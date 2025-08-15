@@ -28,7 +28,10 @@ class _CalendarPageState extends State<CalendarPage> {
   bool _isMonthlyView = true;
   double _bottomSheetHeight = 0;
   final Map<DateTime, List<Color>> _dayRecords = {};
-  final Map<DateTime, String> _dayImages = {};
+
+  // CalendarBottomSheet에 전달할 콜백을 위한 GlobalKey
+  final GlobalKey<CalendarBottomSheetState> _bottomSheetKey = GlobalKey();
+  final GlobalKey<YearlyCalendarState> _yearlyCalendarKey = GlobalKey();
 
   @override
   void initState() {
@@ -99,6 +102,13 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
+  Future<void> _onDataChanged() async {
+    print('data changed 호출');
+    _yearlyCalendarKey.currentState?.refreshData();
+    _bottomSheetKey.currentState?.refreshData();
+    await _loadRecords();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -138,7 +148,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 shape: const CircleBorder(),
                 onPressed: () async {
                   HapticFeedback.mediumImpact();
-                  await Navigator.push(
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder:
@@ -146,6 +156,10 @@ class _CalendarPageState extends State<CalendarPage> {
                               RecordFoamPage(selectedDate: _selectedDay),
                     ),
                   );
+
+                  if (result == true) {
+                    await _onDataChanged();
+                  }
                 },
                 backgroundColor: Colors.pinkAccent,
                 child: const Icon(LucideIcons.plus, color: Colors.white),
@@ -212,9 +226,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildYearlyCalendar() {
     return YearlyCalendar(
+      key: _yearlyCalendarKey,
       focusedDay: _focusedDay,
       selectedDay: _selectedDay,
-      dayImages: _dayImages,
       onDaySelected: (date) {
         setState(() {
           _selectedDay = date;
@@ -226,6 +240,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildBottomSheet(double screenHeight) {
     return CalendarBottomSheet(
+      key: _bottomSheetKey,
       bottomSheetHeight: _bottomSheetHeight,
       selectedDay: _selectedDay,
       onHeightChanged: (newHeight) {
@@ -239,6 +254,7 @@ class _CalendarPageState extends State<CalendarPage> {
           _focusedDay = newDate;
         });
       },
+      onDataChanged: _onDataChanged,
     );
   }
 }

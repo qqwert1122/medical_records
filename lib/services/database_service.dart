@@ -386,4 +386,18 @@ class DatabaseService {
       orderBy: 'start_date DESC',
     );
   }
+
+  Future<Map<String, dynamic>?> getRecord(int recordId) async {
+    final db = await database;
+    final results = await db.query(
+      'records',
+      where: 'record_id = ?',
+      whereArgs: [recordId],
+    );
+
+    if (results.isNotEmpty) {
+      return results.first;
+    }
+    return null;
+  }
 }
