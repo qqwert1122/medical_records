@@ -66,8 +66,13 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('증상', style: AppTextStyle.subTitle),
-        SizedBox(width: context.wp(4)),
+        SizedBox(
+          width: context.wp(12),
+          child: Text(
+            '증상',
+            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
         Flexible(
           child: GestureDetector(
             onTap: () {

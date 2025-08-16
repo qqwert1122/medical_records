@@ -30,7 +30,8 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
 
   final GlobalKey<RecordFoamSpotWidgetState> _spotKey = GlobalKey();
   final GlobalKey<RecordFoamSymptomWidgetState> _symptomKey = GlobalKey();
-  final GlobalKey<RecordFoamDateWidgetState> _dateKey = GlobalKey();
+  final GlobalKey<RecordFoamDateWidgetState> _startDateKey = GlobalKey();
+  final GlobalKey<RecordFoamDateWidgetState> _endDateKey = GlobalKey();
   final GlobalKey<RecordFoamColorWidgetState> _colorKey = GlobalKey();
   final GlobalKey<RecordFoamMemoWidgetState> _memoKey = GlobalKey();
   final GlobalKey<RecordFoamImageWidgetState> _imageKey = GlobalKey();
@@ -58,8 +59,17 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
   }
 
   Future<List<String>> _getExistingImages() async {
-    final images = await DatabaseService().getImages(
+    final histories = await DatabaseService().getHistories(
       widget.recordData!['record_id'],
+    );
+
+    final initialHistory = histories.firstWhere(
+      (h) => h['event_type'] == 'INITIAL',
+      orElse: () => histories.first,
+    );
+
+    final images = await DatabaseService().getImages(
+      initialHistory['history_id'],
     );
 
     return images.map((img) => img['image_url'] as String).toList();
@@ -68,12 +78,11 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
   void saveRecord() async {
     final spot = _spotKey.currentState?.getSelectedSpot();
     final symptom = _symptomKey.currentState?.getSelectedSymptom();
-    final startDate = _dateKey.currentState?.getSelectedDate();
+    final startDate = _startDateKey.currentState?.getSelectedDate();
+    final endDate = _endDateKey.currentState?.getSelectedDate();
     final color = _colorKey.currentState?.getSelectedColor();
     final memo = _memoKey.currentState?.getMemo();
     final imagePaths = _imageKey.currentState?.getSelectedImagePaths();
-    final historyId = const Uuid().v4();
-    final strDate = startDate!.toIso8601String();
 
     if (spot == null) {
       ScaffoldMessenger.of(
@@ -89,22 +98,97 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
       return;
     }
 
+    if (startDate == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('시작 날짜를 선택해주세요.')));
+      return;
+    }
+
+    // 종료일이 시작일보다 이전인지 검증
+    if (endDate != null && endDate.isBefore(startDate)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('종료일은 시작일 이후여야 합니다.')));
+      return;
+    }
+
     try {
       int recordId;
+      int historyId;
+      final strStartDate = startDate.toIso8601String();
+      final strEndDate = endDate?.toIso8601String();
 
       if (isEditMode) {
         // 수정 모드
         recordId = widget.recordData!['record_id'];
 
-        List<String> finalImagePaths = [];
+        // 종료일 변경에 따른 status 업데이트
+        String status = widget.recordData!['status'];
+        final wasComplete = status == 'COMPLETE';
 
+        if (strEndDate != null && status == 'PROGRESS') {
+          status = 'COMPLETE';
+        } else if (strEndDate == null && status == 'COMPLETE') {
+          status = 'PROGRESS';
+        }
+
+        await DatabaseService().updateRecord(
+          recordId: recordId,
+          status: status,
+          color: color!.toARGB32().toString(),
+          spotId: spot['spot_id'],
+          spotName: spot['spot_name'],
+          symptomId: symptom['symptom_id'],
+          symptomName: symptom['symptom_name'],
+          startDate: strStartDate,
+          endDate: strEndDate,
+        );
+
+        // INITIAL history Update
+        final histories = await DatabaseService().getHistories(recordId);
+        final initialHistory = histories.firstWhere(
+          (h) => h['event_type'] == 'INITIAL',
+          orElse: () => histories.first,
+        );
+
+        await DatabaseService().updateHistory(
+          historyId: initialHistory['history_id'],
+          eventType: 'INITIAL',
+          memo: memo,
+          recordDate: strStartDate,
+        );
+
+        historyId = initialHistory['history_id'];
+
+        if (!wasComplete && strEndDate != null) {
+          await DatabaseService().createHistory(
+            recordId: recordId,
+            eventType: 'COMPLETE',
+            recordDate: strEndDate,
+            memo: '증상 종료',
+          );
+        } else if (wasComplete && strEndDate != null) {
+          // COMPLETE history 날짜 업데이트
+          final completeHistory = histories.firstWhere(
+            (h) => h['event_type'] == 'COMPLETE',
+            orElse: () => <String, dynamic>{},
+          );
+          if (completeHistory.isNotEmpty) {
+            await DatabaseService().updateHistory(
+              historyId: completeHistory['history_id'],
+              eventType: 'COMPLETE',
+              recordDate: strEndDate,
+            );
+          }
+        }
+
+        List<String> finalImagePaths = [];
         if (imagePaths != null && imagePaths.isNotEmpty) {
           for (String imagePath in imagePaths) {
             if (imagePath.contains('app_flutter/images/')) {
-              // 기존 이미지 - 그대로 유지
               finalImagePaths.add(imagePath);
             } else {
-              // 새로 선택한 이미지 - 앱 내부로 복사
               final savedPath = await FileService().saveImageToAppStorage(
                 imagePath,
               );
@@ -113,44 +197,46 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
           }
         }
 
-        await DatabaseService().updateRecord(
-          recordId: recordId,
-          type: 'INITIAL',
-          historyId: widget.recordData!['history_id'],
-          memo: memo ?? '',
-          color: color!.toARGB32().toString(),
-          spotId: spot['spot_id'],
-          spotName: spot['spot_name'],
-          symptomId: symptom['symptom_id'],
-          symptomName: symptom['symptom_name'],
-          startDate: strDate,
-        );
-
-        await DatabaseService().deleteAllImagesByRecordId(recordId);
+        await DatabaseService().deleteAllImagesByHistoryId(historyId);
         if (finalImagePaths.isNotEmpty) {
-          await DatabaseService().saveImages(recordId, finalImagePaths);
+          await DatabaseService().saveImages(historyId, finalImagePaths);
         }
       } else {
-        // 추가 모드
+        // 생성 모드
+
+        final status = strEndDate != null ? 'COMPLETE' : 'PROGRESS';
+
         recordId = await DatabaseService().createRecord(
-          type: 'INITIAL',
-          historyId: historyId,
-          memo: memo ?? '',
+          status: status,
           color: color!.toARGB32().toString(),
           spotId: spot['spot_id'],
           spotName: spot['spot_name'],
           symptomId: symptom['symptom_id'],
           symptomName: symptom['symptom_name'],
-          startDate: strDate,
+          startDate: strStartDate,
+          endDate: strEndDate,
+          initialMemo: memo,
         );
+        final histories = await DatabaseService().getHistories(recordId);
+        historyId = histories.first['history_id'];
 
         if (imagePaths != null && imagePaths.isNotEmpty) {
           final savedImagePaths = await FileService().saveImagesToAppStorage(
             imagePaths,
           );
           if (savedImagePaths.isNotEmpty) {
-            await DatabaseService().saveImages(recordId, savedImagePaths);
+            await DatabaseService().saveImages(historyId, savedImagePaths);
           }
+        }
+
+        // 종료일이 있으면 COMPLETE history도 자동 생성
+        if (strEndDate != null) {
+          await DatabaseService().createHistory(
+            recordId: recordId,
+            eventType: 'COMPLETE',
+            recordDate: strEndDate,
+            memo: '증상 종료',
+          );
         }
       }
 
@@ -206,29 +292,12 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
                       initialImagePaths: _existingImages,
                     ),
                     SizedBox(height: context.hp(2)),
-                    Row(
-                      children: [
-                        // 날짜
-                        RecordFoamDateWidget(
-                          key: _dateKey,
-                          initialDate:
-                              isEditMode
-                                  ? DateTime.parse(
-                                    widget.recordData!['start_date'],
-                                  )
-                                  : widget.selectedDate,
-                        ),
-                        SizedBox(width: context.wp(4)),
-                        RecordFoamColorWidget(
-                          key: _colorKey,
-                          initialColor:
-                              isEditMode
-                                  ? Color(
-                                    int.parse(widget.recordData!['color']),
-                                  )
-                                  : null,
-                        ),
-                      ],
+                    RecordFoamColorWidget(
+                      key: _colorKey,
+                      initialColor:
+                          isEditMode
+                              ? Color(int.parse(widget.recordData!['color']))
+                              : null,
                     ),
                     SizedBox(height: context.hp(1)),
                     RecordFoamSpotWidget(
@@ -248,8 +317,47 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
                       initialMemo:
                           isEditMode ? widget.recordData!['memo'] : null,
                     ),
-
-                    // SizedBox(height: context.hp(2)),
+                    SizedBox(height: context.hp(1)),
+                    // 시작일
+                    RecordFoamDateWidget(
+                      key: _startDateKey,
+                      initialDate:
+                          isEditMode
+                              ? DateTime.parse(widget.recordData!['start_date'])
+                              : widget.selectedDate,
+                      onTap: () async {
+                        // 시작일 선택 시 종료일 가져오기
+                        final endDate =
+                            _endDateKey.currentState?.getSelectedDate();
+                        return endDate;
+                      },
+                      onDateChanged: (DateTime? date) {
+                        // 시작일 변경 시 종료일 체크
+                        if (date != null) {
+                          final endDate =
+                              _endDateKey.currentState?.getSelectedDate();
+                          if (endDate != null && endDate.isBefore(date)) {
+                            _endDateKey.currentState?.setSelectedDate(date);
+                          }
+                        }
+                      },
+                    ),
+                    SizedBox(height: context.hp(1)),
+                    // 종료일 (선택사항)
+                    RecordFoamDateWidget(
+                      key: _endDateKey,
+                      initialDate:
+                          isEditMode && widget.recordData!['end_date'] != null
+                              ? DateTime.parse(widget.recordData!['end_date'])
+                              : null,
+                      isOptional: true, // 선택사항 표시
+                      onTap: () async {
+                        // 종료일 선택 시 시작일을 minDate로 전달
+                        final startDate =
+                            _startDateKey.currentState?.getSelectedDate();
+                        return startDate;
+                      },
+                    ),
                     SizedBox(height: context.hp(2)),
                   ],
                 ),
@@ -295,7 +403,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.pinkAccent.shade100,
+              backgroundColor: Colors.pinkAccent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -303,7 +411,10 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             ),
             child: Text(
               '저장',
-              style: AppTextStyle.body.copyWith(fontWeight: FontWeight.w900),
+              style: AppTextStyle.body.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.white,
+              ),
             ),
           ),
         ),

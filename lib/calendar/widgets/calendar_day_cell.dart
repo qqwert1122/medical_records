@@ -17,10 +17,9 @@ class CalendarDayCell extends StatelessWidget {
   }) : super(key: key);
 
   Widget _buildRecordIndicator() {
-    // 항상 고정된 크기의 Container를 반환
     return Container(
-      height: 24, // 최대 높이로 고정
-      width: 24, // 최대 너비로 고정
+      height: 24,
+      width: 24,
       alignment: Alignment.center,
       child: _buildIndicatorContent(),
     );
@@ -31,8 +30,8 @@ class CalendarDayCell extends StatelessWidget {
 
     if (recordColors.length == 1) {
       return Container(
-        height: 16,
-        width: 16,
+        height: 8,
+        width: 8,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: recordColors[0],
@@ -43,10 +42,10 @@ class CalendarDayCell extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Transform.translate(
-            offset: Offset(4, 4),
+            offset: Offset(2, 2),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[1],
@@ -54,10 +53,10 @@ class CalendarDayCell extends StatelessWidget {
             ),
           ),
           Transform.translate(
-            offset: Offset(-4, -4),
+            offset: Offset(-2, -2),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[0],
@@ -71,10 +70,10 @@ class CalendarDayCell extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Transform.translate(
-            offset: Offset(8, 0),
+            offset: Offset(4, 0),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[2],
@@ -84,8 +83,8 @@ class CalendarDayCell extends StatelessWidget {
           Transform.translate(
             offset: Offset(0, 0),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[1],
@@ -93,10 +92,10 @@ class CalendarDayCell extends StatelessWidget {
             ),
           ),
           Transform.translate(
-            offset: Offset(-8, 0),
+            offset: Offset(-4, 0),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[0],
@@ -110,10 +109,10 @@ class CalendarDayCell extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Transform.translate(
-            offset: Offset(5, 5),
+            offset: Offset(2, 2),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[3],
@@ -121,10 +120,10 @@ class CalendarDayCell extends StatelessWidget {
             ),
           ),
           Transform.translate(
-            offset: Offset(-5, 5),
+            offset: Offset(-2, 2),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[2],
@@ -132,10 +131,10 @@ class CalendarDayCell extends StatelessWidget {
             ),
           ),
           Transform.translate(
-            offset: Offset(5, -5),
+            offset: Offset(2, -2),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[1],
@@ -143,10 +142,10 @@ class CalendarDayCell extends StatelessWidget {
             ),
           ),
           Transform.translate(
-            offset: Offset(-5, -5),
+            offset: Offset(-2, -2),
             child: Container(
-              height: 16,
-              width: 16,
+              height: 8,
+              width: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: recordColors[0],
@@ -160,36 +159,33 @@ class CalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color:
-            isSelected
-                ? Colors.pinkAccent.withValues(alpha: 0.1)
-                : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            child: Text(
-              '${day.day}',
-              style: AppTextStyle.body.copyWith(
-                fontWeight:
-                    isSelected || isToday ? FontWeight.w900 : FontWeight.normal,
-                color:
-                    isSelected
-                        ? Colors.pinkAccent
-                        : isToday
-                        ? Colors.blueAccent
-                        : AppColors.black,
-              ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color:
+                isSelected
+                    ? Colors.pinkAccent.withValues(alpha: 0.1)
+                    : Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            '${day.day}',
+            style: AppTextStyle.body.copyWith(
+              fontWeight:
+                  isSelected || isToday ? FontWeight.w900 : FontWeight.normal,
+              color:
+                  isSelected
+                      ? Colors.pinkAccent
+                      : isToday
+                      ? Colors.blueAccent
+                      : AppColors.black,
             ),
           ),
-          Expanded(child: Center(child: _buildRecordIndicator())),
-        ],
-      ),
+        ),
+        Expanded(child: Center(child: _buildRecordIndicator())),
+      ],
     );
   }
 }

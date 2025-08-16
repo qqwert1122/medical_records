@@ -1,17 +1,10 @@
-// calendar_bottom_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:medical_records/calendar/widgets/calendar_bottom_sheet_handle.dart';
 import 'package:medical_records/calendar/widgets/calendar_record_detail.dart';
 import 'package:medical_records/calendar/widgets/calendar_records_list.dart';
 import 'package:medical_records/styles/app_colors.dart';
-import 'package:medical_records/styles/app_size.dart';
-import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/services/database_service.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
-import 'dart:io';
 
 class CalendarBottomSheet extends StatefulWidget {
   final double bottomSheetHeight;
@@ -70,7 +63,6 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
     if (widget.selectedDay != oldWidget.selectedDay &&
         widget.selectedDay != null) {
-      print('새로운 날짜가 클릭 됐어요');
       _loadDayRecords();
       setState(() {
         _selectedRecord = null;
@@ -78,7 +70,6 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
       });
       _resetToListView();
     }
-    print('기존 날짜가 클릭 됐어요');
   }
 
   @override
@@ -88,7 +79,6 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
   }
 
   void refreshData() {
-    print('bottom sheet refresh data');
     _loadDayRecords();
     // 현재 선택된 레코드가 있다면 해당 레코드도 다시 로드
     if (_selectedRecord != null) {
@@ -212,7 +202,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return AnimatedPositioned(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       left: 0,
       right: 0,
@@ -221,15 +211,11 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.background,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+              blurRadius: 1,
+              offset: const Offset(0, -1),
             ),
           ],
         ),

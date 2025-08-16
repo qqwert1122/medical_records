@@ -87,7 +87,6 @@ class YearlyCalendarState extends State<YearlyCalendar> {
   }
 
   void refreshData() {
-    print('refresh yearly records');
     _loadYearlyRecords();
   }
 

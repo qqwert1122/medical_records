@@ -64,16 +64,27 @@ class RecordFoamColorWidgetState extends State<RecordFoamColorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showColorPickerModal(context),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: selectedColor,
-          borderRadius: BorderRadius.circular(12.0),
+    return Row(
+      children: [
+        SizedBox(
+          width: context.wp(12),
+          child: Text(
+            '색상',
+            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
-      ),
+        GestureDetector(
+          onTap: () => _showColorPickerModal(context),
+          child: Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(
+              color: selectedColor,
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

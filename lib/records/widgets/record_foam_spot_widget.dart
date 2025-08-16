@@ -64,8 +64,13 @@ class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('위치', style: AppTextStyle.subTitle),
-        SizedBox(width: context.wp(4)),
+        SizedBox(
+          width: context.wp(12),
+          child: Text(
+            '위치',
+            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
         Flexible(
           child: GestureDetector(
             onTap: () {

@@ -71,7 +71,7 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
         setState(() => _isDragging = false);
 
         final current = widget.currentHeight;
-        const snapPoints = [0.0, 0.4, 0.9];
+        const snapPoints = [0.0, 0.5, 0.9];
 
         // 속도 기반 스냅: 빠르게 위로 올리면 다음 스냅, 아래로 내리면 이전 스냅
         final v = details.primaryVelocity ?? 0.0;

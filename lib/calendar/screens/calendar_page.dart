@@ -3,15 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/calendar/widgets/calendar_bottom_sheet.dart';
 import 'package:medical_records/calendar/widgets/month_picker_bottom_sheet.dart';
-import 'package:medical_records/calendar/widgets/month_selector_widget.dart';
 import 'package:medical_records/calendar/widgets/montly_calendar.dart';
-import 'package:medical_records/calendar/widgets/view_toggle_widget.dart';
+import 'package:medical_records/calendar/widgets/calendar_header_widget.dart';
 import 'package:medical_records/calendar/widgets/yearly_calendar.dart';
-import 'package:medical_records/calendar/widgets/yearly_selector_widget.dart';
 import 'package:medical_records/records/screens/record_foam_page.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
-import 'package:medical_records/styles/app_size.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -103,7 +100,6 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Future<void> _onDataChanged() async {
-    print('data changed 호출');
     _yearlyCalendarKey.currentState?.refreshData();
     _bottomSheetKey.currentState?.refreshData();
     await _loadRecords();
@@ -119,17 +115,7 @@ class _CalendarPageState extends State<CalendarPage> {
         children: [
           Column(
             children: [
-              SafeArea(
-                bottom: false,
-                child: Column(
-                  children: [
-                    _buildViewToggle(),
-                    _isMonthlyView
-                        ? _buildMonthSelector()
-                        : _buildYearSelector(),
-                  ],
-                ),
-              ),
+              SafeArea(bottom: false, child: _buildViewToggle()),
               Expanded(
                 child:
                     _isMonthlyView
@@ -140,70 +126,44 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
           _buildBottomSheet(screenHeight),
 
-          if (_bottomSheetHeight <= 0.1)
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                shape: const CircleBorder(),
-                onPressed: () async {
-                  HapticFeedback.mediumImpact();
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              RecordFoamPage(selectedDate: _selectedDay),
-                    ),
-                  );
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: FloatingActionButton(
+              shape: const CircleBorder(),
+              onPressed: () async {
+                HapticFeedback.mediumImpact();
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => RecordFoamPage(selectedDate: _selectedDay),
+                  ),
+                );
 
-                  if (result == true) {
-                    await _onDataChanged();
-                  }
-                },
-                backgroundColor: Colors.pinkAccent,
-                child: const Icon(LucideIcons.plus, color: Colors.white),
-              ),
+                if (result == true) {
+                  await _onDataChanged();
+                }
+              },
+              backgroundColor: Colors.pinkAccent,
+              child: const Icon(LucideIcons.plus, color: Colors.white),
             ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildViewToggle() {
-    return ViewToggleWidget(
+    return CalendarHeaderWidget(
       isMonthlyView: _isMonthlyView,
+      focusedDay: _focusedDay,
       onToggle: (isMonthly) {
         setState(() {
           _isMonthlyView = isMonthly;
         });
       },
-    );
-  }
-
-  Widget _buildMonthSelector() {
-    return MonthSelectorWidget(
-      focusedDay: _focusedDay,
-      onMonthChanged: (newDate) {
-        HapticFeedback.lightImpact();
-        setState(() {
-          _focusedDay = newDate;
-        });
-      },
-      onMonthTap: () => _showMonthPicker(isMonthlyView: true),
-    );
-  }
-
-  Widget _buildYearSelector() {
-    return YearlySelectorWidget(
-      selectedDate: _focusedDay,
-      onDateChanged: (newDate) {
-        HapticFeedback.lightImpact();
-        setState(() {
-          _focusedDay = newDate;
-        });
-      },
-      onDateTap: () => _showMonthPicker(isMonthlyView: false),
+      onDateTap: () => _showMonthPicker(isMonthlyView: _isMonthlyView),
     );
   }
 
@@ -213,6 +173,7 @@ class _CalendarPageState extends State<CalendarPage> {
       selectedDay: _selectedDay,
       calendarFormat: _calendarFormat,
       dayRecords: _dayRecords,
+      bottomSheetHeight: _bottomSheetHeight,
       onDaySelected: _onDaySelected,
       onPageChanged: (focusedDay) {
         HapticFeedback.lightImpact();
@@ -220,6 +181,11 @@ class _CalendarPageState extends State<CalendarPage> {
           _focusedDay = focusedDay;
         });
         _loadRecords();
+      },
+      onHeightChanged: (factor) {
+        setState(() {
+          _bottomSheetHeight = factor;
+        });
       },
     );
   }

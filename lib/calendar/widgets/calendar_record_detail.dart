@@ -141,7 +141,7 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
                       _buildInfoRow(
                         icon: LucideIcons.mapPin,
                         label: '부위',
-                        value: _getTypeLabel(widget.record['spot_name']),
+                        value: widget.record['spot_name'],
                       ),
                       _buildInfoRow(
                         icon: LucideIcons.calendar,
@@ -211,10 +211,8 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
         '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  String _getTypeLabel(String? type) {
-    switch (type) {
-      case 'INITIAL':
-        return '최초';
+  String _getStatusLabel(String? status) {
+    switch (status) {
       case 'PROGRESS':
         return '진행중';
       case 'TREATMENT':
@@ -222,7 +220,7 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
       case 'COMPLETE':
         return '완료';
       default:
-        return type ?? '-';
+        return status ?? '-';
     }
   }
 

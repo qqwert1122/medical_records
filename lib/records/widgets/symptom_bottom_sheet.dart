@@ -132,7 +132,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       height: context.hp(80),
-      padding: context.paddingSM,
+      padding: context.paddingHorizSM,
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(32.0),
@@ -140,6 +140,15 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Container(
+            width: context.wp(15),
+            height: context.hp(0.5),
+            margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
+            decoration: BoxDecoration(
+              color: Colors.pinkAccent.shade100,
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
           Padding(
             padding: context.paddingSM,
             child: Row(
