@@ -48,12 +48,26 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
     setState(() => _isLoadingImages = true);
 
     try {
-      final images = await DatabaseService().getImages(
+      // 1. record_id로 모든 history 가져오기
+      final histories = await DatabaseService().getHistories(
         widget.record['record_id'],
       );
+
+      // 2. 모든 history의 이미지 수집
+      List<Map<String, dynamic>> allImages = [];
+      for (final history in histories) {
+        final historyImages = await DatabaseService().getImages(
+          history['history_id'],
+        );
+        allImages.addAll(historyImages);
+      }
+
+      // 3. 중복 제거 (필요한 경우)
+      final uniqueImages = allImages.toSet().toList();
+
       if (mounted) {
         setState(() {
-          _recordImages = images;
+          _recordImages = uniqueImages;
           _isLoadingImages = false;
           _currentImageIndex = 0;
         });
@@ -164,7 +178,7 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
                       _buildInfoRow(
                         icon: LucideIcons.hash,
                         label: 'No',
-                        value: '#${widget.record['record_id']}',
+                        value: '${widget.record['record_id']}',
                       ),
                     ],
                   ),
@@ -299,7 +313,7 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.6),
+                                    color: Colors.black.withValues(alpha: 0.6),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(

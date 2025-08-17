@@ -7,6 +7,8 @@ class CalendarDayCell extends StatelessWidget {
   final bool isSelected;
   final bool isToday;
   final List<Color> recordColors;
+  final bool isOutside;
+  final Animation<double>? animation;
 
   const CalendarDayCell({
     Key? key,
@@ -14,6 +16,8 @@ class CalendarDayCell extends StatelessWidget {
     required this.isSelected,
     this.isToday = false,
     required this.recordColors,
+    this.isOutside = false,
+    this.animation,
   }) : super(key: key);
 
   Widget _buildRecordIndicator() {
@@ -159,6 +163,16 @@ class CalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (animation != null) {
+      return AnimatedBuilder(
+        animation: animation!,
+        builder: (context, child) => _buildCell(animation!.value),
+      );
+    }
+    return _buildCell(1.0);
+  }
+
+  Widget _buildCell(double animationValue) {
     return Column(
       children: [
         Container(
@@ -176,7 +190,9 @@ class CalendarDayCell extends StatelessWidget {
               fontWeight:
                   isSelected || isToday ? FontWeight.w900 : FontWeight.normal,
               color:
-                  isSelected
+                  isOutside
+                      ? Colors.grey
+                      : isSelected
                       ? Colors.pinkAccent
                       : isToday
                       ? Colors.blueAccent
@@ -184,7 +200,14 @@ class CalendarDayCell extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(child: Center(child: _buildRecordIndicator())),
+        Expanded(
+          child: Center(
+            child: Opacity(
+              opacity: animationValue,
+              child: _buildRecordIndicator(),
+            ),
+          ),
+        ),
       ],
     );
   }

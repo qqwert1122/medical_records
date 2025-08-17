@@ -49,31 +49,6 @@ class CalendarRecordsList extends StatelessWidget {
                             color: AppColors.grey,
                           ),
                         ),
-                        Padding(
-                          padding: EdgeInsets.all(context.wp(4)),
-                          child: GestureDetector(
-                            onTap: () {
-                              // TODOLIST 레코드 페이지 이동, onDataChanged 콜백함수 호출
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.pinkAccent,
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              child: Text(
-                                '증상 기록하기',
-                                style: AppTextStyle.body.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   )
@@ -95,21 +70,35 @@ class CalendarRecordsList extends StatelessWidget {
     final localDate = DateTime.parse(record['start_date']);
 
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: DatabaseService().getImages(record['record_id']),
+      future: () async {
+        // 1. record_id로 모든 history 가져오기
+        final histories = await DatabaseService().getHistories(
+          record['record_id'],
+        );
+
+        // 2. 모든 history의 이미지 수집
+        List<Map<String, dynamic>> allImages = [];
+        for (final history in histories) {
+          final historyImages = await DatabaseService().getImages(
+            history['history_id'],
+          );
+          allImages.addAll(historyImages);
+        }
+
+        // 3. 중복 제거 후 반환
+        return allImages.toSet().toList();
+      }(),
       builder: (context, snapshot) {
         final images = snapshot.data ?? [];
 
         return GestureDetector(
           onTap: () => onRecordTap(record),
           child: Container(
-            margin: EdgeInsets.only(
-              top: context.hp(0.5),
-              bottom: context.hp(2),
-            ),
+            margin: EdgeInsets.only(bottom: context.hp(1)),
             padding: context.paddingSM,
             decoration: BoxDecoration(
               color: AppColors.surface.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +110,7 @@ class CalendarRecordsList extends StatelessWidget {
                       child: Row(
                         children: [
                           Container(
-                            width: 8,
+                            width: 5,
                             decoration: BoxDecoration(
                               color: color,
                               borderRadius: BorderRadius.circular(12.0),
@@ -133,13 +122,15 @@ class CalendarRecordsList extends StatelessWidget {
                             children: [
                               Text(
                                 record['symptom_name'] ?? '증상 없음',
-                                style: AppTextStyle.subTitle,
+                                style: AppTextStyle.body.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                               ),
                               Text(
                                 record['spot_name'] ?? '부위 없음',
-                                style: AppTextStyle.body.copyWith(
+                                style: AppTextStyle.caption.copyWith(
                                   color: Colors.grey,
                                 ),
                                 overflow: TextOverflow.ellipsis,

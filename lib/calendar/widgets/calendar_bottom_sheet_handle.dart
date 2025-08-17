@@ -156,7 +156,7 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                         Text(
                                           widget.selectedRecord!['symptom_name'] ??
                                               '증상 없음',
-                                          style: AppTextStyle.title,
+                                          style: AppTextStyle.subTitle,
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 1,
                                         ),
@@ -185,7 +185,7 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                           _formatDateHeader(
                                             widget.selectedDay!,
                                           ),
-                                          style: AppTextStyle.title,
+                                          style: AppTextStyle.subTitle,
                                         ),
                                         SizedBox(width: context.wp(2)),
                                         if (widget.dayRecords.isNotEmpty)

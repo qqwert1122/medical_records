@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medical_records/records/screens/setting_page.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
@@ -72,6 +73,10 @@ class CalendarHeaderWidget extends StatelessWidget {
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingPage()),
+              );
             },
             child: Container(
               padding: EdgeInsets.all(context.wp(2.5)),

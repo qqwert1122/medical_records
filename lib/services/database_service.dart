@@ -30,8 +30,6 @@ class DatabaseService {
     );
   }
 
-  // TODOLIST record_foam에서 initial history에 memo 생성하는 로직 구현
-
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE records (
@@ -50,13 +48,6 @@ class DatabaseService {
         FOREIGN KEY (spot_id) REFERENCES spots (spot_id)
       )
     '''); // status = ['PROGRESS', 'COMPLETE']
-
-    /*
-      TODOLIST
-      type > status로 변경
-      record 생성 시 history 함께 생성
-
-    */
 
     await db.execute('''
       CREATE TABLE histories (
@@ -112,8 +103,6 @@ class DatabaseService {
         count INTEGER DEFAULT 0
       )
     ''');
-
-    // TODOLIST CRUD에서 record_id 참조하도록 되어 있음.
 
     await db.execute('''
       CREATE TABLE images (

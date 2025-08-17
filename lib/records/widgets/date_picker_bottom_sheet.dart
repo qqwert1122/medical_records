@@ -38,16 +38,10 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
     selectedHour = widget.initialDate.hour;
     selectedMinute = widget.initialDate.minute;
 
-    _baseDate = DateTime(
-      widget.minDate?.year ?? widget.initialDate.year,
-      widget.minDate?.month ?? widget.initialDate.month,
-      widget.minDate?.day ?? widget.initialDate.day,
-    );
+    _baseDate = widget.minDate ?? widget.initialDate;
 
     _currentSelectedIndex =
-        widget.minDate != null
-            ? widget.initialDate.difference(widget.minDate!).inDays
-            : _centerIndex;
+        widget.initialDate.difference(_baseDate).inDays + _centerIndex;
 
     dayController = FixedExtentScrollController(
       initialItem: _currentSelectedIndex,

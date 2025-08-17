@@ -3,12 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:medical_records/calendar/widgets/calendar_bottom_sheet_handle.dart';
 import 'package:medical_records/calendar/widgets/calendar_record_detail.dart';
 import 'package:medical_records/calendar/widgets/calendar_records_list.dart';
+import 'package:medical_records/calendar/widgets/weekly_record_overlay.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/services/database_service.dart';
 
 class CalendarBottomSheet extends StatefulWidget {
   final double bottomSheetHeight;
   final DateTime? selectedDay;
+  final Map<int, RecordInfo>? dayRecordSlots;
+  final Map<String, String>? recordTitles;
   final Function(double) onHeightChanged;
   final Function(DateTime) onDateChanged;
   final VoidCallback? onDataChanged;
@@ -17,6 +20,8 @@ class CalendarBottomSheet extends StatefulWidget {
     Key? key,
     required this.bottomSheetHeight,
     required this.selectedDay,
+    this.dayRecordSlots,
+    this.recordTitles,
     required this.onHeightChanged,
     required this.onDateChanged,
     this.onDataChanged,
@@ -91,12 +96,22 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
     try {
       final recordId = _selectedRecord!['record_id'];
-      final updatedRecord = await DatabaseService().getRecord(recordId);
+      final updatedRecord = _dayRecords.firstWhere(
+        (record) => record['record_id'] == recordId,
+        orElse: () => <String, dynamic>{},
+      );
 
-      if (mounted && updatedRecord != null) {
+      if (mounted && updatedRecord.isNotEmpty) {
         setState(() {
           _selectedRecord = updatedRecord;
         });
+      } else {
+        // 레코드가 날짜 범위를 벗어났거나 삭제된 경우
+        setState(() {
+          _selectedRecord = null;
+          _currentPageIndex = 0;
+        });
+        _resetToListView();
       }
     } catch (e) {
       print('레코드 새로고침 실패: $e');
@@ -109,7 +124,34 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
     setState(() => _isLoading = true);
 
     try {
-      // 로컬 시간 기준으로 날짜 범위 설정
+      // 전달받은 슬롯 정보가 있으면 사용
+      if (widget.dayRecordSlots != null && widget.recordTitles != null) {
+        final recordIds =
+            widget.dayRecordSlots!.values.map((info) => info.recordId).toSet();
+
+        List<Map<String, dynamic>> records = [];
+        for (final recordId in recordIds) {
+          final record = await DatabaseService().getRecord(int.parse(recordId));
+          if (record != null) {
+            records.add(record);
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _dayRecords =
+                records..sort((a, b) {
+                  final aDate = DateTime.parse(a['start_date']).toLocal();
+                  final bDate = DateTime.parse(b['start_date']).toLocal();
+                  return aDate.compareTo(bDate);
+                });
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
+      // 기존 로직 (슬롯 정보가 없을 때)
       final startOfDay = DateTime(
         widget.selectedDay!.year,
         widget.selectedDay!.month,
@@ -193,7 +235,9 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
   Future<void> _onRecordUpdated() async {
     await _loadDayRecords();
-    await _refreshSelectedRecord();
+    if (_selectedRecord != null) {
+      await _refreshSelectedRecord();
+    }
     widget.onDataChanged?.call(); // 부모 위젯에 알림
   }
 
