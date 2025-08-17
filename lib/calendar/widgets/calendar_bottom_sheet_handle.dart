@@ -17,6 +17,7 @@ class CalendarBottomSheetHandle extends StatefulWidget {
   final int currentPageIndex;
   final VoidCallback onBackPressed;
   final VoidCallback? onRecordUpdated;
+  final ValueChanged<DateTime> onDateChanged;
 
   const CalendarBottomSheetHandle({
     Key? key,
@@ -27,6 +28,7 @@ class CalendarBottomSheetHandle extends StatefulWidget {
     required this.selectedRecord,
     required this.currentPageIndex,
     required this.onBackPressed,
+    required this.onDateChanged,
     this.onRecordUpdated,
   }) : super(key: key);
 
@@ -39,6 +41,18 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
   double? _dragStartHeight;
   double? _dragStartDy;
   bool _isDragging = false;
+
+  void _changeDay(int delta) {
+    final base = widget.selectedDay;
+    if (base == null) return;
+    HapticFeedback.selectionClick();
+    final newDate = DateTime(
+      base.year,
+      base.month,
+      base.day,
+    ).add(Duration(days: delta));
+    widget.onDateChanged(newDate);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -181,11 +195,61 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                     ? Container()
                                     : Row(
                                       children: [
-                                        Text(
-                                          _formatDateHeader(
-                                            widget.selectedDay!,
-                                          ),
-                                          style: AppTextStyle.subTitle,
+                                        Row(
+                                          spacing: 4,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _formatDateHeader(
+                                                widget.selectedDay!,
+                                              ),
+                                              style: AppTextStyle.subTitle,
+                                            ),
+                                            GestureDetector(
+                                              onTap:
+                                                  widget.selectedDay == null
+                                                      ? null
+                                                      : () {
+                                                        _changeDay(-1);
+                                                        HapticFeedback.lightImpact();
+                                                      },
+                                              child: Container(
+                                                width: 32,
+                                                height: 32,
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.surface,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Icon(
+                                                  LucideIcons.chevronLeft,
+                                                  size: context.xl,
+                                                ),
+                                              ),
+                                            ),
+                                            GestureDetector(
+                                              onTap:
+                                                  widget.selectedDay == null
+                                                      ? null
+                                                      : () {
+                                                        _changeDay(1);
+                                                        HapticFeedback.lightImpact();
+                                                      },
+                                              child: Container(
+                                                width: 32,
+                                                height: 32,
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.surface,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Icon(
+                                                  LucideIcons.chevronRight,
+                                                  size: context.xl,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                         SizedBox(width: context.wp(2)),
                                         if (widget.dayRecords.isNotEmpty)
@@ -291,7 +355,7 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
     } else if (date.year == now.year) {
       return '${date.month}월 ${date.day}일';
     } else {
-      return '${date.year}년 ${date.month}월 ${date.day}일)';
+      return '${date.year}년 ${date.month}월 ${date.day}일';
     }
   }
 }

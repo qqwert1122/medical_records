@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medical_records/calendar/widgets/record_time_line.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
@@ -12,11 +13,17 @@ import 'dart:io';
 
 class CalendarRecordDetail extends StatefulWidget {
   final Map<String, dynamic> record;
+  final List<Map<String, dynamic>> histories;
+  final List<Map<String, dynamic>> images;
+  final List<String> memos;
   final VoidCallback onBackPressed;
 
   const CalendarRecordDetail({
     super.key,
     required this.record,
+    required this.histories,
+    required this.images,
+    required this.memos,
     required this.onBackPressed,
   });
 
@@ -25,60 +32,9 @@ class CalendarRecordDetail extends StatefulWidget {
 }
 
 class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
-  List<Map<String, dynamic>> _recordImages = [];
-  bool _isLoadingImages = false;
   int _currentImageIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRecordImages();
-  }
-
-  @override
-  void didUpdateWidget(CalendarRecordDetail oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.record['record_id'] != oldWidget.record['record_id'] ||
-        widget.record['updated_at'] != oldWidget.record['updated_at']) {
-      _loadRecordImages();
-    }
-  }
-
-  Future<void> _loadRecordImages() async {
-    setState(() => _isLoadingImages = true);
-
-    try {
-      // 1. record_id로 모든 history 가져오기
-      final histories = await DatabaseService().getHistories(
-        widget.record['record_id'],
-      );
-
-      // 2. 모든 history의 이미지 수집
-      List<Map<String, dynamic>> allImages = [];
-      for (final history in histories) {
-        final historyImages = await DatabaseService().getImages(
-          history['history_id'],
-        );
-        allImages.addAll(historyImages);
-      }
-
-      // 3. 중복 제거 (필요한 경우)
-      final uniqueImages = allImages.toSet().toList();
-
-      if (mounted) {
-        setState(() {
-          _recordImages = uniqueImages;
-          _isLoadingImages = false;
-          _currentImageIndex = 0;
-        });
-      }
-    } catch (e) {
-      print('이미지 로드 실패: $e');
-      if (mounted) {
-        setState(() => _isLoadingImages = false);
-      }
-    }
-  }
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
 
   @override
   Widget build(BuildContext context) {
@@ -86,33 +42,21 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
         DateTime.parse(widget.record['start_date']).toLocal();
     final localCreateDate =
         DateTime.parse(widget.record['created_at']).toLocal();
-    final localUpdateDate =
-        DateTime.parse(widget.record['updated_at']).toLocal();
 
     return Column(
       children: [
         // 컨텐츠
         Expanded(
           child: SingleChildScrollView(
-            padding: context.paddingSM,
+            padding: context.paddingHorizSM,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 이미지 갤러리
-                if (_isLoadingImages) ...[
-                  SizedBox(
-                    height: context.hp(50),
-                    child: const Center(
-                      child: CircularProgressIndicator(color: AppColors.black),
-                    ),
-                  ),
-                ] else if (_recordImages.isNotEmpty) ...[
-                  _buildImageGallery(),
-                ],
+                if (widget.images.isNotEmpty) ...[_buildImageGallery()],
 
                 // 메모
-                if (widget.record['memo'] != null &&
-                    widget.record['memo'].toString().trim().isNotEmpty) ...[
+                if (widget.memos.isNotEmpty) ...[
                   SizedBox(height: context.hp(2)),
                   Container(
                     width: double.infinity,
@@ -131,11 +75,109 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
                           ),
                         ),
                         SizedBox(height: context.hp(1)),
-                        Text(widget.record['memo'], style: AppTextStyle.body),
+                        ...widget.memos
+                            .map(
+                              (memo) => Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: context.hp(0.5),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('• ', style: AppTextStyle.body),
+                                    Expanded(
+                                      child: Text(
+                                        memo,
+                                        style: AppTextStyle.body,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
                       ],
                     ),
                   ),
                 ],
+
+                // 타임라인
+                if (widget.histories.isNotEmpty) ...[
+                  SizedBox(height: context.hp(2)),
+                  Container(
+                    width: double.infinity,
+                    padding: context.paddingSM,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '기록 타임라인',
+                          style: AppTextStyle.subTitle.copyWith(
+                            color: AppColors.grey,
+                          ),
+                        ),
+                        SizedBox(height: context.hp(1)),
+                        ...widget.histories.map((history) {
+                          final historyDate =
+                              DateTime.parse(history['created_at']).toLocal();
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: context.hp(1)),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  margin: EdgeInsets.only(top: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.grey,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                SizedBox(width: context.wp(2)),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _formatDateTime(historyDate),
+                                        style: AppTextStyle.caption.copyWith(
+                                          color: AppColors.grey,
+                                        ),
+                                      ),
+                                      if (history['memo'] != null &&
+                                          history['memo']
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty)
+                                        Text(
+                                          history['memo'],
+                                          style: AppTextStyle.body,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // 타임라인
+                RecordTimeline(
+                  record: widget.record,
+                  histories: widget.histories,
+                  images: widget.images,
+                  onImageTap: _showFullScreenImage,
+                ),
 
                 // 상세 정보
                 SizedBox(height: context.hp(2)),
@@ -239,99 +281,183 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
   }
 
   Widget _buildImageGallery() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final imageSize = screenWidth * 0.8;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: context.hp(50),
-          child: CarouselSlider(
-            options: CarouselOptions(
-              height: context.hp(50),
-              enlargeCenterPage: true,
-              enableInfiniteScroll: false,
-              viewportFraction: 0.8,
-              enlargeFactor: 0.3,
-              onPageChanged: (index, reason) {
-                setState(() {
-                  _currentImageIndex = index;
-                });
-              },
-            ),
-            items:
-                _recordImages.map((image) {
-                  final imagePath = image['image_url'] as String;
-                  return GestureDetector(
-                    onTap:
-                        () => _showFullScreenImage(
-                          _recordImages,
-                          _recordImages.indexOf(image),
-                        ),
+        CarouselSlider(
+          carouselController: _carouselController,
+          options: CarouselOptions(
+            height: imageSize,
+            aspectRatio: 1.0,
+            enableInfiniteScroll: false,
+            viewportFraction: 1,
+            onPageChanged: (index, reason) {
+              setState(() {
+                _currentImageIndex = index;
+              });
+            },
+          ),
+          items:
+              widget.images.map((image) {
+                final imagePath = image['image_url'] as String;
+                final historyMemo =
+                    widget.histories.firstWhere(
+                      (history) => history['history_id'] == image['history_id'],
+                      orElse: () => {'memo': ''},
+                    )['memo'] ??
+                    '';
+
+                return GestureDetector(
+                  onTap:
+                      () => _showFullScreenImage(
+                        widget.images,
+                        widget.images.indexOf(image),
+                      ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(4),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
+                            blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Stack(
+                      child: Column(
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              File(imagePath),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.broken_image,
-                                      size: 48,
-                                      color: Colors.grey[400],
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
+                              ),
+                              child: Image.file(
+                                File(imagePath),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: imageSize,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 48,
+                                        color: Colors.grey[400],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                          if (_recordImages.length > 1)
-                            Positioned(
-                              bottom: 8,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.6),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${_currentImageIndex + 1}/${_recordImages.length}',
-                                    style: AppTextStyle.caption.copyWith(
-                                      color: AppColors.white,
-                                    ),
-                                  ),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(12),
+                                bottomRight: Radius.circular(12),
+                              ),
+                              border: Border(
+                                top: BorderSide(
+                                  color: AppColors.grey.withValues(alpha: 0.5),
+
+                                  width: 0.5,
                                 ),
                               ),
+                            ),
+                            child: Text(
+                              historyMemo.toString().trim().isEmpty
+                                  ? ' '
+                                  : historyMemo,
+                              style: AppTextStyle.caption,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+        ),
+        if (widget.images.length > 1) ...[
+          SizedBox(height: context.hp(1)),
+          SizedBox(
+            height: 60,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: widget.images.length,
+              padding: EdgeInsets.symmetric(horizontal: context.wp(2)),
+              itemBuilder: (context, index) {
+                final imagePath = widget.images[index]['image_url'] as String;
+                final isSelected = index == _currentImageIndex;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _currentImageIndex = index;
+                    });
+                    _carouselController.jumpToPage(index);
+                  },
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    margin: EdgeInsets.only(right: context.wp(2)),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      border: Border.all(color: AppColors.surface, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Stack(
+                        children: [
+                          Image.file(
+                            File(imagePath),
+                            fit: BoxFit.cover,
+                            width: 60,
+                            height: 60,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[300],
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 20,
+                                  color: Colors.grey[500],
+                                ),
+                              );
+                            },
+                          ),
+                          if (!isSelected)
+                            Container(
+                              color: Colors.black.withValues(alpha: 0.3),
                             ),
                         ],
                       ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -354,7 +480,7 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
 }
 
 // 전체화면 이미지 갤러리
-class FullScreenImageGallery extends StatelessWidget {
+class FullScreenImageGallery extends StatefulWidget {
   final List<Map<String, dynamic>> images;
   final int initialIndex;
 
@@ -365,6 +491,27 @@ class FullScreenImageGallery extends StatelessWidget {
   });
 
   @override
+  State<FullScreenImageGallery> createState() => _FullScreenImageGalleryState();
+}
+
+class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
+  late int _currentIndex;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
@@ -373,7 +520,7 @@ class FullScreenImageGallery extends StatelessWidget {
           PhotoViewGallery.builder(
             scrollPhysics: const BouncingScrollPhysics(),
             builder: (BuildContext context, int index) {
-              final imagePath = images[index]['image_url'] as String;
+              final imagePath = widget.images[index]['image_url'] as String;
               return PhotoViewGalleryPageOptions(
                 imageProvider: FileImage(File(imagePath)),
                 minScale: PhotoViewComputedScale.contained,
@@ -381,7 +528,7 @@ class FullScreenImageGallery extends StatelessWidget {
                 heroAttributes: PhotoViewHeroAttributes(tag: imagePath),
               );
             },
-            itemCount: images.length,
+            itemCount: widget.images.length,
             loadingBuilder:
                 (context, event) => Center(
                   child: CircularProgressIndicator(
@@ -393,7 +540,12 @@ class FullScreenImageGallery extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-            pageController: PageController(initialPage: initialIndex),
+            pageController: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
             backgroundDecoration: const BoxDecoration(color: Colors.black),
           ),
           SafeArea(
@@ -409,7 +561,7 @@ class FullScreenImageGallery extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  if (images.length > 1)
+                  if (widget.images.length > 1)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -420,7 +572,7 @@ class FullScreenImageGallery extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        '${initialIndex + 1} / ${images.length}',
+                        '${_currentIndex + 1} / ${widget.images.length}',
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),

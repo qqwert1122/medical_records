@@ -1,13 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:medical_records/services/database_service.dart';
+import 'package:medical_records/calendar/widgets/record_memos.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
+import 'package:medical_records/utils/time_format.dart';
+import 'package:path/path.dart';
 
 class CalendarRecordsList extends StatelessWidget {
   final List<Map<String, dynamic>> dayRecords;
+  final Map<int, List<Map<String, dynamic>>> recordImages;
+  final Map<int, List<String>> recordMemos;
   final bool isLoading;
   final Function(Map<String, dynamic>) onRecordTap;
   final Function(double) onHeightChanged;
@@ -15,6 +18,8 @@ class CalendarRecordsList extends StatelessWidget {
   const CalendarRecordsList({
     Key? key,
     required this.dayRecords,
+    required this.recordImages,
+    required this.recordMemos,
     required this.isLoading,
     required this.onRecordTap,
     required this.onHeightChanged,
@@ -57,7 +62,7 @@ class CalendarRecordsList extends StatelessWidget {
                     itemCount: dayRecords.length,
                     itemBuilder: (context, index) {
                       final record = dayRecords[index];
-                      return _buildRecordItem(record);
+                      return _buildRecordItem(context, record);
                     },
                   ),
         ),
@@ -65,121 +70,98 @@ class CalendarRecordsList extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordItem(Map<String, dynamic> record) {
+  Widget _buildRecordItem(BuildContext context, Map<String, dynamic> record) {
+    final recordId = record['record_id'];
     final color = Color(int.parse(record['color']));
-    final localDate = DateTime.parse(record['start_date']);
+    final DateTime startDate = DateTime.parse(record['start_date']);
+    final DateTime? endDate =
+        (record['end_date'] != null &&
+                record['end_date'].toString().trim().isNotEmpty)
+            ? DateTime.parse(record['end_date'])
+            : null;
 
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: () async {
-        // 1. record_id로 모든 history 가져오기
-        final histories = await DatabaseService().getHistories(
-          record['record_id'],
-        );
+    final images = recordImages[recordId] ?? [];
+    final memos = recordMemos[recordId] ?? [];
 
-        // 2. 모든 history의 이미지 수집
-        List<Map<String, dynamic>> allImages = [];
-        for (final history in histories) {
-          final historyImages = await DatabaseService().getImages(
-            history['history_id'],
-          );
-          allImages.addAll(historyImages);
-        }
-
-        // 3. 중복 제거 후 반환
-        return allImages.toSet().toList();
-      }(),
-      builder: (context, snapshot) {
-        final images = snapshot.data ?? [];
-
-        return GestureDetector(
-          onTap: () => onRecordTap(record),
-          child: Container(
-            margin: EdgeInsets.only(bottom: context.hp(1)),
-            padding: context.paddingSM,
-            decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () => onRecordTap(record),
+      child: Container(
+        margin: EdgeInsets.only(bottom: context.hp(1)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IntrinsicHeight(
-                      child: Row(
+                IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 5,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
+                      SizedBox(width: context.wp(4)),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 5,
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(12.0),
+                          Text(
+                            record['symptom_name'] ?? '증상 없음',
+                            style: AppTextStyle.body.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
-                          SizedBox(width: context.wp(4)),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                record['symptom_name'] ?? '증상 없음',
-                                style: AppTextStyle.body.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                              Text(
-                                record['spot_name'] ?? '부위 없음',
-                                style: AppTextStyle.caption.copyWith(
-                                  color: Colors.grey,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ],
+                          Text(
+                            record['spot_name'] ?? '부위 없음',
+                            style: AppTextStyle.caption.copyWith(
+                              color: Colors.grey,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ],
                       ),
-                    ),
-                    Text(
-                      '${localDate.hour < 12 ? 'AM' : 'PM'} ${localDate.hour % 12 == 0 ? 12 : localDate.hour % 12}:${localDate.minute.toString().padLeft(2, '0')}',
-                      style: AppTextStyle.body.copyWith(color: Colors.grey),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                if (record['memo'] != null &&
-                    record['memo'].toString().trim().isNotEmpty)
-                  Padding(
-                    padding: context.paddingXS,
-                    child: Text(
-                      record['memo'],
-                      style: AppTextStyle.caption.copyWith(
-                        color: AppColors.grey,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                if (images.isNotEmpty) ...[
-                  Padding(
-                    padding: context.paddingXS,
-                    child: _buildImageStack(images),
-                  ),
-                ],
+                Padding(
+                  padding: context.paddingXS,
+                  child: _buildTimeRange(startDate, endDate),
+                ),
               ],
             ),
-          ),
-        );
-      },
+            if (memos.isNotEmpty) RecordMemo(memos: memos),
+
+            if (images.isNotEmpty) ...[
+              Padding(
+                padding: context.paddingXS,
+                child: _buildImageStack(images),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildImageStack(List<Map<String, dynamic>> images) {
-    final displayCount = images.length > 5 ? 5 : images.length;
+    final displayCount = images.length > 3 ? 3 : images.length;
     final remainingCount = images.length - displayCount;
 
+    const double tileSize = 50.0;
+    const double step = 40.0;
+    double stackWidth = tileSize + (displayCount - 1) * step;
+    if (remainingCount > 0) {
+      stackWidth = tileSize + displayCount * step;
+    }
+
     return SizedBox(
-      height: 50,
+      height: tileSize,
+      width: stackWidth,
       child: Stack(
         children: [
           ...List.generate(displayCount, (index) {
@@ -245,6 +227,47 @@ class CalendarRecordsList extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTimeRange(DateTime start, DateTime? end) {
+    final startDate = TimeFormat.formatAmPm(start);
+    final endDate = end != null ? TimeFormat.formatAmPm(end) : '-';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          spacing: 4,
+          children: [
+            Text(
+              '시작일',
+              style: AppTextStyle.caption.copyWith(color: AppColors.grey),
+            ),
+            Text(
+              startDate,
+              style: AppTextStyle.caption.copyWith(color: AppColors.grey),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          spacing: 4,
+          children: [
+            Text(
+              '종료일',
+              style: AppTextStyle.caption.copyWith(color: AppColors.grey),
+            ),
+            Text(
+              endDate,
+              style: AppTextStyle.caption.copyWith(color: AppColors.grey),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
