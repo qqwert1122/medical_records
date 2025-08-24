@@ -7,6 +7,7 @@ import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/utils/time_format.dart';
+import 'package:medical_records/widgets/drag_handle.dart';
 import 'package:shimmer/shimmer.dart';
 
 class SpotBottomSheet extends StatefulWidget {
@@ -38,8 +39,8 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
   }
 
   Future<void> _loadSpots() async {
-    final db = await DatabaseService().database;
-    final result = await db.query('spots', where: 'deleted_at IS NULL');
+    final _dbService = await DatabaseService();
+    final result = await _dbService.getSpots();
     setState(() {
       spots = result;
     });
@@ -137,33 +138,33 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
       padding: context.paddingHorizSM,
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(32.0),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: context.wp(15),
-            height: context.hp(0.5),
-            margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
-            decoration: BoxDecoration(
-              color: Colors.pinkAccent.shade100,
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
+          DragHandle(),
           Padding(
             padding: context.paddingSM,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('위치', style: AppTextStyle.subTitle),
+                Text(
+                  '위치',
+                  style: AppTextStyle.subTitle.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
                     _showSpotDialog();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pinkAccent,
+                    backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -197,7 +198,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                             'assets/images/empty_box.png',
                             width: context.wp(30),
                             height: context.wp(30),
-                            color: AppColors.grey,
+                            color: AppColors.lightGrey,
                           ),
                           SizedBox(height: context.hp(2)),
                           Text('저장된 위치가 없습니다', style: AppTextStyle.hint),
@@ -218,7 +219,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                   HapticFeedback.lightImpact();
                                   _showSpotDialog(spot: spot);
                                 },
-                                backgroundColor: Colors.pinkAccent,
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 icon: Icons.edit,
                                 label: '수정',
@@ -228,7 +229,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                   HapticFeedback.lightImpact();
                                   _deleteSpot(spot['spot_id']);
                                 },
-                                backgroundColor: Colors.grey.shade400,
+                                backgroundColor: AppColors.lightGrey,
                                 foregroundColor: Colors.white,
                                 icon: Icons.delete,
                                 label: '삭제',
@@ -240,9 +241,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                               color:
                                   widget.selectedSpot?['spot_name'] ==
                                           spot['spot_name']
-                                      ? Colors.pink.shade200.withValues(
-                                        alpha: 0.1,
-                                      )
+                                      ? AppColors.primary.withValues(alpha: 0.1)
                                       : null,
                               borderRadius: BorderRadius.circular(16.0),
                             ),
@@ -255,8 +254,8 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                       color:
                                           widget.selectedSpot?['spot_name'] ==
                                                   spot['spot_name']
-                                              ? Colors.pink
-                                              : AppColors.grey,
+                                              ? AppColors.primary
+                                              : AppColors.lightGrey,
                                       fontWeight: FontWeight.w900,
                                     ),
                                   ),
@@ -266,7 +265,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                       spot['last_used_at'],
                                     ),
                                     style: AppTextStyle.caption.copyWith(
-                                      color: AppColors.grey,
+                                      color: AppColors.lightGrey,
                                     ),
                                   ),
                                 ],

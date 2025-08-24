@@ -70,7 +70,10 @@ class RecordFoamColorWidgetState extends State<RecordFoamColorWidget> {
           width: context.wp(12),
           child: Text(
             '색상',
-            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+            style: AppTextStyle.body.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         GestureDetector(
@@ -96,7 +99,10 @@ class RecordFoamColorWidgetState extends State<RecordFoamColorWidget> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: AppColors.background,
-          title: Text('색상 선택', style: AppTextStyle.title),
+          title: Text(
+            '색상 선택',
+            style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: GridView.builder(

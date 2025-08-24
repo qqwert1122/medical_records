@@ -105,7 +105,10 @@ class CalendarDayCellBar extends StatelessWidget {
             '+$extraCount',
             style: TextStyle(
               fontSize: 10,
-              color: extraCount > 0 ? Colors.grey : AppColors.background,
+              color:
+                  extraCount > 0
+                      ? AppColors.textSecondary
+                      : AppColors.background,
             ),
           ),
         ),
@@ -128,7 +131,7 @@ class CalendarDayCellBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color:
                     isSelected
-                        ? Colors.pinkAccent.withValues(alpha: 0.1)
+                        ? AppColors.primary.withValues(alpha: 0.1)
                         : Colors.transparent,
                 shape: BoxShape.circle,
               ),
@@ -142,12 +145,12 @@ class CalendarDayCellBar extends StatelessWidget {
                           : FontWeight.normal,
                   color:
                       isOutside
-                          ? Colors.grey
+                          ? AppColors.textSecondary
                           : isSelected
-                          ? Colors.pinkAccent
+                          ? AppColors.primary
                           : isToday
                           ? Colors.blueAccent
-                          : Colors.black,
+                          : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -162,7 +165,8 @@ class CalendarDayCellBar extends StatelessWidget {
             '+$extraCount',
             style: TextStyle(
               fontSize: 10,
-              color: extraCount > 0 ? Colors.grey : AppColors.background,
+              color:
+                  extraCount > 0 ? AppColors.lightGrey : AppColors.background,
             ),
           ),
         ),

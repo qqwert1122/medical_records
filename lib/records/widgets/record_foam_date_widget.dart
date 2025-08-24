@@ -113,7 +113,10 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
           width: context.wp(12),
           child: Text(
             !widget.isOptional ? '시작일' : '종료일',
-            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+            style: AppTextStyle.body.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         Flexible(
@@ -133,16 +136,18 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
                   Icon(
                     LucideIcons.calendarDays,
                     size: context.xl,
-                    color: AppColors.primary,
+                    color: AppColors.textSecondary,
                   ),
                   SizedBox(width: context.wp(2)),
                   Text(
                     _selectedDate != null
-                        ? TimeFormat.getAbsoluteAmPm(
+                        ? TimeFormat.getDateTime(
                           _selectedDate!.toIso8601String(),
                         )
                         : '선택 안함',
-                    style: AppTextStyle.body,
+                    style: AppTextStyle.body.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   if (widget.isOptional && _selectedDate != null) ...[
                     Spacer(),
@@ -154,7 +159,7 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
                       child: Icon(
                         LucideIcons.x,
                         size: context.lg,
-                        color: AppColors.grey,
+                        color: AppColors.lightGrey,
                       ),
                     ),
                   ],

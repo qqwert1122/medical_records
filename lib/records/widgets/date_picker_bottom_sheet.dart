@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
+import 'package:medical_records/widgets/drag_handle.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class DateTimePickerBottomSheet extends StatefulWidget {
@@ -76,7 +77,7 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
       padding: context.paddingHorizSM,
       child: Column(
         children: [
-          _buildDragHandle(),
+          DragHandle(),
           _buildTitle(),
           SizedBox(height: context.hp(2)),
           Expanded(
@@ -87,7 +88,12 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                   flex: 3,
                   child: Column(
                     children: [
-                      Text('날짜', style: AppTextStyle.caption),
+                      Text(
+                        '날짜',
+                        style: AppTextStyle.caption.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                       SizedBox(height: context.hp(1)),
                       Expanded(
                         child: CupertinoPicker(
@@ -134,8 +140,8 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                                               : FontWeight.normal,
                                       color:
                                           isSelected
-                                              ? AppColors.black
-                                              : AppColors.grey,
+                                              ? AppColors.textPrimary
+                                              : AppColors.textSecondary,
                                     ),
                                   ),
                                   if (isToday)
@@ -146,7 +152,7 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                                             isSelected
                                                 ? FontWeight.bold
                                                 : FontWeight.normal,
-                                        color: Colors.pinkAccent,
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                 ],
@@ -164,7 +170,12 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                   flex: 1,
                   child: Column(
                     children: [
-                      Text('시', style: AppTextStyle.caption),
+                      Text(
+                        '시',
+                        style: AppTextStyle.caption.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                       SizedBox(height: context.hp(1)),
                       Expanded(
                         child: CupertinoPicker(
@@ -196,7 +207,7 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                             bool isSelected = selectedHour == index;
                             return Center(
                               child: Text(
-                                index.toString().padLeft(2, '0'),
+                                index.toString(),
                                 style: AppTextStyle.body.copyWith(
                                   fontWeight:
                                       isSelected
@@ -204,8 +215,8 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                                           : FontWeight.normal,
                                   color:
                                       isSelected
-                                          ? AppColors.black
-                                          : AppColors.grey,
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
                                 ),
                               ),
                             );
@@ -221,7 +232,12 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                   flex: 1,
                   child: Column(
                     children: [
-                      Text('분', style: AppTextStyle.caption),
+                      Text(
+                        '분',
+                        style: AppTextStyle.caption.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                       SizedBox(height: context.hp(1)),
                       Expanded(
                         child: CupertinoPicker(
@@ -257,8 +273,8 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                                           : FontWeight.normal,
                                   color:
                                       isSelected
-                                          ? AppColors.black
-                                          : AppColors.grey,
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
                                 ),
                               ),
                             );
@@ -278,20 +294,11 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
     );
   }
 
-  Widget _buildDragHandle() {
-    return Container(
-      width: context.wp(15),
-      height: context.hp(0.5),
-      margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
-      decoration: BoxDecoration(
-        color: Colors.pinkAccent.shade100,
-        borderRadius: BorderRadius.circular(16),
-      ),
-    );
-  }
-
   Widget _buildTitle() {
-    return Text('날짜 선택', style: AppTextStyle.subTitle);
+    return Text(
+      '날짜 선택',
+      style: AppTextStyle.subTitle.copyWith(color: AppColors.textPrimary),
+    );
   }
 
   Widget _buildButtons() {
@@ -314,7 +321,10 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
             ),
             child: Text(
               '취소',
-              style: AppTextStyle.body.copyWith(fontWeight: FontWeight.w900),
+              style: AppTextStyle.body.copyWith(
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ),
@@ -327,7 +337,7 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.pinkAccent,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
 
               shape: RoundedRectangleBorder(

@@ -153,12 +153,12 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey[300],
+                    color: AppColors.lightGrey.withValues(alpha: 0.3),
                     child: Center(
                       child: Icon(
                         LucideIcons.imageOff,
                         size: 48,
-                        color: Colors.grey[600],
+                        color: AppColors.lightGrey,
                       ),
                     ),
                   );
@@ -184,12 +184,8 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.textPrimary,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
+                        color: AppColors.black,
+                        shape: BoxShape.circle,
                       ),
                       child: Icon(
                         LucideIcons.trash2,
@@ -215,16 +211,12 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.textPrimary,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
+                        color: AppColors.black,
+                        shape: BoxShape.circle,
                       ),
                       child: Icon(
                         LucideIcons.plus,
-                        color: Colors.white,
+                        color: AppColors.white,
                         size: 18,
                       ),
                     ),
@@ -244,13 +236,13 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.textPrimary,
+                        color: AppColors.black,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         '${(_currentIndex % _allImagePaths.length) + 1} / ${_allImagePaths.length}',
                         style: TextStyle(
-                          color: AppColors.background,
+                          color: AppColors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -273,7 +265,7 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
         // (_random.nextDouble() - 0.5) * 6 * (math.pi / 180), // 빈 상태도 살짝 틸트
         child: DottedBorder(
           options: RoundedRectDottedBorderOptions(
-            color: AppColors.grey,
+            color: AppColors.textSecondary,
             strokeWidth: 1,
             dashPattern: [8, 4],
             radius: Radius.circular(20),
@@ -292,13 +284,13 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                   Icon(
                     LucideIcons.image,
                     size: 56,
-                    color: AppColors.grey.withValues(alpha: 0.6),
+                    color: AppColors.lightGrey.withValues(alpha: 0.6),
                   ),
                   SizedBox(height: context.hp(3)),
                   Text(
                     '사진을 추가해주세요',
                     style: AppTextStyle.subTitle.copyWith(
-                      color: AppColors.grey.withValues(alpha: 0.8),
+                      color: AppColors.lightGrey.withValues(alpha: 0.8),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -306,7 +298,7 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
                   Text(
                     '여기를 탭하여 갤러리에서 선택',
                     style: AppTextStyle.caption.copyWith(
-                      color: AppColors.grey.withValues(alpha: 0.6),
+                      color: AppColors.lightGrey.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

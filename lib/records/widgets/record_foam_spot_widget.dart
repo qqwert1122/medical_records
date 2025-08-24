@@ -68,7 +68,10 @@ class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
           width: context.wp(12),
           child: Text(
             '위치',
-            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+            style: AppTextStyle.body.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         Flexible(
@@ -87,13 +90,15 @@ class RecordFoamSpotWidgetState extends State<RecordFoamSpotWidget> {
                 children: [
                   Text(
                     selectedSpot?['spot_name'] ?? '위치를 선택하세요',
-                    style: AppTextStyle.body,
+                    style: AppTextStyle.body.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   Spacer(),
                   Icon(
                     LucideIcons.chevronDown,
                     size: context.xl,
-                    color: AppColors.grey,
+                    color: AppColors.lightGrey,
                   ),
                 ],
               ),

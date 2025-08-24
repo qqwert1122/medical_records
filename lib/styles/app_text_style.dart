@@ -25,6 +25,6 @@ class AppTextStyle {
   static TextStyle hint = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: AppColors.grey,
+    color: AppColors.lightGrey,
   );
 }

@@ -31,7 +31,7 @@ class MonthSelectorWidget extends StatelessWidget {
             onPressed: () {
               onMonthChanged(DateTime(focusedDay.year, focusedDay.month - 1));
             },
-            icon: const Icon(LucideIcons.chevronLeft),
+            icon: Icon(LucideIcons.chevronLeft, color: AppColors.textPrimary),
           ),
           GestureDetector(
             onTap: () {
@@ -46,7 +46,9 @@ class MonthSelectorWidget extends StatelessWidget {
               ),
               child: Text(
                 '${focusedDay.year}년 ${focusedDay.month}월',
-                style: AppTextStyle.subTitle,
+                style: AppTextStyle.subTitle.copyWith(
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
           ),
@@ -54,7 +56,7 @@ class MonthSelectorWidget extends StatelessWidget {
             onPressed: () {
               onMonthChanged(DateTime(focusedDay.year, focusedDay.month + 1));
             },
-            icon: const Icon(LucideIcons.chevronRight),
+            icon: Icon(LucideIcons.chevronRight, color: AppColors.textPrimary),
           ),
         ],
       ),

@@ -180,7 +180,7 @@ class CalendarDayCell extends StatelessWidget {
           decoration: BoxDecoration(
             color:
                 isSelected
-                    ? Colors.pinkAccent.withValues(alpha: 0.1)
+                    ? AppColors.primary.withValues(alpha: 0.1)
                     : Colors.transparent,
             shape: BoxShape.circle,
           ),
@@ -191,12 +191,12 @@ class CalendarDayCell extends StatelessWidget {
                   isSelected || isToday ? FontWeight.w900 : FontWeight.normal,
               color:
                   isOutside
-                      ? Colors.grey
+                      ? AppColors.textSecondary
                       : isSelected
-                      ? Colors.pinkAccent
+                      ? AppColors.primary
                       : isToday
                       ? Colors.blueAccent
-                      : AppColors.black,
+                      : AppColors.textPrimary,
             ),
           ),
         ),

@@ -7,6 +7,7 @@ import 'package:medical_records/records/screens/record_foam_page.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
+import 'package:medical_records/widgets/drag_handle.dart';
 
 class CalendarBottomSheetHandle extends StatefulWidget {
   final List<Map<String, dynamic>> dayRecords;
@@ -122,15 +123,7 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
         alignment: Alignment.topCenter,
         child: Column(
           children: [
-            Container(
-              width: context.wp(15),
-              height: context.hp(0.5),
-              margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
-              decoration: BoxDecoration(
-                color: Colors.pinkAccent.shade100,
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+            DragHandle(),
             Padding(
               padding: context.paddingHorizSM,
               child: Row(
@@ -160,7 +153,8 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                         IconButton(
                                           icon: Icon(
                                             LucideIcons.chevronLeft,
-                                            size: context.xl,
+                                            size: 24,
+                                            color: AppColors.textPrimary,
                                           ),
                                           onPressed: () {
                                             HapticFeedback.lightImpact();
@@ -170,7 +164,9 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                         Text(
                                           widget.selectedRecord!['symptom_name'] ??
                                               '증상 없음',
-                                          style: AppTextStyle.subTitle,
+                                          style: AppTextStyle.subTitle.copyWith(
+                                            color: AppColors.textPrimary,
+                                          ),
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 1,
                                         ),
@@ -196,14 +192,18 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                     : Row(
                                       children: [
                                         Row(
-                                          spacing: 4,
+                                          spacing: 8,
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
                                               _formatDateHeader(
                                                 widget.selectedDay!,
                                               ),
-                                              style: AppTextStyle.subTitle,
+                                              style: AppTextStyle.subTitle
+                                                  .copyWith(
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                  ),
                                             ),
                                             GestureDetector(
                                               onTap:
@@ -223,7 +223,8 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                                 ),
                                                 child: Icon(
                                                   LucideIcons.chevronLeft,
-                                                  size: context.xl,
+                                                  size: 24,
+                                                  color: AppColors.textPrimary,
                                                 ),
                                               ),
                                             ),
@@ -245,34 +246,33 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                                 ),
                                                 child: Icon(
                                                   LucideIcons.chevronRight,
-                                                  size: context.xl,
+                                                  size: 24,
+                                                  color: AppColors.textPrimary,
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
                                         SizedBox(width: context.wp(2)),
-                                        if (widget.dayRecords.isNotEmpty)
+                                        if (widget.dayRecords.isNotEmpty) ...[
+                                          SizedBox(width: context.wp(2)),
                                           Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 5,
-                                            ),
+                                            padding: EdgeInsets.all(8.0),
                                             decoration: BoxDecoration(
-                                              color: Colors.pinkAccent
+                                              color: AppColors.primary
                                                   .withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
+                                              shape: BoxShape.circle,
                                             ),
                                             child: Text(
-                                              '${widget.dayRecords.length}개',
+                                              '${widget.dayRecords.length}',
                                               style: AppTextStyle.caption
                                                   .copyWith(
-                                                    color: Colors.pinkAccent,
+                                                    color: AppColors.primary,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                             ),
                                           ),
+                                        ],
                                       ],
                                     ),
                           ),
@@ -283,46 +283,11 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeInOut,
-                        switchOutCurve: Curves.easeInOut,
-                        child:
-                            widget.currentPageIndex == 1
-                                ? IconButton(
-                                  icon: Icon(
-                                    LucideIcons.pencil,
-                                    size: context.xl,
-                                    color: AppColors.grey,
-                                  ),
-                                  onPressed: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => RecordFoamPage(
-                                              recordData: widget.selectedRecord,
-                                            ),
-                                      ),
-                                    );
-
-                                    if (result == true) {
-                                      widget.onRecordUpdated?.call();
-                                    }
-                                  },
-                                  padding: EdgeInsets.zero,
-                                  constraints: BoxConstraints(
-                                    minWidth: 32,
-                                    minHeight: 32,
-                                  ),
-                                )
-                                : Container(),
-                      ),
                       IconButton(
                         icon: Icon(
                           LucideIcons.x,
-                          size: context.xl,
-                          color: AppColors.grey,
+                          size: 24,
+                          color: AppColors.textPrimary,
                         ),
                         onPressed: () {
                           HapticFeedback.lightImpact();

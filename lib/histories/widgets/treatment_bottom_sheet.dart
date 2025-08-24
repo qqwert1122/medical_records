@@ -1,53 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/utils/time_format.dart';
 import 'package:medical_records/widgets/drag_handle.dart';
+import 'package:shimmer/shimmer.dart';
 
-class SymptomBottomSheet extends StatefulWidget {
-  final Map<String, dynamic>? selectedSymptom;
+class TreatmentBottomSheet extends StatefulWidget {
+  final Map<String, dynamic>? selectedTreatment;
 
-  const SymptomBottomSheet({super.key, this.selectedSymptom});
+  const TreatmentBottomSheet({super.key, this.selectedTreatment});
 
   static Future<Map<String, dynamic>?> show(
     BuildContext context, {
-    Map<String, dynamic>? selectedSymptom,
+    Map<String, dynamic>? selectedTreatment,
   }) {
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       builder:
-          (context) => SymptomBottomSheet(selectedSymptom: selectedSymptom),
+          (context) =>
+              TreatmentBottomSheet(selectedTreatment: selectedTreatment),
     );
   }
 
   @override
-  State<SymptomBottomSheet> createState() => _SymptomBottomSheetState();
+  State<TreatmentBottomSheet> createState() => _TreatmentBottomSheetState();
 }
 
-class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
-  List<Map<String, dynamic>> symptoms = [];
+class _TreatmentBottomSheetState extends State<TreatmentBottomSheet> {
+  List<Map<String, dynamic>> treatments = [];
 
   @override
   void initState() {
     super.initState();
-    _loadSymptoms();
+    _loadTreatments();
   }
 
-  Future<void> _loadSymptoms() async {
+  Future<void> _loadTreatments() async {
     final _dbService = await DatabaseService();
-    final result = await _dbService.getSymptoms();
+    final result = await _dbService.getTreatments();
     setState(() {
-      symptoms = result;
+      treatments = result;
     });
   }
 
-  void _showSymptomDialog({Map<String, dynamic>? symptom}) {
-    String symptomName = symptom?['symptom_name'] ?? '';
-    bool isEdit = symptom != null;
+  void _showTreatmentDialog({Map<String, dynamic>? treatment}) {
+    String treatmentName = treatment?['treatment_name'] ?? '';
+
+    bool isEdit = treatment != null;
 
     showDialog(
       context: context,
@@ -57,21 +61,21 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                 (context, setDialogState) => AlertDialog(
                   backgroundColor: AppColors.background,
                   title: Text(
-                    isEdit ? '증상 수정' : '증상 추가',
+                    isEdit ? '치료 수정' : '치료 추가',
                     style: AppTextStyle.title,
                   ),
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('증상 이름', style: AppTextStyle.subTitle),
+                      Text('치료 이름', style: AppTextStyle.subTitle),
                       TextField(
-                        controller: TextEditingController(text: symptomName),
+                        controller: TextEditingController(text: treatmentName),
                         decoration: InputDecoration(
                           hintText: '이름',
                           hintStyle: AppTextStyle.hint,
                         ),
-                        onChanged: (value) => symptomName = value,
+                        onChanged: (value) => treatmentName = value,
                       ),
                     ],
                   ),
@@ -88,18 +92,18 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                     ),
                     TextButton(
                       onPressed: () async {
-                        if (symptomName.isNotEmpty) {
+                        if (treatmentName.isNotEmpty) {
                           if (isEdit) {
-                            await _updateSymptom(
-                              symptom['symptom_id'],
-                              symptomName,
+                            await _updateTreatment(
+                              treatmentId: treatment['treatment_id'],
+                              name: treatmentName,
                             );
                           } else {
-                            await _saveSymptom(symptomName);
+                            await _saveTreatment(treatmentName);
                           }
                           HapticFeedback.lightImpact();
                           Navigator.pop(context);
-                          _loadSymptoms();
+                          _loadTreatments();
                         }
                       },
                       child: Text(
@@ -116,17 +120,23 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
     );
   }
 
-  Future<void> _saveSymptom(String name) async {
-    await DatabaseService().createSymptom(name);
+  Future<void> _saveTreatment(String name) async {
+    await DatabaseService().createTreatment(name);
   }
 
-  Future<void> _updateSymptom(int symptomId, String name) async {
-    await DatabaseService().updateSymptom(symptomId, name);
+  Future<void> _updateTreatment({
+    required int treatmentId,
+    required String name,
+  }) async {
+    await DatabaseService().updateTreatment(
+      treatmentId: treatmentId,
+      name: name,
+    );
   }
 
-  Future<void> _deleteSymptom(int symptomId) async {
-    await DatabaseService().deleteSpot(symptomId);
-    _loadSymptoms();
+  Future<void> _deleteTreatment(int treatmentId) async {
+    await DatabaseService().deleteTreatment(treatmentId);
+    _loadTreatments();
   }
 
   @override
@@ -151,7 +161,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '증상',
+                  '치료',
                   style: AppTextStyle.subTitle.copyWith(
                     color: AppColors.textPrimary,
                   ),
@@ -159,7 +169,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                 ElevatedButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    _showSymptomDialog();
+                    _showTreatmentDialog();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -187,7 +197,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
           ),
           Expanded(
             child:
-                symptoms.isEmpty
+                treatments.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -199,23 +209,23 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                             color: AppColors.lightGrey,
                           ),
                           SizedBox(height: context.hp(2)),
-                          Text('저장된 증상이 없습니다', style: AppTextStyle.hint),
+                          Text('저장된 치료가 없습니다', style: AppTextStyle.hint),
                         ],
                       ),
                     )
                     : ListView.builder(
-                      itemCount: symptoms.length,
+                      itemCount: treatments.length,
                       itemBuilder: (context, index) {
-                        final symptom = symptoms[index];
+                        final treatment = treatments[index];
                         return Slidable(
-                          key: ValueKey(symptom['symptom_id']),
+                          key: ValueKey(treatment['treatment_id']),
                           endActionPane: ActionPane(
                             motion: const ScrollMotion(),
                             children: [
                               SlidableAction(
                                 onPressed: (context) {
                                   HapticFeedback.lightImpact();
-                                  _showSymptomDialog(symptom: symptom);
+                                  _showTreatmentDialog(treatment: treatment);
                                 },
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
@@ -225,7 +235,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                               SlidableAction(
                                 onPressed: (context) {
                                   HapticFeedback.lightImpact();
-                                  _deleteSymptom(symptom['symptom_id']);
+                                  _deleteTreatment(treatment['treatment_id']);
                                 },
                                 backgroundColor: AppColors.lightGrey,
                                 foregroundColor: Colors.white,
@@ -237,8 +247,8 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                           child: Container(
                             decoration: BoxDecoration(
                               color:
-                                  widget.selectedSymptom?['symptom_name'] ==
-                                          symptom['symptom_name']
+                                  widget.selectedTreatment?['treatment_name'] ==
+                                          treatment['treatment_name']
                                       ? AppColors.primary.withValues(alpha: 0.1)
                                       : null,
                               borderRadius: BorderRadius.circular(16.0),
@@ -247,12 +257,12 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                               title: Row(
                                 children: [
                                   Text(
-                                    symptom['symptom_name'],
+                                    treatment['treatment_name'],
                                     style: AppTextStyle.body.copyWith(
                                       color:
-                                          widget.selectedSymptom?['symptom_name'] ==
-                                                  symptom['symptom_name']
-                                              ? Colors.pink
+                                          widget.selectedTreatment?['treatment_name'] ==
+                                                  treatment['treatment_name']
+                                              ? AppColors.primary
                                               : AppColors.lightGrey,
                                       fontWeight: FontWeight.w900,
                                     ),
@@ -260,7 +270,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                                   Spacer(),
                                   Text(
                                     TimeFormat.getRelativeTime(
-                                      symptom['last_used_at'],
+                                      treatment['last_used_at'],
                                     ),
                                     style: AppTextStyle.caption.copyWith(
                                       color: AppColors.lightGrey,
@@ -270,7 +280,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                               ),
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                Navigator.pop(context, symptom);
+                                Navigator.pop(context, treatment);
                               },
                             ),
                           ),

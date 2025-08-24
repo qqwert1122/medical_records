@@ -139,7 +139,10 @@ class YearlyCalendarState extends State<YearlyCalendar> {
       children: [
         Text(
           '$month월',
-          style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+          style: AppTextStyle.body.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
         Expanded(
           child: GridView.builder(
@@ -200,10 +203,10 @@ class YearlyCalendarState extends State<YearlyCalendar> {
                         hasRecords
                             ? mainColor!.withValues(alpha: opacity)
                             : AppColors.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(4),
                     border:
                         isSelected
-                            ? Border.all(color: Colors.pinkAccent, width: 1)
+                            ? Border.all(color: AppColors.primary, width: 1)
                             : null,
                   ),
                   child: Center(
@@ -223,7 +226,7 @@ class YearlyCalendarState extends State<YearlyCalendar> {
                                     ? Colors.blueAccent
                                     : hasRecords
                                     ? Colors.white
-                                    : AppColors.grey,
+                                    : AppColors.lightGrey,
                           ),
                         ),
                       ],

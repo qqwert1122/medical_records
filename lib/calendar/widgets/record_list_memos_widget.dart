@@ -7,16 +7,17 @@ import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 
-class RecordMemo extends StatefulWidget {
+class RecordListMemosWidget extends StatefulWidget {
   final List<String> memos;
 
-  const RecordMemo({Key? key, required this.memos}) : super(key: key);
+  const RecordListMemosWidget({Key? key, required this.memos})
+    : super(key: key);
 
   @override
-  State<RecordMemo> createState() => _RecordMemoState();
+  State<RecordListMemosWidget> createState() => _RecordListMemosWidgetState();
 }
 
-class _RecordMemoState extends State<RecordMemo> {
+class _RecordListMemosWidgetState extends State<RecordListMemosWidget> {
   int _currentIndex = 0;
   Timer? _timer;
 
@@ -49,7 +50,7 @@ class _RecordMemoState extends State<RecordMemo> {
       ),
       child: Text(
         widget.memos[_currentIndex],
-        style: AppTextStyle.caption.copyWith(color: AppColors.grey),
+        style: AppTextStyle.caption.copyWith(color: AppColors.lightGrey),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

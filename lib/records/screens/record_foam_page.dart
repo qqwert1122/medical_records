@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/services/file_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
@@ -76,6 +77,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
   }
 
   void saveRecord() async {
+    // TODOLIST 증상, 부위 count++
     final spot = _spotKey.currentState?.getSelectedSpot();
     final symptom = _symptomKey.currentState?.getSelectedSymptom();
     final startDate = _startDateKey.currentState?.getSelectedDate();
@@ -166,7 +168,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             recordId: recordId,
             eventType: 'COMPLETE',
             recordDate: strEndDate,
-            memo: '증상 종료',
+            memo: '',
           );
         } else if (wasComplete && strEndDate != null) {
           // COMPLETE history 날짜 업데이트
@@ -235,7 +237,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             recordId: recordId,
             eventType: 'COMPLETE',
             recordDate: strEndDate,
-            memo: '증상 종료',
+            memo: '',
           );
         }
       }
@@ -257,21 +259,35 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.background,
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(LucideIcons.chevronLeft, color: AppColors.textPrimary),
+            onPressed: () => Navigator.pop(context),
+          ),
           title: Text(
             isEditMode ? '증상 수정' : '증상 추가',
-            style: AppTextStyle.title,
+            style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),
           ),
           backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textPrimary,
         ),
-        body: Center(child: CircularProgressIndicator(color: AppColors.black)),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.textPrimary),
+        ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditMode ? '기록 수정' : '기록 추가', style: AppTextStyle.title),
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          isEditMode ? '기록 수정' : '기록 추가',
+          style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),
+        ),
         backgroundColor: AppColors.background,
       ),
       body: Container(
@@ -390,7 +406,10 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             ),
             child: Text(
               '취소',
-              style: AppTextStyle.body.copyWith(fontWeight: FontWeight.w900),
+              style: AppTextStyle.body.copyWith(
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ),
@@ -403,8 +422,8 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.pinkAccent,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.background,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -413,7 +432,7 @@ class _RecordFoamPageState extends State<RecordFoamPage> {
               '저장',
               style: AppTextStyle.body.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.white,
+                color: Colors.white,
               ),
             ),
           ),

@@ -39,11 +39,15 @@ class RecordFoamMemoWidgetState extends State<RecordFoamMemoWidget> {
           width: context.wp(12),
           child: Text(
             '메모',
-            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+            style: AppTextStyle.body.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         Flexible(
           child: TextField(
+            style: AppTextStyle.body.copyWith(color: AppColors.textPrimary),
             controller: _controller,
             decoration: InputDecoration(
               hintText: '(선택) 증상에 대해 자세히 기록해주세요',

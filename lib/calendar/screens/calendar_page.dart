@@ -35,6 +35,8 @@ class _CalendarPageState extends State<CalendarPage> {
   final GlobalKey<CalendarBottomSheetState> _bottomSheetKey = GlobalKey();
   final GlobalKey<YearlyCalendarState> _yearlyCalendarKey = GlobalKey();
 
+  int _currentBottomSheetPage = 0;
+
   @override
   void initState() {
     super.initState();
@@ -179,6 +181,7 @@ class _CalendarPageState extends State<CalendarPage> {
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
       _bottomSheetHeight = 0.4;
+      _currentBottomSheetPage = 0;
     });
     _loadRecords();
   }
@@ -231,24 +234,36 @@ class _CalendarPageState extends State<CalendarPage> {
           Positioned(
             right: 16,
             bottom: 16,
-            child: FloatingActionButton(
-              shape: const CircleBorder(),
-              onPressed: () async {
-                HapticFeedback.mediumImpact();
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => RecordFoamPage(selectedDate: _selectedDay),
-                  ),
-                );
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child:
+                  _currentBottomSheetPage == 0
+                      ? FloatingActionButton(
+                        key: const ValueKey('add_fab'),
+                        shape: const CircleBorder(),
+                        onPressed: () async {
+                          HapticFeedback.mediumImpact();
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => RecordFoamPage(
+                                    selectedDate: _selectedDay,
+                                  ),
+                            ),
+                          );
 
-                if (result == true) {
-                  await _onDataChanged();
-                }
-              },
-              backgroundColor: Colors.pinkAccent,
-              child: const Icon(LucideIcons.plus, color: Colors.white),
+                          if (result == true) {
+                            await _onDataChanged();
+                          }
+                        },
+                        backgroundColor: AppColors.primary,
+                        child: const Icon(
+                          LucideIcons.plus,
+                          color: Colors.white,
+                        ),
+                      )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
             ),
           ),
         ],
@@ -332,6 +347,9 @@ class _CalendarPageState extends State<CalendarPage> {
       onHeightChanged: (newHeight) {
         setState(() {
           _bottomSheetHeight = newHeight;
+          if (newHeight == 0) {
+            _currentBottomSheetPage = 0;
+          }
         });
       },
       onDateChanged: (newDate) {
@@ -341,6 +359,11 @@ class _CalendarPageState extends State<CalendarPage> {
         });
       },
       onDataChanged: _onDataChanged,
+      onPageChanged: (pageIndex) {
+        setState(() {
+          _currentBottomSheetPage = pageIndex;
+        });
+      },
     );
   }
 }

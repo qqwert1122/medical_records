@@ -351,7 +351,10 @@ class DatabaseService {
     );
   }
 
-  Future<void> updateTreatment(int treatmentId, String name) async {
+  Future<void> updateTreatment({
+    required int treatmentId,
+    required String name,
+  }) async {
     final db = await database;
     await db.update(
       'treatments',
@@ -510,6 +513,18 @@ class DatabaseService {
         'start_date': startDate,
         'end_date': endDate,
       },
+      where: 'record_id = ?',
+      whereArgs: [recordId],
+    );
+  }
+
+  Future<int> endRecord({required int recordId, String? endDate}) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    return await db.update(
+      'records',
+      {'status': 'COMPLETE', 'updated_at': now, 'end_date': endDate ?? now},
       where: 'record_id = ?',
       whereArgs: [recordId],
     );

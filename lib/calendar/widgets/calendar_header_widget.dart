@@ -45,9 +45,15 @@ class CalendarHeaderWidget extends StatelessWidget {
                     isMonthlyView
                         ? '${focusedDay.year}년 ${focusedDay.month}월'
                         : '${focusedDay.year}년',
-                    style: AppTextStyle.subTitle,
+                    style: AppTextStyle.subTitle.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  Icon(LucideIcons.chevronDown, size: context.xl),
+                  Icon(
+                    LucideIcons.chevronDown,
+                    size: context.xl,
+                    color: AppColors.textPrimary,
+                  ),
                 ],
               ),
             ),
@@ -65,7 +71,7 @@ class CalendarHeaderWidget extends StatelessWidget {
               ),
               child: Icon(
                 LucideIcons.image,
-                color: AppColors.black,
+                color: AppColors.textPrimary,
                 size: context.wp(5),
               ),
             ),
@@ -86,7 +92,7 @@ class CalendarHeaderWidget extends StatelessWidget {
               ),
               child: Icon(
                 LucideIcons.settings,
-                color: AppColors.black,
+                color: AppColors.textPrimary,
                 size: context.wp(5),
               ),
             ),
@@ -104,7 +110,7 @@ class CalendarHeaderWidget extends StatelessWidget {
               ),
               child: Icon(
                 isMonthlyView ? LucideIcons.calendar : LucideIcons.calendarDays,
-                color: AppColors.black,
+                color: AppColors.textPrimary,
                 size: context.wp(5),
               ),
             ),

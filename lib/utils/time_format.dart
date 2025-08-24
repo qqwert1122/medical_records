@@ -1,4 +1,33 @@
 class TimeFormat {
+  static String getDateTime(String? dateTimeString) {
+    if (dateTimeString == null) return '';
+    try {
+      final dt = DateTime.parse(dateTimeString);
+      final ampm = dt.hour < 12 ? '오전' : '오후';
+      final hour12 = (dt.hour % 12 == 0) ? 12 : (dt.hour % 12);
+      final mm = dt.minute.toString().padLeft(2, '0');
+
+      return '${dt.year}년 ${dt.month}월 ${dt.day}일 $ampm ${hour12.toString().padLeft(2, '0')}:$mm';
+    } catch (e) {
+      return '미사용';
+    }
+  }
+
+  static String getDate(String? dateTimeString) {
+    if (dateTimeString == null) return '';
+    try {
+      final dt = DateTime.parse(dateTimeString);
+      final now = DateTime.now();
+
+      if (dt.year == now.year) {
+        return '${dt.month}월 ${dt.day}일';
+      }
+      return '${dt.year}년 ${dt.month}월 ${dt.day}일';
+    } catch (e) {
+      return '미사용';
+    }
+  }
+
   static String getRelativeTime(String? dateTimeString) {
     if (dateTimeString == null) return '';
 
@@ -30,22 +59,7 @@ class TimeFormat {
     }
   }
 
-  static String getAbsoluteAmPm(String? dateTimeString) {
-    if (dateTimeString == null) return '';
-    try {
-      final dt = DateTime.parse(dateTimeString);
-      return _formatAmPm(dt);
-    } catch (e) {
-      return '미사용';
-    }
-  }
-
-  static String formatAmPm(DateTime? dt) {
-    if (dt == null) return '';
-    return _formatAmPm(dt);
-  }
-
-  static String getRelativeOrAbsoluteAmPm(
+  static String getRelativeOrDateTime(
     String? dateTimeString, {
     Duration absoluteAfter = const Duration(days: 7),
   }) {
@@ -56,19 +70,11 @@ class TimeFormat {
       final diff = now.difference(dt);
 
       if (diff >= absoluteAfter) {
-        return _formatAmPm(dt);
+        return getDateTime(dateTimeString);
       }
       return getRelativeTime(dateTimeString);
     } catch (e) {
       return '미사용';
     }
-  }
-
-  static String _formatAmPm(DateTime dt) {
-    final ampm = dt.hour < 12 ? '오전' : '오후';
-    final hour12 = (dt.hour % 12 == 0) ? 12 : (dt.hour % 12);
-    final mm = dt.minute.toString().padLeft(2, '0');
-    // 월/일은 한국식 표기에서 보통 0패딩 없이 씁니다.
-    return '${dt.year}년 ${dt.month}월 ${dt.day}일 $ampm ${hour12.toString().padLeft(2, '0')}:$mm';
   }
 }

@@ -70,7 +70,10 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
           width: context.wp(12),
           child: Text(
             '증상',
-            style: AppTextStyle.body.copyWith(fontWeight: FontWeight.bold),
+            style: AppTextStyle.body.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         Flexible(
@@ -89,13 +92,15 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
                 children: [
                   Text(
                     selectedSymptom?['symptom_name'] ?? '증상을 선택하세요',
-                    style: AppTextStyle.body,
+                    style: AppTextStyle.body.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   Spacer(),
                   Icon(
                     LucideIcons.chevronDown,
                     size: context.xl,
-                    color: AppColors.grey,
+                    color: AppColors.lightGrey,
                   ),
                 ],
               ),

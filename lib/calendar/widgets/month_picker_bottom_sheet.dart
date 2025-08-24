@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
+import 'package:medical_records/widgets/drag_handle.dart';
 
 class MonthPickerBottomSheet extends StatefulWidget {
   final DateTime initialDate;
@@ -41,19 +42,11 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
       ),
       child: Column(
         children: [
-          Container(
-            width: context.wp(15),
-            height: context.hp(0.5),
-            margin: EdgeInsets.symmetric(vertical: context.hp(1.5)),
-            decoration: BoxDecoration(
-              color: Colors.pinkAccent.shade100,
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
+          DragHandle(),
           SizedBox(height: context.hp(1)),
           Text(
             widget.isMonthlyView ? '월 선택' : '연도 선택',
-            style: AppTextStyle.subTitle,
+            style: AppTextStyle.subTitle.copyWith(color: AppColors.textPrimary),
           ),
           SizedBox(height: context.hp(1)),
           Expanded(
@@ -85,8 +78,8 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
                                 style: AppTextStyle.body.copyWith(
                                   color:
                                       isSelected
-                                          ? AppColors.primary
-                                          : Colors.grey,
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
                                 ),
                               ),
                             );
@@ -117,8 +110,8 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
                                   style: AppTextStyle.body.copyWith(
                                     color:
                                         isSelected
-                                            ? AppColors.primary
-                                            : Colors.grey,
+                                            ? AppColors.textPrimary
+                                            : AppColors.textSecondary,
                                   ),
                                 ),
                               );
@@ -141,7 +134,7 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(double.infinity, context.hp(6)),
-                backgroundColor: Colors.pinkAccent,
+                backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

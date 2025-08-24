@@ -133,10 +133,10 @@ class WeeklyRecordOverlay extends StatelessWidget {
                         color: positions.first.recordInfo.color,
                         borderRadius: BorderRadius.horizontal(
                           left: Radius.circular(
-                            isWeekStart || startDay == 0 ? 4 : 0,
+                            isWeekStart || startDay == 0 ? 2 : 0,
                           ),
                           right: Radius.circular(
-                            isWeekEnd || endDay == 6 ? 4 : 0,
+                            isWeekEnd || endDay == 6 ? 2 : 0,
                           ),
                         ),
                       ),

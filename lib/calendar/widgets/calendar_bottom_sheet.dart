@@ -15,6 +15,7 @@ class CalendarBottomSheet extends StatefulWidget {
   final Function(double) onHeightChanged;
   final Function(DateTime) onDateChanged;
   final VoidCallback? onDataChanged;
+  final Function(int)? onPageChanged;
 
   const CalendarBottomSheet({
     Key? key,
@@ -25,6 +26,7 @@ class CalendarBottomSheet extends StatefulWidget {
     required this.onHeightChanged,
     required this.onDateChanged,
     this.onDataChanged,
+    this.onPageChanged,
   }) : super(key: key);
 
   @override
@@ -177,12 +179,22 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
         List<Map<String, dynamic>> allImages = [];
         List<String> allMemos = [];
+        Set<int> addedImageIds = {};
 
         for (final history in recordHistories) {
           final historyImages = await DatabaseService().getImages(
             history['history_id'],
           );
-          allImages.addAll(historyImages);
+          for (final image in historyImages) {
+            final imageId = image['image_id'] as int;
+            if (!addedImageIds.contains(imageId)) {
+              addedImageIds.add(imageId);
+              allImages.add({
+                ...image,
+                'record_date': history['record_date'], // history의 날짜 정보 추가
+              });
+            }
+          }
 
           final memoText = (history['memo'] as String? ?? '').trim();
           if (memoText.isNotEmpty) {
@@ -190,7 +202,15 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
           }
         }
 
-        images[recordId] = allImages.toSet().toList();
+        // 이미지를 record_date 기준으로 정렬 (필요한 경우)
+        // recordHistories가 이미 정렬되어 있다면 이 단계는 불필요할 수 있음
+        allImages.sort(
+          (a, b) => DateTime.parse(
+            a['record_date'],
+          ).compareTo(DateTime.parse(b['record_date'])),
+        );
+
+        images[recordId] = allImages;
         memos[recordId] = allMemos;
       }
 
@@ -241,7 +261,9 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
           if (mounted) {
             setState(() {
               _isAnimating = false;
+              _currentPageIndex = pageIndex;
             });
+            widget.onPageChanged?.call(pageIndex);
           }
         });
   }
@@ -283,7 +305,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
           color: AppColors.background,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.shadow.withValues(alpha: 0.1),
               blurRadius: 1,
               offset: const Offset(0, -1),
             ),
@@ -292,10 +314,11 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
         child: Column(
           children: [
             Container(
+              padding: EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: AppColors.grey.withValues(alpha: 0.5),
+                    color: AppColors.backgroundSecondary,
                     width: 0.5,
                   ),
                 ),
@@ -322,11 +345,13 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                     setState(() {
                       _currentPageIndex = index;
                     });
+                    widget.onPageChanged?.call(index);
                   },
                   children: [
                     // 첫 번째 페이지: 레코드 리스트
                     CalendarRecordsList(
                       dayRecords: _dayRecords,
+                      histories: _recordHistories,
                       recordImages: _recordImages,
                       recordMemos: _recordMemos,
                       isLoading: _isLoading,
@@ -346,6 +371,8 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                           memos:
                               _recordMemos[_selectedRecord!['record_id']] ?? [],
                           onBackPressed: _onBackToList,
+                          pageIndex: _currentPageIndex,
+                          onDataUpdated: refreshData,
                         )
                         : Container(),
                   ],

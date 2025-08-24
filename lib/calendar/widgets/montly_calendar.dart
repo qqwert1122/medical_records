@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medical_records/calendar/widgets/calendar_day_cell.dart';
 import 'package:medical_records/calendar/widgets/calendar_day_cell_bar.dart';
 import 'package:medical_records/calendar/widgets/weekly_record_overlay.dart';
+import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:medical_records/styles/app_size.dart';
@@ -142,9 +143,11 @@ class _MonthlyCalendarState extends State<MonthlyCalendar>
                       headerVisible: false,
                       daysOfWeekHeight: context.hp(2),
                       daysOfWeekStyle: DaysOfWeekStyle(
-                        weekdayStyle: AppTextStyle.caption,
+                        weekdayStyle: AppTextStyle.caption.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
                         weekendStyle: AppTextStyle.caption.copyWith(
-                          color: Colors.pinkAccent,
+                          color: AppColors.primary,
                         ),
                       ),
 

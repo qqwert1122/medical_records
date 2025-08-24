@@ -1,24 +1,35 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static Color primary = Colors.black;
-  static Color accent = const Color(0xFFE53E3E);
+  static bool get isDarkMode =>
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+      Brightness.dark;
+
+  static Color primary = Colors.pinkAccent;
   static Color get primaryLight => primary.withValues(alpha: 0.3);
 
-  static const Color background = Colors.white;
-  static const Color surface = Color(0xFFF7F7F7);
+  static Color get background =>
+      isDarkMode ? const Color(0xFF333333) : Colors.white;
+  static Color get backgroundSecondary =>
+      isDarkMode ? const Color(0xFF3C3C3C) : Color(0xFFEBEBEB);
+  static Color get surface =>
+      isDarkMode ? const Color(0xFF2A2A2A) : const Color(0xFFF7F7F7);
+
+  static Color get textPrimary => isDarkMode ? white : Color(0xFF333333);
+  static Color get textSecondary => isDarkMode ? white : Color(0xFFBBBBBB);
+
+  static Color get shadow => isDarkMode ? Color(0xFFBBBBBB) : Color(0xFF333333);
 
   static const Color black = Color(0xFF333333);
-  static const Color grey = Color(0xFFBBBBBB);
+  static const Color darkGrey = Color(0xFF31363F);
+  static const Color lightGrey = Color(0xFFBBBBBB);
   static const Color white = Colors.white;
 
-  static const Color textPrimary = Colors.black;
-
-  static void changeTheme(Color newPrimary, Color newAccent) {
+  static void changeTheme(Color newPrimary) {
     primary = newPrimary;
-    accent = newAccent;
   }
 
+  // 배경색에 따라 적절한 폰트 색깔 return
   static Color getTextColor(Color backgroundColor) {
     // 배경색의 밝기 계산 (0.0 ~ 1.0)
     double luminance = backgroundColor.computeLuminance();

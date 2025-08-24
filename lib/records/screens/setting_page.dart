@@ -29,7 +29,14 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('설정', style: AppTextStyle.title),
+        leading: IconButton(
+          icon: Icon(LucideIcons.chevronLeft, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '설정',
+          style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),
+        ),
         backgroundColor: AppColors.background,
       ),
       body: Container(
@@ -47,12 +54,16 @@ class _SettingPageState extends State<SettingPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  leading: Icon(LucideIcons.history, color: AppColors.grey),
+                  leading: Icon(
+                    LucideIcons.history,
+                    color: AppColors.lightGrey,
+                  ),
                   title: Container(
                     child: Text(
                       '기록 전체 초기화',
                       style: AppTextStyle.subTitle.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -62,10 +73,17 @@ class _SettingPageState extends State<SettingPage> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           backgroundColor: AppColors.background,
-                          title: Text('기록 전체 초기화', style: AppTextStyle.title),
+                          title: Text(
+                            '기록 전체 초기화',
+                            style: AppTextStyle.title.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                           content: Text(
                             '모든 기록과 사진이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-                            style: AppTextStyle.body,
+                            style: AppTextStyle.body.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                           actions: [
                             TextButton(
@@ -74,6 +92,7 @@ class _SettingPageState extends State<SettingPage> {
                                 '취소',
                                 style: AppTextStyle.body.copyWith(
                                   fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
@@ -85,7 +104,7 @@ class _SettingPageState extends State<SettingPage> {
                               child: Text(
                                 '확인',
                                 style: AppTextStyle.body.copyWith(
-                                  color: Colors.pinkAccent,
+                                  color: AppColors.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -104,11 +123,12 @@ class _SettingPageState extends State<SettingPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  leading: Icon(LucideIcons.scroll, color: AppColors.grey),
+                  leading: Icon(LucideIcons.scroll, color: AppColors.lightGrey),
                   title: Text(
                     '이용약관',
                     style: AppTextStyle.subTitle.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   onTap: () {},
@@ -122,11 +142,12 @@ class _SettingPageState extends State<SettingPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  leading: Icon(LucideIcons.scroll, color: AppColors.grey),
+                  leading: Icon(LucideIcons.scroll, color: AppColors.lightGrey),
                   title: Text(
                     '기여',
                     style: AppTextStyle.subTitle.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   onTap: () {},
@@ -139,11 +160,12 @@ class _SettingPageState extends State<SettingPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  leading: Icon(LucideIcons.hash, color: AppColors.grey),
+                  leading: Icon(LucideIcons.hash, color: AppColors.lightGrey),
                   title: Text(
                     '버전',
                     style: AppTextStyle.subTitle.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   onTap: HapticFeedback.lightImpact,
@@ -151,6 +173,7 @@ class _SettingPageState extends State<SettingPage> {
                     '0.0.1',
                     style: AppTextStyle.subTitle.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
