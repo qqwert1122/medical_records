@@ -13,7 +13,13 @@ import 'package:medical_records/styles/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({Key? key}) : super(key: key);
+  final bool isMonthlyView;
+  final Function(double)? onBottomSheetHeightChanged;
+  const CalendarPage({
+    Key? key,
+    required this.isMonthlyView,
+    this.onBottomSheetHeightChanged,
+  }) : super(key: key);
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
@@ -23,7 +29,6 @@ class _CalendarPageState extends State<CalendarPage> {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  bool _isMonthlyView = true;
   double _bottomSheetHeight = 0;
   final Map<DateTime, List<Color>> _dayRecords = {};
   final Map<DateTime, Map<int, RecordInfo>> _weekRecordSlots = {};
@@ -183,6 +188,7 @@ class _CalendarPageState extends State<CalendarPage> {
       _bottomSheetHeight = 0.4;
       _currentBottomSheetPage = 0;
     });
+    widget.onBottomSheetHeightChanged?.call(0.4);
     _loadRecords();
   }
 
@@ -223,7 +229,7 @@ class _CalendarPageState extends State<CalendarPage> {
               SafeArea(bottom: false, child: _buildViewToggle()),
               Expanded(
                 child:
-                    _isMonthlyView
+                    widget.isMonthlyView
                         ? _buildMonthlyCalendar()
                         : _buildYearlyCalendar(),
               ),
@@ -232,35 +238,39 @@ class _CalendarPageState extends State<CalendarPage> {
           _buildBottomSheet(screenHeight),
 
           Positioned(
-            right: 16,
             bottom: 16,
+            right: 16,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child:
                   _currentBottomSheetPage == 0
-                      ? FloatingActionButton(
-                        key: const ValueKey('add_fab'),
-                        shape: const CircleBorder(),
-                        onPressed: () async {
-                          HapticFeedback.mediumImpact();
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => RecordFoamPage(
-                                    selectedDate: _selectedDay,
-                                  ),
-                            ),
-                          );
+                      ? SizedBox(
+                        height: 48,
+                        width: 48,
+                        child: FloatingActionButton(
+                          key: const ValueKey('add_fab'),
+                          shape: const CircleBorder(),
+                          onPressed: () async {
+                            HapticFeedback.mediumImpact();
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => RecordFoamPage(
+                                      selectedDate: _selectedDay,
+                                    ),
+                              ),
+                            );
 
-                          if (result == true) {
-                            await _onDataChanged();
-                          }
-                        },
-                        backgroundColor: AppColors.primary,
-                        child: const Icon(
-                          LucideIcons.plus,
-                          color: Colors.white,
+                            if (result == true) {
+                              await _onDataChanged();
+                            }
+                          },
+                          backgroundColor: AppColors.primary,
+                          child: const Icon(
+                            LucideIcons.plus,
+                            color: Colors.white,
+                          ),
                         ),
                       )
                       : const SizedBox.shrink(key: ValueKey('empty')),
@@ -273,14 +283,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildViewToggle() {
     return CalendarHeaderWidget(
-      isMonthlyView: _isMonthlyView,
+      isMonthlyView: widget.isMonthlyView,
       focusedDay: _focusedDay,
-      onToggle: (isMonthly) {
-        setState(() {
-          _isMonthlyView = isMonthly;
-        });
-      },
-      onDateTap: () => _showMonthPicker(isMonthlyView: _isMonthlyView),
+
+      onDateTap: () => _showMonthPicker(isMonthlyView: widget.isMonthlyView),
     );
   }
 
@@ -306,6 +312,7 @@ class _CalendarPageState extends State<CalendarPage> {
       onHeightChanged: (factor) {
         setState(() {
           _bottomSheetHeight = factor;
+          widget.onBottomSheetHeightChanged?.call(factor);
         });
       },
     );
@@ -321,6 +328,8 @@ class _CalendarPageState extends State<CalendarPage> {
           _selectedDay = date;
           _bottomSheetHeight = 0.4;
         });
+
+        widget.onBottomSheetHeightChanged?.call(0.4);
       },
     );
   }
@@ -350,6 +359,7 @@ class _CalendarPageState extends State<CalendarPage> {
           if (newHeight == 0) {
             _currentBottomSheetPage = 0;
           }
+          widget.onBottomSheetHeightChanged?.call(newHeight);
         });
       },
       onDateChanged: (newDate) {

@@ -29,10 +29,10 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(LucideIcons.chevronLeft, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: Icon(LucideIcons.chevronLeft, color: AppColors.textPrimary),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         title: Text(
           '설정',
           style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),

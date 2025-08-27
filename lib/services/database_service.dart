@@ -474,6 +474,15 @@ class DatabaseService {
     return db.rawQuery(sql, args);
   }
 
+  Future<List<Map<String, dynamic>>> getLiveRecords() async {
+    final db = await database;
+    return await db.query(
+      'records',
+      where: 'deleted_at IS NULL AND end_date IS NULL',
+      orderBy: 'start_date DESC',
+    );
+  }
+
   Future<List<Map<String, dynamic>>> getRecordsByDateRange({
     required DateTime startDate,
     required DateTime endDate,

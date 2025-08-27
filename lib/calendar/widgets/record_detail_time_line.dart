@@ -362,7 +362,8 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                                   return Positioned(
                                     left: leftPosition,
                                     child: Transform.rotate(
-                                      angle: angle,
+                                      angle:
+                                          historyImages.length <= 5 ? angle : 0,
                                       child: GestureDetector(
                                         onTap:
                                             () => widget.onImageTap(

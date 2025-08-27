@@ -131,11 +131,16 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
     try {
       List<Map<String, dynamic>> records = [];
-
+      print('widget.dayRecordSlots: ${widget.dayRecordSlots}');
+      print('widget.recordTitles: ${widget.recordTitles}');
       // 전달받은 슬롯 정보가 있으면 사용
       if (widget.dayRecordSlots != null && widget.recordTitles != null) {
         final recordIds =
-            widget.dayRecordSlots!.values.map((info) => info.recordId).toSet();
+            widget.dayRecordSlots!.values
+                .map((info) => info.recordId)
+                .toList()
+                .toSet();
+        ;
 
         for (final recordId in recordIds) {
           final record = await DatabaseService().getRecord(int.parse(recordId));

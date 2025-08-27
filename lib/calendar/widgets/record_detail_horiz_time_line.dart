@@ -1,9 +1,11 @@
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/utils/time_format.dart';
+import 'package:path/path.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
 class RecordDetailHorizTimeLine extends StatelessWidget {
@@ -46,16 +48,34 @@ class RecordDetailHorizTimeLine extends StatelessWidget {
       'label': '시작',
       'checked': sortedHistories.any((h) => h['event_type'] == 'INITIAL'),
       'date': getLatestDateForEventType('INITIAL'),
+      'color': Colors.blueAccent,
+      'icon': Icon(LucideIcons.circleDashed, color: AppColors.white, size: 16),
     });
 
     for (var history in sortedHistories) {
-      if (history['event_type'] == 'TREATMENT' ||
-          history['event_type'] == 'PROGRESS') {
+      if (history['event_type'] == 'PROGRESS') {
         timelineItems.add({
           'type': history['event_type'],
-          'label': history['event_type'] == 'TREATMENT' ? '치료' : '경과',
+          'label': '경과',
           'checked': true,
           'date': history['record_date'],
+          'color': Colors.green,
+          'icon': Icon(
+            LucideIcons.arrowRight,
+            color: AppColors.white,
+            size: 16,
+          ),
+        });
+      }
+
+      if (history['event_type'] == 'TREATMENT') {
+        timelineItems.add({
+          'type': history['event_type'],
+          'label': '치료',
+          'checked': true,
+          'date': history['record_date'],
+          'color': Colors.pinkAccent,
+          'icon': Icon(LucideIcons.heart, color: AppColors.white, size: 16),
         });
       }
     }
@@ -65,6 +85,8 @@ class RecordDetailHorizTimeLine extends StatelessWidget {
       'label': '종료',
       'checked': sortedHistories.any((h) => h['event_type'] == 'COMPLETE'),
       'date': getLatestDateForEventType('COMPLETE'),
+      'color': Colors.blueAccent,
+      'icon': Icon(LucideIcons.checkCircle, color: AppColors.white, size: 16),
     });
 
     final isCompleted =
@@ -160,10 +182,7 @@ class RecordDetailHorizTimeLine extends StatelessWidget {
                 isChecked ? Colors.blueAccent : AppColors.backgroundSecondary,
             border: Border.all(color: AppColors.background, width: 8),
           ),
-          child:
-              isChecked
-                  ? Icon(LucideIcons.check, color: AppColors.white, size: 24)
-                  : null,
+          child: isChecked ? item['icon'] : null,
         ),
       ),
       beforeLineStyle: LineStyle(color: beforeLineColor, thickness: 2),

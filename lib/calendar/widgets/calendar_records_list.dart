@@ -146,7 +146,7 @@ class _CalendarRecordsListState extends State<CalendarRecordsList> {
       behavior: HitTestBehavior.opaque,
       onTap: () {
         widget.onRecordTap(record);
-        widget.onHeightChanged(0.9);
+        widget.onHeightChanged(0.93);
       },
       child: Container(
         margin: EdgeInsets.only(bottom: context.hp(1)),
