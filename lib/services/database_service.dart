@@ -74,7 +74,7 @@ class DatabaseService {
         spot_name TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        deleted_at TEXT,
+        deleted_at TEXT
       )
     ''');
 
@@ -84,7 +84,7 @@ class DatabaseService {
         symptom_name TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        deleted_at TEXT,
+        deleted_at TEXT
       )
     ''');
 
@@ -94,7 +94,7 @@ class DatabaseService {
         treatment_name TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        deleted_at TEXT,
+        deleted_at TEXT
       )
     ''');
 
@@ -181,14 +181,21 @@ class DatabaseService {
 
     await createSpot(name: '입술 주변');
     await createSpot(name: '혓바닥');
-    await createSpot(name: '입 천장');
     await createSpot(name: '목구멍');
+    await createSpot(name: '코');
+    await createSpot(name: '소장/대장');
 
-    await createSymptom('입병');
-    await createSymptom('염증');
+    await createSymptom('구내염');
+    await createSymptom('소화불량');
+    await createSymptom('복통');
+    await createSymptom('포진');
+    await createSymptom('발열');
 
-    await createTreatment('가글');
-    await createTreatment('약 복용');
+    await createTreatment('진통제 복용');
+    await createTreatment('해열제 복용');
+    await createTreatment('물리치료');
+    await createTreatment('온/냉찜질');
+    await createTreatment('소독/드레싱');
 
     await prefs.setBool(seedKey, true);
   }

@@ -424,6 +424,7 @@ class _TreatmentInsightSectionState extends State<TreatmentInsightSection> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 2,
               children: [
                 Text(
                   '참고',

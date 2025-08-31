@@ -37,7 +37,7 @@ class RangeSelector extends StatelessWidget {
               value: e.$2,
               child: Text(
                 e.$1,
-                style: AppTextStyle.body.copyWith(
+                style: AppTextStyle.caption.copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textPrimary,
@@ -53,7 +53,7 @@ class RangeSelector extends StatelessWidget {
 
         // 버튼(닫혀 있을 때) 스타일
         buttonStyleData: ButtonStyleData(
-          height: 44,
+          height: 36,
           padding: EdgeInsets.symmetric(horizontal: context.wp(3)),
           decoration: BoxDecoration(
             color: AppColors.surface,
@@ -65,7 +65,7 @@ class RangeSelector extends StatelessWidget {
         iconStyleData: IconStyleData(
           icon: Icon(
             LucideIcons.chevronDown,
-            size: 18,
+            size: 16,
             color: AppColors.textSecondary,
           ),
         ),

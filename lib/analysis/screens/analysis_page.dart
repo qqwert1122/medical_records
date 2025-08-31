@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/analysis/enum/analysis_range.dart';
+import 'package:medical_records/analysis/widgets/correlation_table.dart';
 import 'package:medical_records/analysis/widgets/donut_chart.dart';
 import 'package:medical_records/analysis/widgets/range_selector.dart';
 import 'package:medical_records/analysis/widgets/summary_card.dart';
@@ -44,6 +45,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
   Future<void> _loadAnalysis() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
@@ -246,6 +248,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
                         ),
                         const SizedBox(height: 10),
                         const TreatmentInsightSection(),
+                        const SizedBox(height: 10),
+                        const CorrelationTable(),
                         SizedBox(height: context.hp(10)),
                       ],
                     ),

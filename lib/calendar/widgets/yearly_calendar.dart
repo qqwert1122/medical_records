@@ -202,12 +202,8 @@ class YearlyCalendarState extends State<YearlyCalendar> {
                     color:
                         hasRecords
                             ? mainColor!.withValues(alpha: opacity)
-                            : AppColors.surface,
-                    borderRadius: BorderRadius.circular(4),
-                    border:
-                        isSelected
-                            ? Border.all(color: AppColors.primary, width: 1)
-                            : null,
+                            : AppColors.surface.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                   child: Center(
                     child: Stack(
@@ -222,11 +218,15 @@ class YearlyCalendarState extends State<YearlyCalendar> {
                                     ? FontWeight.bold
                                     : FontWeight.normal,
                             color:
-                                isToday
-                                    ? Colors.blueAccent
+                                isSelected
+                                    ? AppColors.primary
                                     : hasRecords
-                                    ? Colors.white
-                                    : AppColors.lightGrey,
+                                    ? opacity >= 0.5
+                                        ? AppColors.background
+                                        : AppColors.textPrimary
+                                    : isToday
+                                    ? Colors.blueAccent
+                                    : AppColors.textSecondary,
                           ),
                         ),
                       ],

@@ -169,7 +169,7 @@ class _ImagesPageState extends State<ImagesPage> {
               child: Row(
                 spacing: 10,
                 children: [
-                  // 전체 초기화 버튼
+                  // 필터 초기화 버튼
                   GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
@@ -182,23 +182,17 @@ class _ImagesPageState extends State<ImagesPage> {
                     },
                     child: Container(
                       height: 36,
-                      width: 60,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      width: 36,
+                      padding: context.paddingXS,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        color: AppColors.surface,
                       ),
                       child: Center(
-                        child: Text(
-                          '전체',
-                          style: AppTextStyle.body.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                        child: Icon(
+                          LucideIcons.filterX,
+                          size: 16,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -409,7 +403,7 @@ class _ImagesPageState extends State<ImagesPage> {
           children: [
             Text(
               label,
-              style: TextStyle(
+              style: AppTextStyle.caption.copyWith(
                 fontSize: 14,
                 color:
                     value != null ? AppColors.white : AppColors.textSecondary,
@@ -418,7 +412,7 @@ class _ImagesPageState extends State<ImagesPage> {
             const SizedBox(width: 5),
             Text(
               selectedName,
-              style: TextStyle(
+              style: AppTextStyle.caption.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
                 color: value != null ? AppColors.white : AppColors.textPrimary,
@@ -439,7 +433,10 @@ class _ImagesPageState extends State<ImagesPage> {
               value: item[idKey],
               child: Text(
                 item[nameKey],
-                style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                style: AppTextStyle.caption.copyWith(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
               ),
             );
           }).toList(),

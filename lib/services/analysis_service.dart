@@ -6,21 +6,6 @@ class AnalysisService {
   factory AnalysisService() => _instance;
   AnalysisService._internal();
 
-  // 증상별 이미지들 리턴
-  Future<List<Map<String, dynamic>>> getImagesBySymptom(int symptomId) async {
-    final db = await DatabaseService().database;
-    return await db.rawQuery(
-      '''
-      SELECT i.image_id, i.image_url, i.created_at, r.record_id, r.date, r.memo
-      FROM images i
-      INNER JOIN records r ON i.record_id = r.record_id
-      WHERE r.symptom_id = ? AND i.deleted_at IS NULL AND r.deleted_at IS NULL
-      ORDER BY r.date DESC
-    ''',
-      [symptomId],
-    );
-  }
-
   Future<List<Map<String, dynamic>>> getSpotsLastUsedAt() async {
     final db = await DatabaseService().database;
     return db.rawQuery('''
@@ -52,4 +37,50 @@ class AnalysisService {
         GROUP BY treatment_id
       ''');
   }
+
+  // 상관계수
+  Future<List<Map<String, dynamic>>> getSymptomSpotCooc() async {
+    final db = await DatabaseService().database;
+    return db.rawQuery('''
+      SELECT r.symptom_id, r.symptom_name, r.spot_id, r.spot_name, COUNT(*) AS cnt
+      FROM records r
+      WHERE r.deleted_at IS NULL
+      GROUP BY r.symptom_id, r.spot_id
+    ''');
+  }
+
+  Future<
+    ({
+      Map<(int, int), int> cooc,
+      Map<int, int> symTotals,
+      Map<int, int> spotTotals,
+      int N,
+    })
+  >
+  buildSymptomSpotCounts() async {
+    final rows = await getSymptomSpotCooc();
+
+    final cooc = <(int, int), int>{};
+    final symTotals = <int, int>{};
+    final spotTotals = <int, int>{};
+    var N = 0;
+
+    for (final r in rows) {
+      final sid = r['symptom_id'] as int;
+      final pid = r['spot_id'] as int;
+      final cnt = (r['cnt'] as int);
+
+      cooc[(sid, pid)] = cnt;
+      symTotals[sid] = (symTotals[sid] ?? 0) + cnt;
+      spotTotals[pid] = (spotTotals[pid] ?? 0) + cnt;
+      N += cnt;
+    }
+
+    return (cooc: cooc, symTotals: symTotals, spotTotals: spotTotals, N: N);
+  }
+
+  Future<List<Map<String, dynamic>>> getSymptomsForPicker() =>
+      DatabaseService().getSymptoms();
+  Future<List<Map<String, dynamic>>> getSpotsForPicker() =>
+      DatabaseService().getSpots();
 }
