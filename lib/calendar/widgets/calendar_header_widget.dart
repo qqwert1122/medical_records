@@ -23,12 +23,10 @@ class CalendarHeaderWidget extends StatefulWidget {
 }
 
 class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
-  int recentStartCount = 0;
-  int activeCount = 0;
-  int initialCount = 0;
-  int progressCount = 0;
+  // count 변수 초기화
+  int thisMonthCount = 0;
+  int totalLiveCount = 0;
   int treatmentCount = 0;
-  int completeCount = 0;
 
   bool _isLoadingCounts = false;
 
@@ -41,7 +39,8 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
   @override
   void didUpdateWidget(CalendarHeaderWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.focusedDay != widget.focusedDay) {
+    if (oldWidget.focusedDay != widget.focusedDay ||
+        oldWidget.isMonthlyView != widget.isMonthlyView) {
       _loadCounts();
     }
   }
@@ -51,75 +50,69 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
     _isLoadingCounts = true;
 
     try {
-      final today = DateTime.now();
-      final sevenDaysAgo = today.subtract(const Duration(days: 7));
+      // 임시 변수 초기화
+      int tempThisMonthCount = 0;
+      int tempTotalLiveCount = 0;
+      int tempTreatmentCount = 0;
 
+      // 해당 월 count
+      tempThisMonthCount = await _getMonthlyRecordCount();
+
+      // LiveRecords count
       final liveRecords = await DatabaseService().getLiveRecords();
-
-      // ← 누적 방지: 로컬 임시 변수로 새로 계산
-      int active = liveRecords.length;
-      int recent = 0;
-      int initial = 0;
-      int progress = 0;
-      int treatment = 0;
-      int complete = 0;
+      tempTotalLiveCount = liveRecords.length;
 
       for (final record in liveRecords) {
-        final startDateStr = record['start_date'] as String?;
-        if (startDateStr != null) {
-          final startDate = DateTime.parse(startDateStr);
-          if (startDate.isAfter(sevenDaysAgo) ||
-              startDate.isAtSameMomentAs(sevenDaysAgo)) {
-            recent++;
-          }
-        }
-
-        // 최신 history가 맨 앞에 오도록 정렬돼 있어야 합니다.
-        // getHistories(recordId)는 내부에서 ORDER BY history_id DESC (또는 created_at DESC) 권장
         final histories = await DatabaseService().getHistories(
           record['record_id'],
         );
 
-        if (histories.isEmpty) continue;
-
-        switch ((histories.first['event_type'] as String?) ?? '') {
-          case 'INITIAL':
-            initial++;
-            break;
-          case 'PROGRESS':
-            progress++;
-            break;
-          case 'TREATMENT':
-            treatment++;
-            break;
-          case 'COMPLETE':
-            complete++;
-            break;
-          default:
-            // 정의되지 않은 상태는 필요 시 별도 처리
-            break;
-        }
+        if (histories.where((h) => h['event_type'] == 'TREATMENT').length > 0)
+          tempTreatmentCount++;
       }
 
       if (!mounted) return;
       setState(() {
-        activeCount = active;
-        recentStartCount = recent;
-        initialCount = initial;
-        progressCount = progress;
-        treatmentCount = treatment;
-        completeCount = complete;
+        thisMonthCount = tempThisMonthCount;
+        totalLiveCount = tempTotalLiveCount;
+        treatmentCount = tempTreatmentCount;
       });
     } finally {
       _isLoadingCounts = false;
     }
   }
 
+  Future<int> _getMonthlyRecordCount() async {
+    final DateTime firstDay;
+    final DateTime lastDay;
+
+    if (widget.isMonthlyView) {
+      // 월별 보기: 해당 월의 첫날과 마지막날
+      firstDay = DateTime(widget.focusedDay.year, widget.focusedDay.month, 1);
+      lastDay = DateTime(
+        widget.focusedDay.year,
+        widget.focusedDay.month + 1,
+        0,
+      );
+    } else {
+      // 연간 보기: 해당 연도의 1월 1일부터 12월 31일
+      firstDay = DateTime(widget.focusedDay.year, 1, 1);
+      lastDay = DateTime(widget.focusedDay.year, 12, 31);
+    }
+
+    final records = await DatabaseService().getOverlappingRecords(
+      startDate: firstDay,
+      endDate: lastDay,
+    );
+
+    return records.length;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        // 날짜 선택 헤더
+        // 월 선택 헤더
         Container(
           margin: EdgeInsets.symmetric(
             horizontal: context.wp(4),
@@ -130,6 +123,7 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
               GestureDetector(
                 onTap: widget.onDateTap,
                 child: Container(
+                  height: 40,
                   padding: const EdgeInsets.symmetric(
                     vertical: 8,
                     horizontal: 16,
@@ -165,61 +159,47 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
         ),
 
         // 대시보드
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: context.wp(4)),
-          padding: EdgeInsets.symmetric(
-            horizontal: context.wp(4),
-            vertical: context.hp(1),
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppColors.backgroundSecondary.withValues(alpha: 0.1),
-              width: 1,
+        Expanded(
+          child: Container(
+            height: 40,
+            margin: EdgeInsets.only(
+              right: context.wp(4),
+              top: context.hp(1.5),
+              bottom: context.hp(1.5),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatItem(
-                label: '진행중',
-                count: activeCount,
-                color: AppColors.primary,
-                icon: LucideIcons.plus,
-              ),
-              _buildStatItem(
-                label: '최근 7일',
-                count: recentStartCount,
-                color: AppColors.primary,
-                icon: LucideIcons.plus,
-              ),
-
-              _buildStatItem(
-                label: '시작',
-                count: initialCount,
-                color: Colors.orange,
-                icon: LucideIcons.activity,
-              ),
-              _buildStatItem(
-                label: '경과',
-                count: progressCount,
-                color: Colors.orange,
-                icon: LucideIcons.activity,
-              ),
-              _buildStatItem(
-                label: '치료중',
-                count: treatmentCount,
-                color: Colors.orange,
-                icon: LucideIcons.activity,
-              ),
-              _buildStatItem(
-                label: '종료',
-                count: completeCount,
-                color: Colors.orange,
-                icon: LucideIcons.activity,
-              ),
-            ],
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              spacing: 5,
+              children: [
+                _buildStatItem(
+                  label: '전체',
+                  count: thisMonthCount,
+                  color: AppColors.black,
+                  icon: LucideIcons.calendar,
+                  isSimple: false,
+                ),
+                _buildStatItem(
+                  label: '진행중',
+                  count: totalLiveCount,
+                  color: Colors.blueAccent,
+                  icon: LucideIcons.circleDashed,
+                  isSimple: true,
+                ),
+                _buildStatItem(
+                  label: '치료즁',
+                  count: treatmentCount,
+                  color: AppColors.primary,
+                  icon: LucideIcons.heart,
+                  isSimple: true,
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -231,43 +211,39 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
     required int count,
     required Color color,
     required IconData icon,
+    required bool isSimple,
   }) {
-    return Expanded(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 14, color: color.withValues(alpha: 0.7)),
-          SizedBox(width: 6),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 4,
+      children: [
+        isSimple
+            ? Icon(icon, size: 16, color: color)
+            : Container(
+              padding: EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
                 label,
                 style: AppTextStyle.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 11,
+                  color: AppColors.white,
+                  fontSize: 12,
                 ),
               ),
-              Text(
-                '$count건',
-                style: AppTextStyle.subTitle.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+            ),
 
-  Widget _buildDivider() {
-    return Container(
-      height: 24,
-      width: 1,
-      color: AppColors.backgroundSecondary.withValues(alpha: 0.1),
+        Text(
+          '$count건',
+          style: AppTextStyle.subTitle.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 }

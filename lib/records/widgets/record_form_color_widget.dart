@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 
-class RecordFoamColorWidget extends StatefulWidget {
+class RecordFormColorWidget extends StatefulWidget {
   final Color? initialColor;
 
-  const RecordFoamColorWidget({super.key, this.initialColor});
+  const RecordFormColorWidget({super.key, this.initialColor});
 
   @override
-  State<RecordFoamColorWidget> createState() => RecordFoamColorWidgetState();
+  State<RecordFormColorWidget> createState() => RecordFormColorWidgetState();
 }
 
-class RecordFoamColorWidgetState extends State<RecordFoamColorWidget> {
+class RecordFormColorWidgetState extends State<RecordFormColorWidget> {
   late Color selectedColor;
 
   final List<Color> colors = [
@@ -67,13 +68,27 @@ class RecordFoamColorWidgetState extends State<RecordFoamColorWidget> {
     return Row(
       children: [
         SizedBox(
-          width: context.wp(12),
-          child: Text(
-            '색상',
-            style: AppTextStyle.body.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          width: context.wp(15),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: 4,
+            children: [
+              Text(
+                '색상',
+                style: AppTextStyle.body.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ),
         ),
         GestureDetector(
@@ -83,7 +98,26 @@ class RecordFoamColorWidgetState extends State<RecordFoamColorWidget> {
             height: 35,
             decoration: BoxDecoration(
               color: selectedColor,
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+        ),
+        SizedBox(width: 10),
+        GestureDetector(
+          onTap: () => _showColorPickerModal(context),
+          child: Container(
+            height: 35,
+            width: 35,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Center(
+              child: Icon(
+                LucideIcons.chevronDown,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ),

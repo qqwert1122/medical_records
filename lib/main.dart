@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medical_records/analysis/screens/analysis_page.dart';
 import 'package:medical_records/calendar/screens/calendar_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:medical_records/images/screens/images_page.dart';
 import 'package:medical_records/records/screens/setting_page.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
@@ -12,6 +14,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR', null);
   await DatabaseService().ensureSeeded();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   runApp(const MyApp());
 }
@@ -51,8 +57,8 @@ class _MainNavigationState extends State<MainNavigation> {
         });
       },
     ),
-    SearchPage(),
-    AnalyticsPage(),
+    ImagesPage(),
+    AnalysisPage(),
     SettingPage(),
   ];
 
@@ -117,7 +123,7 @@ class _MainNavigationState extends State<MainNavigation> {
       return Expanded(
         child: GestureDetector(
           onTap: () => onNavTap(index),
-          child: Container(
+          child: SizedBox(
             height: 48,
             child: Stack(
               alignment: Alignment.center,
@@ -166,8 +172,8 @@ class _MainNavigationState extends State<MainNavigation> {
                           decoration: BoxDecoration(
                             color:
                                 isMonthlyView
-                                    ? Colors.redAccent
-                                    : Colors.redAccent.withValues(alpha: 0.4),
+                                    ? AppColors.primary
+                                    : AppColors.primary.withValues(alpha: 0.4),
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
@@ -179,8 +185,8 @@ class _MainNavigationState extends State<MainNavigation> {
                           decoration: BoxDecoration(
                             color:
                                 isMonthlyView
-                                    ? Colors.redAccent.withValues(alpha: 0.4)
-                                    : Colors.redAccent,
+                                    ? AppColors.primary.withValues(alpha: 0.4)
+                                    : AppColors.primary,
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
@@ -274,29 +280,6 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// 임시 페이지들
-class SearchPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text('검색'), backgroundColor: AppColors.background),
-      body: Center(child: Text('검색 페이지')),
-    );
-  }
-}
-
-class AnalyticsPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text('분석'), backgroundColor: AppColors.background),
-      body: Center(child: Text('분석 페이지')),
     );
   }
 }

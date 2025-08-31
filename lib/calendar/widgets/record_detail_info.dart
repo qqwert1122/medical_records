@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:medical_records/records/screens/record_foam_page.dart';
+import 'package:medical_records/records/screens/record_form_page.dart';
+import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
@@ -9,10 +10,13 @@ import 'package:medical_records/styles/app_text_style.dart';
 class RecordDetailInfo extends StatefulWidget {
   final Map<String, dynamic> record;
   final VoidCallback? onRecordUpdated;
+  final VoidCallback onBackPressed;
+
   const RecordDetailInfo({
     super.key,
     required this.record,
     this.onRecordUpdated,
+    required this.onBackPressed,
   });
 
   @override
@@ -134,44 +138,132 @@ class _RecordDetailInfoState extends State<RecordDetailInfo> {
             value: '${widget.record['record_id']}',
           ),
           SizedBox(height: context.hp(2)),
-          ElevatedButton(
-            onPressed: () async {
-              HapticFeedback.lightImpact();
-              print('push edit');
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => RecordFoamPage(
-                        recordData: widget.record,
-                        selectedDate: DateTime.parse(
-                          widget.record['start_date'],
-                        ),
-                      ),
-                ),
-              );
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    HapticFeedback.lightImpact();
 
-              print('result');
-              if (result == true) {
-                widget.onRecordUpdated?.call();
-                print('after  onRecordUpdated');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, context.hp(6)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.backgroundSecondary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                    final result = await showModalBottomSheet<bool>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder:
+                          (context) => Padding(
+                            padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom,
+                            ),
+                            child: RecordFormPage(
+                              recordData: widget.record,
+                              selectedDate: DateTime.parse(
+                                widget.record['start_date'],
+                              ),
+                            ),
+                          ),
+                    );
+
+                    if (result == true) {
+                      widget.onRecordUpdated?.call();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    minimumSize: Size(double.infinity, context.hp(6)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: AppColors.backgroundSecondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    '수정하기',
+                    style: AppTextStyle.body.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: Text(
-              '수정하기',
-              style: AppTextStyle.body.copyWith(
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
+              SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    HapticFeedback.lightImpact();
+
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          backgroundColor: AppColors.background,
+                          title: Text(
+                            '기록 삭제',
+                            style: AppTextStyle.title.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          content: Text(
+                            '해당 기록의 히스토리와 사진이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                            style: AppTextStyle.body.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(
+                                '취소',
+                                style: AppTextStyle.body.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                HapticFeedback.lightImpact();
+                                final recordId = widget.record['record_id'];
+                                await DatabaseService().deleteRecord(recordId);
+                                await DatabaseService().deleteHistories(
+                                  recordId,
+                                );
+
+                                widget.onRecordUpdated?.call();
+                                widget.onBackPressed();
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(
+                                '확인',
+                                style: AppTextStyle.body.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    minimumSize: Size(double.infinity, context.hp(6)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: AppColors.backgroundSecondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    '삭제하기',
+                    style: AppTextStyle.body.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),

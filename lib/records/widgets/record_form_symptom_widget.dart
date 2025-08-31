@@ -8,17 +8,17 @@ import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/records/widgets/spot_bottom_sheet.dart';
 import 'package:medical_records/records/widgets/symptom_bottom_sheet.dart';
 
-class RecordFoamSymptomWidget extends StatefulWidget {
+class RecordFormSymptomWidget extends StatefulWidget {
   final int? initialSymptomId;
 
-  const RecordFoamSymptomWidget({super.key, this.initialSymptomId});
+  const RecordFormSymptomWidget({super.key, this.initialSymptomId});
 
   @override
-  State<RecordFoamSymptomWidget> createState() =>
-      RecordFoamSymptomWidgetState();
+  State<RecordFormSymptomWidget> createState() =>
+      RecordFormSymptomWidgetState();
 }
 
-class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
+class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
   Map<String, dynamic>? selectedSymptom;
 
   @override
@@ -67,13 +67,27 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: context.wp(12),
-          child: Text(
-            '증상',
-            style: AppTextStyle.body.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          width: context.wp(15),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: 4,
+            children: [
+              Text(
+                '증상',
+                style: AppTextStyle.body.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ),
         ),
         Flexible(
@@ -99,8 +113,8 @@ class RecordFoamSymptomWidgetState extends State<RecordFoamSymptomWidget> {
                   Spacer(),
                   Icon(
                     LucideIcons.chevronDown,
-                    size: context.xl,
-                    color: AppColors.lightGrey,
+                    size: 16,
+                    color: AppColors.textSecondary,
                   ),
                 ],
               ),

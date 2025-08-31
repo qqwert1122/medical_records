@@ -74,9 +74,7 @@ class DatabaseService {
         spot_name TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        last_used_at TEXT,
         deleted_at TEXT,
-        count INTEGER DEFAULT 0
       )
     ''');
 
@@ -86,9 +84,7 @@ class DatabaseService {
         symptom_name TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        last_used_at TEXT,
         deleted_at TEXT,
-        count INTEGER DEFAULT 0
       )
     ''');
 
@@ -98,9 +94,7 @@ class DatabaseService {
         treatment_name TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        last_used_at TEXT,
         deleted_at TEXT,
-        count INTEGER DEFAULT 0
       )
     ''');
 
@@ -142,7 +136,6 @@ class DatabaseService {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_records_created_at ON records(created_at)',
     );
-
     // histories
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_histories_record_id ON histories(record_id)',
@@ -159,39 +152,17 @@ class DatabaseService {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_histories_deleted_at ON histories(deleted_at)',
     );
-
     // spots / symptoms (정렬/조회에 쓰는 컬럼)
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_spots_deleted_at ON spots(deleted_at)',
     );
     await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_spots_last_used ON spots(last_used_at)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_spots_count ON spots(count)',
-    );
-
-    await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_symptoms_deleted_at ON symptoms(deleted_at)',
     );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_symptoms_last_used ON symptoms(last_used_at)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_symptoms_count ON symptoms(count)',
-    );
-
     // treatments
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_treatments_deleted_at ON treatments(deleted_at)',
     );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_treatments_last_used ON treatments(last_used_at)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_treatments_count ON treatments(count)',
-    );
-
     // images
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_images_history_id ON images(history_id)',
@@ -231,9 +202,7 @@ class DatabaseService {
       'spot_name': name,
       'created_at': now,
       'updated_at': now,
-      'last_used_at': null,
       'deleted_at': null,
-      'count': 0,
     });
   }
 
@@ -242,7 +211,7 @@ class DatabaseService {
     return await db.query(
       'spots',
       where: 'deleted_at IS NULL',
-      orderBy: 'count DESC, last_used_at DESC',
+      orderBy: 'spot_name ASC',
     );
   }
 
@@ -253,15 +222,6 @@ class DatabaseService {
       {'spot_name': name, 'updated_at': DateTime.now().toIso8601String()},
       where: 'spot_id = ?',
       whereArgs: [spotId],
-    );
-  }
-
-  Future<void> updateSpotUsage(int spotId) async {
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    await db.rawUpdate(
-      'UPDATE spots SET last_used_at = ?, count = count + 1 WHERE spot_id = ?',
-      [now, spotId],
     );
   }
 
@@ -284,9 +244,7 @@ class DatabaseService {
       'symptom_name': name,
       'created_at': now,
       'updated_at': now,
-      'last_used_at': null,
       'deleted_at': null,
-      'count': 0,
     });
   }
 
@@ -295,7 +253,7 @@ class DatabaseService {
     return await db.query(
       'symptoms',
       where: 'deleted_at IS NULL',
-      orderBy: 'count DESC, last_used_at DESC',
+      orderBy: 'symptom_name ASC',
     );
   }
 
@@ -306,15 +264,6 @@ class DatabaseService {
       {'symptom_name': name, 'updated_at': DateTime.now().toIso8601String()},
       where: 'symptom_id = ?',
       whereArgs: [symptomId],
-    );
-  }
-
-  Future<void> updateSymptomUsage(int symptomId) async {
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    await db.rawUpdate(
-      'UPDATE symptoms SET last_used_at = ?, count = count + 1 WHERE symptom_id = ?',
-      [now, symptomId],
     );
   }
 
@@ -336,9 +285,7 @@ class DatabaseService {
       'treatment_name': name,
       'created_at': now,
       'updated_at': now,
-      'last_used_at': null,
       'deleted_at': null,
-      'count': 0,
     });
   }
 
@@ -347,8 +294,49 @@ class DatabaseService {
     return await db.query(
       'treatments',
       where: 'deleted_at IS NULL',
-      orderBy: 'count DESC, last_used_at DESC',
+      orderBy: 'treatment_name ASC',
     );
+  }
+
+  Future<List<Map<String, dynamic>>> getTreatmentEventsWithRecord({
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    final db = await database;
+
+    final where = <String>[
+      "h.deleted_at IS NULL",
+      "h.event_type = 'TREATMENT'",
+      "r.deleted_at IS NULL",
+    ];
+    final args = <Object?>[];
+
+    if (from != null) {
+      where.add('h.record_date >= ?');
+      args.add(from.toIso8601String());
+    }
+    if (to != null) {
+      where.add('h.record_date <= ?');
+      args.add(to.toIso8601String());
+    }
+
+    final sql = '''
+      SELECT
+        h.history_id,
+        h.record_id,
+        h.treatment_id,
+        h.treatment_name,
+        h.record_date,
+        r.start_date AS record_start_date,
+        r.end_date   AS record_end_date,
+        r.status     AS record_status
+      FROM histories h
+      JOIN records r ON r.record_id = h.record_id
+      WHERE ${where.join(' AND ')}
+      ORDER BY h.record_date ASC, h.history_id ASC
+    ''';
+
+    return db.rawQuery(sql, args);
   }
 
   Future<void> updateTreatment({
@@ -361,15 +349,6 @@ class DatabaseService {
       {'treatment_name': name, 'updated_at': DateTime.now().toIso8601String()},
       where: 'treatment_id = ?',
       whereArgs: [treatmentId],
-    );
-  }
-
-  Future<void> updateTreatmentUsage(int treatmentId) async {
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    await db.rawUpdate(
-      'UPDATE treatments SET last_used_at = ?, count = count + 1 WHERE treatment_id = ?',
-      [now, treatmentId],
     );
   }
 
@@ -496,6 +475,20 @@ class DatabaseService {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getOverlappingRecords({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final db = await database;
+    return await db.query(
+      'records',
+      where:
+          'deleted_at IS NULL AND ((start_date <= ? AND (end_date >= ? OR end_date IS NULL)))',
+      whereArgs: [endDate.toIso8601String(), startDate.toIso8601String()],
+      orderBy: 'start_date DESC',
+    );
+  }
+
   Future<int> updateRecord({
     required int recordId,
     required String status,
@@ -539,6 +532,18 @@ class DatabaseService {
     );
   }
 
+  Future<int> deleteRecord(int recordId) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    return await db.update(
+      'records',
+      {'deleted_at': now},
+      where: 'record_id = ?',
+      whereArgs: [recordId],
+    );
+  }
+
   // histories CRUD
   Future<int> createHistory({
     required int recordId,
@@ -574,6 +579,44 @@ class DatabaseService {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getTreatmentStatsFromHistories({
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    final db = await database;
+
+    final where = <String>[
+      'h.deleted_at IS NULL',
+      "h.event_type = 'TREATMENT'",
+    ];
+    final args = <Object?>[];
+
+    if (from != null) {
+      where.add('h.record_date >= ?');
+      args.add(from.toIso8601String());
+    }
+    if (to != null) {
+      where.add('h.record_date <= ?');
+      args.add(to.toIso8601String());
+    }
+
+    final sql = '''
+      SELECT
+        CASE
+          WHEN h.treatment_name IS NOT NULL AND h.treatment_name <> '' THEN h.treatment_name
+          WHEN h.treatment_id IS NOT NULL THEN '치료 #' || h.treatment_id
+          ELSE '미지정'
+        END AS label,
+        COUNT(*) AS cnt
+      FROM histories h
+      WHERE ${where.join(' AND ')}
+      GROUP BY label
+      ORDER BY cnt DESC
+    ''';
+
+    return db.rawQuery(sql, args);
+  }
+
   Future<int> updateHistory({
     required int historyId,
     required String eventType,
@@ -605,12 +648,31 @@ class DatabaseService {
 
   Future<void> deleteHistory(int historyId) async {
     final db = await database;
+    final now = DateTime.now().toIso8601String();
     await db.update(
       'histories',
-      {'deleted_at': DateTime.now().toIso8601String()},
+      {'deleted_at': now},
       where: 'history_id = ?',
       whereArgs: [historyId],
     );
+  }
+
+  Future<void> deleteHistories(int recordId) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    final histories = await getHistories(recordId);
+
+    await db.transaction((txn) async {
+      for (final history in histories) {
+        await txn.update(
+          'histories',
+          {'deleted_at': now},
+          where: 'history_id = ?',
+          whereArgs: [history['history_id']],
+        );
+      }
+    });
   }
 
   // Image CRUD
@@ -662,6 +724,20 @@ class DatabaseService {
 
   Future<void> deleteAllImagesByHistoryId(int historyId) async {
     final db = await database;
+
+    final images = await db.query(
+      'images',
+      where: 'history_id = ?',
+      whereArgs: [historyId],
+    );
+
+    for (var image in images) {
+      final filePath = image['image_url'] as String?;
+      if (filePath != null) {
+        await FileService().deleteImage(filePath);
+      }
+    }
+
     await db.delete('images', where: 'history_id = ?', whereArgs: [historyId]);
   }
 }

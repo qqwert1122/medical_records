@@ -11,16 +11,17 @@ import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 
-class RecordFoamImageWidget extends StatefulWidget {
+class RecordFormImageWidgetV2 extends StatefulWidget {
   final List<String>? initialImagePaths;
 
-  const RecordFoamImageWidget({super.key, this.initialImagePaths});
+  const RecordFormImageWidgetV2({super.key, this.initialImagePaths});
 
   @override
-  State<RecordFoamImageWidget> createState() => RecordFoamImageWidgetState();
+  State<RecordFormImageWidgetV2> createState() =>
+      RecordFormImageWidgetV2State();
 }
 
-class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
+class RecordFormImageWidgetV2State extends State<RecordFormImageWidgetV2>
     with SingleTickerProviderStateMixin {
   List<String> _allImagePaths = [];
   bool _isPickingImages = false;
@@ -50,7 +51,7 @@ class RecordFoamImageWidgetState extends State<RecordFoamImageWidget>
   }
 
   @override
-  void didUpdateWidget(RecordFoamImageWidget oldWidget) {
+  void didUpdateWidget(RecordFormImageWidgetV2 oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialImagePaths != widget.initialImagePaths) {
       _updateImagePaths();

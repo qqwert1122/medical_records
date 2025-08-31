@@ -21,12 +21,16 @@ class AddHistoryBottomSheet extends StatefulWidget {
   final int recordId;
   final String recordType; // 'PROGRESS' or 'TREATMENT'
   final DateTime? minDate;
+  final bool isEditMode;
+  final Map<String, dynamic>? existingHistory;
 
   const AddHistoryBottomSheet({
     Key? key,
     required this.recordId,
     required this.recordType,
     this.minDate,
+    this.isEditMode = false,
+    this.existingHistory,
   }) : super(key: key);
 
   @override
@@ -41,9 +45,18 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
   List<String> _imagePaths = [];
   bool _isPickingImages = false;
 
+  // 날짜 제약
+  DateTime? _initialDate;
+  DateTime? _completeDate;
+  DateTime? _lastHistoryDate;
+
   @override
   void initState() {
     _loadInitialTreatment();
+    _loadDateConstraints();
+    if (widget.isEditMode && widget.existingHistory != null) {
+      _loadExistingData(); // 추가
+    }
     super.initState();
   }
 
@@ -53,12 +66,197 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
     super.dispose();
   }
 
+  DateTime? _exclusiveMin(DateTime? dt) => dt?.add(const Duration(minutes: 1));
+  DateTime? _exclusiveMax(DateTime? dt) =>
+      dt?.subtract(const Duration(minutes: 1));
+
+  Future<void> _loadDateConstraints() async {
+    if (widget.recordType == 'TREATMENT' || widget.recordType == 'PROGRESS') {
+      final histories = await DatabaseService().getHistories(widget.recordId);
+
+      final initialHistory = histories.firstWhere(
+        (h) => h['event_type'] == 'INITIAL',
+        orElse: () => {},
+      );
+      final completeHistory = histories.firstWhere(
+        (h) => h['event_type'] == 'COMPLETE',
+        orElse: () => {},
+      );
+
+      setState(() {
+        _initialDate =
+            (initialHistory.isNotEmpty && initialHistory['record_date'] != null)
+                ? DateTime.parse(initialHistory['record_date'])
+                : null;
+
+        _completeDate =
+            (completeHistory.isNotEmpty &&
+                    completeHistory['record_date'] != null)
+                ? DateTime.parse(completeHistory['record_date'])
+                : null;
+      });
+    } else if (widget.recordType == 'COMPLETE') {
+      final lastDate = await _getLastHistoryDate();
+      setState(() {
+        _lastHistoryDate = lastDate;
+      });
+    }
+  }
+
+  Future<(DateTime?, DateTime?)> _computeDateBounds() async {
+    // COMPLETE: 마지막 일반 히스토리 '이후'만 허용
+    if (widget.recordType == 'COMPLETE') {
+      final minBase = _lastHistoryDate ?? await _getLastHistoryDate();
+      final min = _exclusiveMin(minBase); // > last history
+      final max = DateTime.now(); // now는 굳이 배타 안 해도 OK
+      return (min, max);
+    }
+
+    // PROGRESS / TREATMENT
+    if (widget.recordType == 'PROGRESS' || widget.recordType == 'TREATMENT') {
+      // 기본 범위: INITIAL 이후, COMPLETE 이전
+      final baseMin = _exclusiveMin(_initialDate); // > INITIAL
+      final baseMax =
+          _completeDate != null
+              ? _exclusiveMax(_completeDate) // < COMPLETE
+              : DateTime.now(); // COMPLETE 없으면 now까지
+
+      // 신규 기록이면 기본 범위 반환
+      if (!widget.isEditMode || widget.existingHistory == null) {
+        return (baseMin, baseMax);
+      }
+
+      // 수정 기록이면 직전/직후 히스토리로 더 좁힘
+      final histories = await _getHistoriesSorted();
+      final currentId = widget.existingHistory!['history_id'];
+      final idx = histories.indexWhere((h) => h['history_id'] == currentId);
+
+      DateTime? prev; // 직전 히스토리 시각
+      DateTime? next; // 직후 히스토리 시각
+
+      if (idx != -1) {
+        // prev
+        for (int i = idx - 1; i >= 0; i--) {
+          final s = histories[i]['record_date'] ?? histories[i]['event_date'];
+          if (s != null) {
+            prev = DateTime.parse(s);
+            break;
+          }
+        }
+        // next
+        for (int i = idx + 1; i < histories.length; i++) {
+          final s = histories[i]['record_date'] ?? histories[i]['event_date'];
+          if (s != null) {
+            next = DateTime.parse(s);
+            break;
+          }
+        }
+      }
+
+      // 직전은 > prev, 직후는 < next 로 배타 처리
+      final prevEx = _exclusiveMin(prev);
+      final nextEx = _exclusiveMax(next);
+
+      // 최종 min = max(baseMin, prevEx), max = min(baseMax, nextEx)
+      DateTime? min = baseMin;
+      if (prevEx != null) {
+        min = (min == null) ? prevEx : (prevEx.isAfter(min) ? prevEx : min);
+      }
+
+      DateTime? max = baseMax;
+      if (nextEx != null) {
+        max = (max == null) ? nextEx : (nextEx.isBefore(max) ? nextEx : max);
+      }
+
+      // (옵션) 가드: 선택 가능 구간이 없을 때의 대비
+      if (min != null && max != null && !min.isBefore(max)) {
+        // 여기서는 그대로 반환해서 피커가 선택 불가 상태를 보여주게 두거나,
+        // max를 min + 1분으로 살짝 열어줄 수도 있음 (선호에 따라 결정)
+        // max = min.add(const Duration(minutes: 1));
+      }
+
+      return (min, max);
+    }
+
+    // 기본
+    return (null, DateTime.now());
+  }
+
+  Future<List<Map<String, dynamic>>> _getHistoriesSorted() async {
+    // UnmodifiableListView 방지: 가변 리스트로 복사
+    final raw = await DatabaseService().getHistories(widget.recordId);
+    final list = List<Map<String, dynamic>>.from(raw);
+
+    DateTime? _p(dynamic s) {
+      if (s == null) return null;
+      try {
+        return DateTime.parse(s as String);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    list.sort((a, b) {
+      final ad = _p(a['record_date'] ?? a['event_date']);
+      final bd = _p(b['record_date'] ?? b['event_date']);
+      if (ad == null && bd == null) return 0; // 둘 다 없으면 그대로
+      if (ad == null) return 1; // null을 뒤로
+      if (bd == null) return -1;
+      return ad.compareTo(bd); // 날짜만 비교
+    });
+
+    return list;
+  }
+
+  Future<DateTime?> _getLastHistoryDate() async {
+    final histories = await DatabaseService().getHistories(widget.recordId);
+
+    if (histories.isEmpty) return null;
+
+    // INITIAL과 COMPLETE를 제외한 history 중 가장 최근 날짜 찾기
+    DateTime? lastDate;
+    for (var history in histories) {
+      if (history['event_type'] != 'INITIAL' &&
+          history['event_type'] != 'COMPLETE') {
+        final date = DateTime.parse(history['record_date']);
+        if (lastDate == null || date.isAfter(lastDate)) {
+          lastDate = date;
+        }
+      }
+    }
+
+    return lastDate;
+  }
+
+  void _loadExistingData() async {
+    final history = widget.existingHistory!;
+    _selectedDateTime = DateTime.parse(history['record_date']);
+    _memoController.text = history['memo'] ?? '';
+    if (history['treatment_id'] != null) {
+      selectedTreatment = {
+        'treatment_id': history['treatment_id'],
+        'treatment_name': history['treatment_name'],
+      };
+    }
+
+    // 기존 이미지 로드
+    final existingImages = await DatabaseService().getImages(
+      history['history_id'],
+    );
+    if (existingImages.isNotEmpty) {
+      setState(() {
+        _imagePaths =
+            existingImages.map((img) => img['file_path'] as String).toList();
+      });
+    }
+  }
+
   String get _title {
     return switch (widget.recordType) {
       'INITIAL' => '증상 시작',
       'COMPLETE' => '증상 종료',
-      'PROGRESS' => '경과 기록',
-      'TREATMENT' => '치료 기록',
+      'PROGRESS' => widget.isEditMode ? '경과 수정' : '경과 기록',
+      'TREATMENT' => widget.isEditMode ? '치료기록 수정' : '치료 기록',
       _ => '기록',
     };
   }
@@ -67,8 +265,8 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
     return switch (widget.recordType) {
       'INITIAL' => '증상 시작',
       'COMPLETE' => '증상 종료',
-      'PROGRESS' => '증상의 경과를 입력해주세요',
-      'TREATMENT' => '치료 내용을 입력해주세요',
+      'PROGRESS' => '(선택) 증상의 경과를 입력해주세요',
+      'TREATMENT' => '(선택) 치료 내용을 입력해주세요',
       _ => '메모',
     };
   }
@@ -114,6 +312,8 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
   }
 
   Future<void> _selectDateTime() async {
+    final (minDate, maxDate) = await _computeDateBounds();
+
     final result = await showModalBottomSheet<DateTime>(
       context: context,
       isScrollControlled: true,
@@ -121,7 +321,8 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
       builder:
           (context) => DateTimePickerBottomSheet(
             initialDate: _selectedDateTime,
-            minDate: widget.minDate,
+            minDate: minDate,
+            maxDate: maxDate,
           ),
     );
 
@@ -140,56 +341,100 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
 
   void createNewHistory() async {
     try {
-      final recordType = widget.recordType;
-      final historyDate = _selectedDateTime.toIso8601String();
-      final memo = _memoController.text;
-      final historyId;
-      final resultMessage =
-          recordType == 'PROGRESS' ? '경과가 기록되었습니다' : '치료가 기록되었습니다';
-
-      // 1. 히스토리 생성
-      if (recordType == 'PROGRESS') {
-        // 경과 기록
-        historyId = await DatabaseService().createHistory(
-          recordId: widget.recordId,
-          eventType: recordType,
-          recordDate: historyDate,
-          memo: memo,
+      if (widget.isEditMode) {
+        await DatabaseService().updateHistory(
+          historyId: widget.existingHistory!['history_id'],
+          eventType: widget.recordType,
+          recordDate: _selectedDateTime.toIso8601String(),
+          memo: _memoController.text,
+          treatmentId: selectedTreatment?['treatment_id'],
+          treatmentName: selectedTreatment?['treatment_name'],
         );
-      } else {
-        // 치료 기록
-        if (selectedTreatment == null || selectedTreatment!.isEmpty) return;
 
-        final treatmentId = selectedTreatment!['treatment_id'];
-        final treatmentName = selectedTreatment!['treatment_name'];
+        List<String> finalImagePaths = [];
 
-        historyId = await DatabaseService().createHistory(
-          recordId: widget.recordId,
-          eventType: recordType,
-          recordDate: historyDate,
-          memo: memo,
-          treatmentId: treatmentId,
-          treatmentName: treatmentName,
-        );
-        // 치료 count++
-        await DatabaseService().updateTreatmentUsage(treatmentId);
-      }
-
-      // 이미지 저장
-      if (_imagePaths != null && _imagePaths.isNotEmpty) {
-        final savedImagePaths = await FileService().saveImagesToAppStorage(
-          _imagePaths,
-        );
-        if (savedImagePaths.isNotEmpty) {
-          await DatabaseService().saveImages(historyId, savedImagePaths);
+        if (_imagePaths != null && _imagePaths.isNotEmpty) {
+          for (String imagePath in _imagePaths) {
+            // 이미 저장된 이미지 경로인지 확인
+            if (imagePath.contains('app_flutter/images/')) {
+              finalImagePaths.add(imagePath);
+            } else {
+              // 새로운 이미지는 저장
+              final savedPath = await FileService().saveImageToAppStorage(
+                imagePath,
+              );
+              finalImagePaths.add(savedPath);
+            }
+          }
         }
+
+        // 기존 이미지 모두 삭제
+        await DatabaseService().deleteAllImagesByHistoryId(
+          widget.existingHistory!['history_id'],
+        );
+
+        // 최종 이미지 경로들 저장
+        if (finalImagePaths.isNotEmpty) {
+          await DatabaseService().saveImages(
+            widget.existingHistory!['history_id'],
+            finalImagePaths,
+          );
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('수정되었습니다')));
+
+        Navigator.of(context).pop(true);
+      } else {
+        final recordType = widget.recordType;
+        final historyDate = _selectedDateTime.toIso8601String();
+        final memo = _memoController.text;
+        final historyId;
+        final resultMessage =
+            recordType == 'PROGRESS' ? '경과가 기록되었습니다' : '치료가 기록되었습니다';
+
+        // 1. 히스토리 생성
+        if (recordType == 'PROGRESS') {
+          // 경과 기록
+          historyId = await DatabaseService().createHistory(
+            recordId: widget.recordId,
+            eventType: recordType,
+            recordDate: historyDate,
+            memo: memo,
+          );
+        } else {
+          // 치료 기록
+          if (selectedTreatment == null || selectedTreatment!.isEmpty) return;
+
+          final treatmentId = selectedTreatment!['treatment_id'];
+          final treatmentName = selectedTreatment!['treatment_name'];
+
+          historyId = await DatabaseService().createHistory(
+            recordId: widget.recordId,
+            eventType: recordType,
+            recordDate: historyDate,
+            memo: memo,
+            treatmentId: treatmentId,
+            treatmentName: treatmentName,
+          );
+        }
+
+        // 이미지 저장
+        if (_imagePaths != null && _imagePaths.isNotEmpty) {
+          final savedImagePaths = await FileService().saveImagesToAppStorage(
+            _imagePaths,
+          );
+          if (savedImagePaths.isNotEmpty) {
+            await DatabaseService().saveImages(historyId, savedImagePaths);
+          }
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(resultMessage)));
+
+        Navigator.of(context).pop(true);
       }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(resultMessage)));
-
-      Navigator.of(context).pop(true);
     } catch (e) {
       print('저장 중 오류가 발생했습니다: $e');
       Navigator.of(context).pop(false);
@@ -206,15 +451,20 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
       final memo = _memoController.text;
 
       // record 종료
-      await DatabaseService().endRecord(recordId: widget.recordId);
+      await DatabaseService().endRecord(
+        recordId: widget.recordId,
+        endDate: historyDate,
+      );
 
       // 종료 히스토리 생성
-      await DatabaseService().createHistory(
+      final result = await DatabaseService().createHistory(
         recordId: widget.recordId,
         eventType: recordType,
         recordDate: historyDate,
         memo: memo,
       );
+
+      print('result : ${result}');
 
       ScaffoldMessenger.of(
         context,
@@ -246,14 +496,11 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
           DragHandle(),
           Padding(
             padding: context.paddingSM,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                _title,
-                style: AppTextStyle.subTitle.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+            child: Text(
+              _title,
+              style: AppTextStyle.subTitle.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -304,12 +551,26 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
       children: [
         SizedBox(
           width: 48,
-          child: Text(
-            '치료',
-            style: AppTextStyle.body.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: 4,
+            children: [
+              Text(
+                '치료',
+                style: AppTextStyle.body.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ),
         ),
         Flexible(
@@ -353,12 +614,26 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
       children: [
         SizedBox(
           width: 48,
-          child: Text(
-            '시간',
-            style: AppTextStyle.body.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: 4,
+            children: [
+              Text(
+                '시간',
+                style: AppTextStyle.body.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ),
         ),
         Flexible(
@@ -442,102 +717,114 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
                 ),
               ),
             ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _pickImages();
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                padding: EdgeInsets.all(12.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  spacing: 10,
+                  children: [
+                    Icon(
+                      LucideIcons.image,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    Text(
+                      '사진 추가',
+                      style: AppTextStyle.body.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
         SizedBox(height: context.hp(1)),
         SizedBox(
           height: 100,
-          child: ListView(
+          child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            children: [
-              // 이미지 추가 버튼
-              DottedBorder(
-                options: RoundedRectDottedBorderOptions(
-                  color: AppColors.textSecondary,
-                  strokeWidth: 1,
-                  dashPattern: [8, 4],
-                  radius: Radius.circular(12),
-                ),
-                child: GestureDetector(
-                  onTap: _isPickingImages ? null : _pickImages,
-                  child: SizedBox(
-                    width: 90,
-                    height: 100,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          LucideIcons.image,
-                          color: AppColors.textSecondary,
-                          size: 32,
-                        ),
-                        SizedBox(height: context.hp(1)),
-                        Text(
-                          '사진 추가',
-                          style: AppTextStyle.caption.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // 선택된 이미지들
-              ..._imagePaths.asMap().entries.map((entry) {
-                final index = entry.key;
-                final path = entry.value;
+            itemCount: _imagePaths.length,
+            padding: const EdgeInsets.only(right: 4),
+            itemBuilder: (context, index) {
+              final path = _imagePaths[index];
+              final file = File(path);
 
-                return Padding(
-                  padding: EdgeInsets.only(left: 4),
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 90,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.background,
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
+              return Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // 썸네일 카드
+                    Container(
+                      width: 85,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColors.background,
+                          width: 2,
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(
-                            File(path),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: AppColors.lightGrey,
-                                child: Icon(
-                                  Icons.broken_image,
-                                  size: 30,
-                                  color: AppColors.textSecondary,
-                                ),
-                              );
-                            },
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.shadow.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 1),
                           ),
-                        ),
+                        ],
                       ),
-                      Positioned(
-                        top: 5,
-                        right: 5,
+                      child: ClipRRect(
+                        child:
+                            file.existsSync()
+                                ? Image.file(
+                                  file,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: AppColors.lightGrey,
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 30,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    );
+                                  },
+                                )
+                                : Container(
+                                  color: AppColors.lightGrey,
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 30,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                      ),
+                    ),
+
+                    Positioned(
+                      top: 5,
+                      right: 5,
+                      child: Material(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        shape: const CircleBorder(),
                         child: InkWell(
+                          customBorder: const CircleBorder(),
                           onTap: () => _removeImage(index),
-                          child: Container(
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
-                              shape: BoxShape.circle,
-                            ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6), // ← 터치영역 확대
                             child: Icon(
                               Icons.close,
                               size: 16,
@@ -546,11 +833,11 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],

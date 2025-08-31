@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/histories/widgets/add_history_bottom_sheet.dart';
+import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
@@ -44,12 +45,46 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
             minDate: DateTime.parse(
               widget.record['start_date'],
             ), // 증상 시작일을 최소 날짜로 설정
+            isEditMode: false,
           ),
     );
 
     if (result == true) {
       widget.onHistoryAdded?.call();
     }
+  }
+
+  Future<void> _reOpenRecord() async {
+    HapticFeedback.lightImpact();
+
+    // record의 end_date는 null
+    await DatabaseService().updateRecord(
+      recordId: widget.record['record_id'],
+      status: 'PROGRESS',
+      color: widget.record['color'],
+      spotId: widget.record['spot_id'],
+      spotName: widget.record['spot_name'],
+      symptomId: widget.record['symptom_id'],
+      symptomName: widget.record['symptom_name'],
+      startDate: widget.record['start_date'],
+      endDate: null,
+    );
+
+    // COMPLETE history 삭제
+    final histories = await DatabaseService().getHistories(
+      widget.record['record_id'],
+    );
+
+    final completeHistory = histories.firstWhere(
+      (h) => h['event_type'] == 'COMPLETE',
+      orElse: () => <String, dynamic>{},
+    );
+    if (completeHistory.isNotEmpty) {
+      await DatabaseService().deleteHistory(completeHistory['history_id']);
+    }
+
+    // 부모 위젯에 refresh 요청
+    widget.onHistoryAdded?.call();
   }
 
   @override
@@ -111,103 +146,147 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                             ),
                           ),
                         ),
-                        PopupMenuItem<String>(
-                          value: 'delete',
-                          child: Text(
-                            '삭제하기',
-                            style: AppTextStyle.body.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
                       ],
                 ),
               ),
             ],
           ),
           _buildHistoryTimeline(context, sortedHistories),
-          Padding(
-            padding: context.paddingSM,
-            child: Column(
-              children: [
-                Row(
+          widget.record['status'] == 'COMPLETE'
+              ? Padding(
+                padding: context.paddingSM,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
                           HapticFeedback.lightImpact();
-                          _showAddHistoryBottomSheet('PROGRESS');
+                          _reOpenRecord();
                         },
                         style: ElevatedButton.styleFrom(
+                          elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.indigoAccent,
+                          backgroundColor: AppColors.backgroundSecondary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: Text(
-                          '경과 기록',
+                          '재시작',
                           style: AppTextStyle.body.copyWith(
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          HapticFeedback.lightImpact();
-                          _showAddHistoryBottomSheet('TREATMENT');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.pinkAccent,
-                          foregroundColor: AppColors.background,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          '치료 기록',
-                          style: AppTextStyle.body.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
-                if (widget.record['status'] != 'COMPLETE')
-                  ElevatedButton(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      _showAddHistoryBottomSheet('COMPLETE');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, context.hp(6)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AppColors.textPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              )
+              : Padding(
+                padding: context.paddingSM,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              _showAddHistoryBottomSheet('PROGRESS');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: Colors.blueAccent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              spacing: 4,
+                              children: [
+                                Icon(
+                                  LucideIcons.arrowRight,
+                                  size: 16,
+                                  color: AppColors.white,
+                                ),
+                                Text(
+                                  '경과 기록',
+                                  style: AppTextStyle.body.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              _showAddHistoryBottomSheet('TREATMENT');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: Colors.pinkAccent,
+                              foregroundColor: AppColors.background,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              spacing: 4,
+                              children: [
+                                Icon(
+                                  LucideIcons.heart,
+                                  size: 16,
+                                  color: AppColors.white,
+                                ),
+                                Text(
+                                  '치료 기록',
+                                  style: AppTextStyle.body.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        _showAddHistoryBottomSheet('COMPLETE');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        minimumSize: Size(double.infinity, context.hp(6)),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppColors.backgroundSecondary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        '증상 종료',
+                        style: AppTextStyle.body.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      '증상 종료',
-                      style: AppTextStyle.body.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.background,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+                  ],
+                ),
+              ),
           SizedBox(height: context.hp(2)),
         ],
       ),
@@ -239,15 +318,36 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                 .where((img) => img['history_id'] == history['history_id'])
                 .toList();
 
+        final hasMemo = history['memo']?.toString().trim().isNotEmpty ?? false;
+        final hasImages = historyImages.isNotEmpty;
+
+        // 수정/삭제 가능한 대상
+        final bool canEdit =
+            history['event_type'] == 'PROGRESS' ||
+            history['event_type'] == 'TREATMENT';
+
         return TimelineTile(
           alignment: TimelineAlign.manual,
           lineXY: 0.25,
           isFirst: index == 0,
           isLast: index == sortedHistories.length - 1,
+
           indicatorStyle: IndicatorStyle(
-            width: 12,
-            height: 12,
-            color: Colors.blueAccent,
+            width: 20,
+            height: 20,
+            indicator: Container(
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(
+                  _getEventTypeIcon(history),
+                  color: Colors.white,
+                  size: 12,
+                ),
+              ),
+            ),
           ),
           beforeLineStyle: LineStyle(
             color: AppColors.backgroundSecondary,
@@ -257,22 +357,22 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
             color: AppColors.backgroundSecondary,
             thickness: 2,
           ),
-          startChild:
-              currentDate != previousDate
-                  ? Padding(
-                    padding: EdgeInsets.only(right: context.wp(4)),
-                    child: Text(
+          startChild: Padding(
+            padding: EdgeInsets.only(right: context.wp(4)),
+            child:
+                currentDate != previousDate
+                    ? Text(
                       currentDate,
                       style: AppTextStyle.body.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.right,
-                    ),
-                  )
-                  : null,
+                    )
+                    : SizedBox(height: 0), // 또는 Container(height: 16)
+          ),
           endChild: Container(
-            padding: EdgeInsets.only(left: 12, bottom: 16, right: 8),
+            padding: EdgeInsets.only(left: 15, bottom: 20, right: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -305,26 +405,8 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                         ],
                       ),
 
-                      // 치료
-                      if (history['treatment_name'] != null &&
-                          history['treatment_name']
-                              .toString()
-                              .trim()
-                              .isNotEmpty) ...[
-                        Text(
-                          '${history['treatment_name']} 치료',
-                          style: AppTextStyle.body.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ],
-
                       // 메모
-                      if (history['memo'] != null &&
-                          history['memo'].toString().trim().isNotEmpty) ...[
+                      if (hasMemo) ...[
                         Text(
                           history['memo'],
                           style: AppTextStyle.caption.copyWith(
@@ -333,11 +415,11 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                           overflow: TextOverflow.ellipsis,
                           maxLines: 5,
                         ),
+                        SizedBox(height: 5),
                       ],
 
                       // 이미지 썸네일
-                      if (historyImages.isNotEmpty) ...[
-                        // SizedBox(height: context.hp(1)),
+                      if (hasImages) ...[
                         SizedBox(
                           height: 60,
                           child: SingleChildScrollView(
@@ -421,32 +503,115 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                     ],
                   ),
                 ),
-                if (_showActions)
+                if (_showActions && canEdit)
                   Row(
                     spacing: 12,
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.black,
-                        ),
-                        child: Icon(
-                          LucideIcons.trash2,
-                          size: 18,
-                          color: AppColors.white,
+                      GestureDetector(
+                        onTap: () async {
+                          HapticFeedback.lightImpact();
+                          // 삭제 확인 다이얼로그
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  backgroundColor: AppColors.background,
+                                  title: Text(
+                                    '기록 삭제',
+                                    style: AppTextStyle.subTitle.copyWith(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  content: Text('이 기록을 삭제하시겠습니까?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () =>
+                                              Navigator.of(context).pop(false),
+                                      child: Text(
+                                        '취소',
+                                        style: AppTextStyle.body.copyWith(
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(context).pop(true),
+                                      child: Text(
+                                        '삭제',
+                                        style: AppTextStyle.body.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          );
+
+                          if (confirm == true) {
+                            await DatabaseService().deleteAllImagesByHistoryId(
+                              history['history_id'],
+                            );
+
+                            await DatabaseService().deleteHistory(
+                              history['history_id'],
+                            );
+                            widget.onHistoryAdded?.call();
+                          }
+                        },
+
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.black,
+                          ),
+                          child: Icon(
+                            LucideIcons.trash2,
+                            size: 18,
+                            color: AppColors.white,
+                          ),
                         ),
                       ),
-                      Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.black,
-                        ),
-                        child: Icon(
-                          LucideIcons.edit,
-                          size: 18,
-                          color: AppColors.white,
+                      GestureDetector(
+                        onTap: () async {
+                          HapticFeedback.lightImpact();
+                          final result = await showModalBottomSheet<bool>(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder:
+                                (context) => AddHistoryBottomSheet(
+                                  recordId: widget.record['record_id'],
+                                  recordType: history['event_type'],
+                                  minDate: DateTime.parse(
+                                    widget.record['start_date'],
+                                  ),
+                                  isEditMode: true,
+                                  existingHistory: history,
+                                ),
+                          );
+
+                          if (result == true) {
+                            widget.onHistoryAdded?.call();
+                          }
+                          setState(() {
+                            _showActions = !_showActions;
+                          });
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.black,
+                          ),
+                          child: Icon(
+                            LucideIcons.edit,
+                            size: 18,
+                            color: AppColors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -472,9 +637,26 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
       case 'PROGRESS':
         return '진행 경과';
       case 'TREATMENT':
-        return '치료';
+        return history['treatment_name'];
       case 'COMPLETE':
         return '증상 종료';
+      default:
+        return eventType ?? '기록';
+    }
+  }
+
+  IconData _getEventTypeIcon(Map<String, dynamic> history) {
+    final eventType = history['event_type'];
+
+    switch (eventType) {
+      case 'INITIAL':
+        return LucideIcons.circleDashed;
+      case 'PROGRESS':
+        return LucideIcons.arrowRight;
+      case 'TREATMENT':
+        return LucideIcons.heart;
+      case 'COMPLETE':
+        return LucideIcons.checkCircle;
       default:
         return eventType ?? '기록';
     }

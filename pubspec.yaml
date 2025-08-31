@@ -48,6 +48,9 @@ dependencies:
   timeline_tile: ^2.0.0
   flutter_launcher_icons : ^0.14.4
   flutter_native_splash: ^2.4.6
+  url_launcher: ^6.3.2
+  dropdown_button2: ^2.3.9
+  fl_chart: ^1.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -72,15 +75,16 @@ flutter_icons:
   android: "launcher_icon"
   ios: true
   remove_alpha_ios: true
-  image_path_android: "assets/logos/logo_02.png"
-  image_path_ios: "assets/logos/logo_02.png"
-  image_path: "assets/logos/logo_02.png"
-  adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/logos/logo_02.png"
+  image_path_android: "assets/logos/logo_03.png"
+  image_path_ios: "assets/logos/logo_03.png"
+  image_path: "assets/logos/logo_03.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/logos/logo_03.png"
+
 
 flutter_native_splash:
   color: "#FFFFFF" # 배경색 (원하는 색상으로 변경 가능)
-  image: "assets/logos/logo_02.png" # 스플래시 이미지 (앱 아이콘과 같은 이미지 사용)
+  image: "assets/logos/logo_03.png" # 스플래시 이미지 (앱 아이콘과 같은 이미지 사용)
   ios: true
   android: true
   web: false

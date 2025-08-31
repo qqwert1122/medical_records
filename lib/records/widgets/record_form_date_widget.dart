@@ -7,30 +7,29 @@ import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/records/widgets/date_picker_bottom_sheet.dart';
 import 'package:medical_records/utils/time_format.dart';
 
-class RecordFoamDateWidget extends StatefulWidget {
+class RecordFormDateWidget extends StatefulWidget {
   final DateTime? initialDate;
   final bool isOptional;
-  final Future<DateTime?> Function()? onTap;
+  final Future<(DateTime?, DateTime?)> Function()? boundsResolver;
   final void Function(DateTime?)? onDateChanged;
 
-  const RecordFoamDateWidget({
+  const RecordFormDateWidget({
     super.key,
     this.initialDate,
     this.isOptional = false,
-    this.onTap,
+    this.boundsResolver,
     this.onDateChanged,
   });
 
   @override
-  State<RecordFoamDateWidget> createState() => RecordFoamDateWidgetState();
+  State<RecordFormDateWidget> createState() => RecordFormDateWidgetState();
 }
 
-class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
+class RecordFormDateWidgetState extends State<RecordFormDateWidget> {
   DateTime? _selectedDate;
   late DateTime _initialNow;
 
   bool _isToday(DateTime d) => DateUtils.isSameDay(d, DateTime.now());
-
   DateTime _midnight(DateTime d) => DateTime(d.year, d.month, d.day);
 
   @override
@@ -40,8 +39,8 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
     if (widget.initialDate != null) {
       _selectedDate =
           _isToday(widget.initialDate!)
-              ? _initialNow
-              : _midnight(widget.initialDate!);
+              ? _initialNow // 오늘이면 now
+              : _midnight(widget.initialDate!); // 과거이면 자정
     } else {
       _selectedDate = widget.isOptional ? null : _initialNow;
     }
@@ -54,24 +53,35 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
     });
   }
 
+  DateTime _clampToBounds(DateTime value, {DateTime? min, DateTime? max}) {
+    if (min != null && value.isBefore(min)) return min;
+    if (max != null && value.isAfter(max)) return max;
+    return value;
+  }
+
   Future<void> _showDatePicker() async {
+    // 1) 경계 계산 (없으면 null 사용)
     DateTime? minDate;
-    if (widget.isOptional && widget.onTap != null) {
-      minDate = await widget.onTap!();
-    }
-    DateTime initialDate;
-    if (_selectedDate != null) {
-      // 선택된 날짜가 오늘이면 현재 시각으로 열기
-      initialDate = _selectedDate!;
-    } else {
-      initialDate = minDate ?? DateTime.now();
+    DateTime? maxDate;
+    if (widget.boundsResolver != null) {
+      final (min, max) = await widget.boundsResolver!.call();
+      minDate = min;
+      maxDate = max;
     }
 
+    // 2) 초기 표시값 결정 + 경계 클램프
+    DateTime initialDate = _selectedDate ?? (minDate ?? DateTime.now());
+    initialDate = _clampToBounds(initialDate, min: minDate, max: maxDate);
+
+    // 3) 바텀시트 호출
     final picked = await _showCustomDatePicker(
       context,
       initialDate,
       minDate: minDate,
+      maxDate: maxDate,
     );
+
+    // 4) 반영
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
@@ -84,14 +94,16 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
     setState(() {
       _selectedDate = null;
     });
+    widget.onDateChanged?.call(null);
   }
 
   static Future<DateTime?> _showCustomDatePicker(
     BuildContext context,
     DateTime initialDate, {
     DateTime? minDate,
-  }) async {
-    return await showModalBottomSheet<DateTime>(
+    DateTime? maxDate,
+  }) {
+    return showModalBottomSheet<DateTime>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -99,6 +111,7 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
         return DateTimePickerBottomSheet(
           initialDate: initialDate,
           minDate: minDate,
+          maxDate: maxDate,
         );
       },
     );
@@ -110,13 +123,29 @@ class RecordFoamDateWidgetState extends State<RecordFoamDateWidget> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: context.wp(12),
-          child: Text(
-            !widget.isOptional ? '시작일' : '종료일',
-            style: AppTextStyle.body.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          width: context.wp(15),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: 4,
+            children: [
+              Text(
+                !widget.isOptional ? '시작일' : '종료일',
+                style: AppTextStyle.body.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              !widget.isOptional
+                  ? Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                  : SizedBox(),
+            ],
           ),
         ),
         Flexible(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:medical_records/services/analysis_service.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
@@ -29,7 +30,7 @@ class SymptomBottomSheet extends StatefulWidget {
 }
 
 class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
-  List<Map<String, dynamic>> symptoms = [];
+  List<Map<String, dynamic>> symptomsWithLastUsedAt = [];
 
   @override
   void initState() {
@@ -38,10 +39,24 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
   }
 
   Future<void> _loadSymptoms() async {
-    final _dbService = await DatabaseService();
-    final result = await _dbService.getSymptoms();
+    final dbService = DatabaseService();
+    final analysisService = AnalysisService();
+
+    final base = await dbService.getSymptoms();
+    final lastRows = await analysisService.getSymptomsLastUsedAt();
+
+    final lastMap = <int, String?>{
+      for (final r in lastRows)
+        (r['symptom_id'] as int): r['last_used_at'] as String?,
+    };
+
+    final result = [
+      for (final s in base)
+        {...s, 'last_used_at': lastMap[s['symptom_id'] as int]},
+    ];
+
     setState(() {
-      symptoms = result;
+      symptomsWithLastUsedAt = result;
     });
   }
 
@@ -187,7 +202,7 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
           ),
           Expanded(
             child:
-                symptoms.isEmpty
+                symptomsWithLastUsedAt.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -204,9 +219,9 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
                       ),
                     )
                     : ListView.builder(
-                      itemCount: symptoms.length,
+                      itemCount: symptomsWithLastUsedAt.length,
                       itemBuilder: (context, index) {
-                        final symptom = symptoms[index];
+                        final symptom = symptomsWithLastUsedAt[index];
                         return Slidable(
                           key: ValueKey(symptom['symptom_id']),
                           endActionPane: ActionPane(

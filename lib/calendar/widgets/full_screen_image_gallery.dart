@@ -7,11 +7,13 @@ import 'package:photo_view/photo_view_gallery.dart';
 class FullScreenImageGallery extends StatefulWidget {
   final List<Map<String, dynamic>> images;
   final int initialIndex;
+  final bool reverseOrder; // 추가된 파라미터
 
   const FullScreenImageGallery({
     super.key,
     required this.images,
     required this.initialIndex,
+    this.reverseOrder = false, // 기본값 false
   });
 
   @override
@@ -21,12 +23,22 @@ class FullScreenImageGallery extends StatefulWidget {
 class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
   late int _currentIndex;
   late PageController _pageController;
+  late List<Map<String, dynamic>> _displayImages;
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
+    // reverseOrder가 true면 이미지 리스트를 뒤집음
+    _displayImages =
+        widget.reverseOrder ? widget.images.reversed.toList() : widget.images;
+
+    // reverseOrder가 true면 초기 인덱스도 조정
+    _currentIndex =
+        widget.reverseOrder
+            ? (widget.images.length - 1 - widget.initialIndex)
+            : widget.initialIndex;
+
+    _pageController = PageController(initialPage: _currentIndex);
   }
 
   @override
@@ -44,7 +56,7 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
           PhotoViewGallery.builder(
             scrollPhysics: const BouncingScrollPhysics(),
             builder: (BuildContext context, int index) {
-              final imagePath = widget.images[index]['image_url'] as String;
+              final imagePath = _displayImages[index]['image_url'] as String;
               return PhotoViewGalleryPageOptions(
                 imageProvider: FileImage(File(imagePath)),
                 minScale: PhotoViewComputedScale.contained,
@@ -52,7 +64,7 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
                 heroAttributes: PhotoViewHeroAttributes(tag: imagePath),
               );
             },
-            itemCount: widget.images.length,
+            itemCount: _displayImages.length,
             loadingBuilder:
                 (context, event) => Center(
                   child: CircularProgressIndicator(
@@ -85,7 +97,7 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
-                  if (widget.images.length > 1)
+                  if (_displayImages.length > 1)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -96,7 +108,7 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        '${_currentIndex + 1} / ${widget.images.length}',
+                        '${_currentIndex + 1} / ${_displayImages.length}',
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),

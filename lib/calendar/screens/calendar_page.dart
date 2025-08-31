@@ -7,7 +7,7 @@ import 'package:medical_records/calendar/widgets/montly_calendar.dart';
 import 'package:medical_records/calendar/widgets/calendar_header_widget.dart';
 import 'package:medical_records/calendar/widgets/weekly_record_overlay.dart';
 import 'package:medical_records/calendar/widgets/yearly_calendar.dart';
-import 'package:medical_records/records/screens/record_foam_page.dart';
+import 'package:medical_records/records/screens/record_form_page.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -42,6 +42,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
   int _currentBottomSheetPage = 0;
 
+  // rebuild를 위한 버젼 관리
+  int _dataVersion = 0;
+  bool _isRefreshing = false;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +61,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final startOfWeek = firstDay.subtract(Duration(days: firstDay.weekday % 7));
     final endOfWeek = lastDay.add(Duration(days: 6 - (lastDay.weekday % 7)));
 
-    final records = await DatabaseService().getRecordsByDateRange(
+    final records = await DatabaseService().getOverlappingRecords(
       startDate: startOfWeek,
       endDate: endOfWeek,
     );
@@ -90,20 +94,32 @@ class _CalendarPageState extends State<CalendarPage> {
         // 레코드 타이틀 저장
         _recordTitles[recordId] = record['symptom_name'] ?? '';
 
+        final displayStart =
+            startDate.isBefore(startOfWeek) ? startOfWeek : startDate;
+        final displayEnd = endDate.isAfter(endOfWeek) ? endOfWeek : endDate;
+
         final normalizedStart = DateTime(
+          displayStart.year,
+          displayStart.month,
+          displayStart.day,
+        );
+        final normalizedEnd = DateTime(
+          displayEnd.year,
+          displayEnd.month,
+          displayEnd.day,
+        );
+
+        // 시작/종료 날짜 저장
+        recordStartDates[recordId] = DateTime(
           startDate.year,
           startDate.month,
           startDate.day,
         );
-        final normalizedEnd = DateTime(
+        recordEndDates[recordId] = DateTime(
           endDate.year,
           endDate.month,
           endDate.day,
         );
-
-        // 시작/종료 날짜 저장
-        recordStartDates[recordId] = normalizedStart;
-        recordEndDates[recordId] = normalizedEnd;
 
         for (
           DateTime date = normalizedStart;
@@ -174,6 +190,20 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
+  Future<List<Map<String, dynamic>>> _getDayRecords(DateTime? day) async {
+    if (day == null) return [];
+
+    final startOfDay = DateTime(day.year, day.month, day.day);
+    final endOfDay = startOfDay
+        .add(Duration(days: 1))
+        .subtract(Duration(microseconds: 1));
+
+    return await DatabaseService().getOverlappingRecords(
+      startDate: startOfDay,
+      endDate: endOfDay,
+    );
+  }
+
   String _getWeekKey(DateTime date) {
     final weekday = date.weekday % 7;
     final sunday = date.subtract(Duration(days: weekday));
@@ -193,6 +223,7 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   void _showMonthPicker({bool isMonthlyView = true}) async {
+    HapticFeedback.lightImpact();
     final selectedDate = await showModalBottomSheet<DateTime>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -211,9 +242,17 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Future<void> _onDataChanged() async {
-    _yearlyCalendarKey.currentState?.refreshData();
-    _bottomSheetKey.currentState?.refreshData();
-    await _loadRecords();
+    if (_isRefreshing) return;
+    _isRefreshing = true;
+    try {
+      _yearlyCalendarKey.currentState?.refreshData();
+      await _loadRecords();
+      setState(() {
+        _dataVersion++;
+      });
+    } finally {
+      _isRefreshing = false;
+    }
   }
 
   @override
@@ -226,7 +265,7 @@ class _CalendarPageState extends State<CalendarPage> {
         children: [
           Column(
             children: [
-              SafeArea(bottom: false, child: _buildViewToggle()),
+              SafeArea(bottom: false, child: _buildHeader()),
               Expanded(
                 child:
                     widget.isMonthlyView
@@ -236,6 +275,62 @@ class _CalendarPageState extends State<CalendarPage> {
             ],
           ),
           _buildBottomSheet(screenHeight),
+
+          Positioned(
+            bottom:
+                64 + 10, // nav height 48 + nav position bottom 16 + extra 10
+            left: 0,
+            right: 0,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child:
+                  _bottomSheetHeight == 0 &&
+                          widget.isMonthlyView &&
+                          (_focusedDay.year != DateTime.now().year ||
+                              _focusedDay.month != DateTime.now().month)
+                      ? Center(
+                        key: const ValueKey('today_badge'),
+                        child: GestureDetector(
+                          onTap: () {
+                            final today = DateTime.now();
+                            setState(() {
+                              _focusedDay = today;
+                              _selectedDay = today;
+                            });
+                            _loadRecords();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.shadow.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '오늘',
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
+            ),
+          ),
 
           Positioned(
             bottom: 16,
@@ -252,14 +347,22 @@ class _CalendarPageState extends State<CalendarPage> {
                           shape: const CircleBorder(),
                           onPressed: () async {
                             HapticFeedback.mediumImpact();
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => RecordFoamPage(
+                            final result = await showModalBottomSheet<bool>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder:
+                                  (context) => Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom:
+                                          MediaQuery.of(
+                                            context,
+                                          ).viewInsets.bottom,
+                                    ),
+                                    child: RecordFormPage(
                                       selectedDate: _selectedDay,
                                     ),
-                              ),
+                                  ),
                             );
 
                             if (result == true) {
@@ -281,11 +384,10 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
-  Widget _buildViewToggle() {
+  Widget _buildHeader() {
     return CalendarHeaderWidget(
       isMonthlyView: widget.isMonthlyView,
       focusedDay: _focusedDay,
-
       onDateTap: () => _showMonthPicker(isMonthlyView: widget.isMonthlyView),
     );
   }
@@ -335,24 +437,11 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Widget _buildBottomSheet(double screenHeight) {
-    final selectedDateKey =
-        _selectedDay != null
-            ? DateTime(
-              _selectedDay!.year,
-              _selectedDay!.month,
-              _selectedDay!.day,
-            )
-            : null;
-
-    final selectedDaySlots =
-        selectedDateKey != null ? _weekRecordSlots[selectedDateKey] : null;
-
     return CalendarBottomSheet(
       key: _bottomSheetKey,
       bottomSheetHeight: _bottomSheetHeight,
       selectedDay: _selectedDay,
-      dayRecordSlots: selectedDaySlots,
-      recordTitles: _recordTitles,
+      selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
       onHeightChanged: (newHeight) {
         setState(() {
           _bottomSheetHeight = newHeight;
@@ -374,6 +463,7 @@ class _CalendarPageState extends State<CalendarPage> {
           _currentBottomSheetPage = pageIndex;
         });
       },
+      dataVersion: _dataVersion,
     );
   }
 }

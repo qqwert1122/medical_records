@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medical_records/services/analysis_service.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
@@ -30,7 +31,7 @@ class SpotBottomSheet extends StatefulWidget {
 }
 
 class _SpotBottomSheetState extends State<SpotBottomSheet> {
-  List<Map<String, dynamic>> spots = [];
+  List<Map<String, dynamic>> spotsWithLastUsedAt = [];
 
   @override
   void initState() {
@@ -39,10 +40,24 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
   }
 
   Future<void> _loadSpots() async {
-    final _dbService = await DatabaseService();
-    final result = await _dbService.getSpots();
+    final dbService = DatabaseService();
+    final analysisService = AnalysisService();
+
+    final base = await dbService.getSpots();
+    final lastRows = await analysisService.getSpotsLastUsedAt();
+
+    final lastMap = <int, String?>{
+      for (final r in lastRows)
+        (r['spot_id'] as int): r['last_used_at'] as String?,
+    };
+
+    final result = [
+      for (final s in base)
+        {...s, 'last_used_at': lastMap[s['spot_id'] as int]},
+    ];
+
     setState(() {
-      spots = result;
+      spotsWithLastUsedAt = result;
     });
   }
 
@@ -189,7 +204,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
           ),
           Expanded(
             child:
-                spots.isEmpty
+                spotsWithLastUsedAt.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -206,9 +221,9 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                       ),
                     )
                     : ListView.builder(
-                      itemCount: spots.length,
+                      itemCount: spotsWithLastUsedAt.length,
                       itemBuilder: (context, index) {
-                        final spot = spots[index];
+                        final spot = spotsWithLastUsedAt[index];
                         return Slidable(
                           key: ValueKey(spot['spot_id']),
                           endActionPane: ActionPane(
@@ -265,7 +280,7 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
                                       spot['last_used_at'],
                                     ),
                                     style: AppTextStyle.caption.copyWith(
-                                      color: AppColors.lightGrey,
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
                                 ],

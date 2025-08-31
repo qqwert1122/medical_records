@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medical_records/services/analysis_service.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
@@ -32,7 +33,7 @@ class TreatmentBottomSheet extends StatefulWidget {
 }
 
 class _TreatmentBottomSheetState extends State<TreatmentBottomSheet> {
-  List<Map<String, dynamic>> treatments = [];
+  List<Map<String, dynamic>> treatmentsWithLastUsedAt = [];
 
   @override
   void initState() {
@@ -41,10 +42,24 @@ class _TreatmentBottomSheetState extends State<TreatmentBottomSheet> {
   }
 
   Future<void> _loadTreatments() async {
-    final _dbService = await DatabaseService();
-    final result = await _dbService.getTreatments();
+    final dbService = DatabaseService();
+    final analysisService = AnalysisService();
+
+    final base = await dbService.getTreatments();
+    final lastRows = await analysisService.getTreatmentsLastUsedAt();
+
+    final lastMap = <int, String?>{
+      for (final r in lastRows)
+        (r['treatment_id'] as int): r['last_used_at'] as String?,
+    };
+
+    final result = [
+      for (final s in base)
+        {...s, 'last_used_at': lastMap[s['treatment_id'] as int]},
+    ];
+
     setState(() {
-      treatments = result;
+      treatmentsWithLastUsedAt = result;
     });
   }
 
@@ -197,7 +212,7 @@ class _TreatmentBottomSheetState extends State<TreatmentBottomSheet> {
           ),
           Expanded(
             child:
-                treatments.isEmpty
+                treatmentsWithLastUsedAt.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -214,9 +229,9 @@ class _TreatmentBottomSheetState extends State<TreatmentBottomSheet> {
                       ),
                     )
                     : ListView.builder(
-                      itemCount: treatments.length,
+                      itemCount: treatmentsWithLastUsedAt.length,
                       itemBuilder: (context, index) {
-                        final treatment = treatments[index];
+                        final treatment = treatmentsWithLastUsedAt[index];
                         return Slidable(
                           key: ValueKey(treatment['treatment_id']),
                           endActionPane: ActionPane(

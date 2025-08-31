@@ -43,14 +43,10 @@ class _RecordListMemosWidgetState extends State<RecordListMemosWidget> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: context.paddingSM,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      padding: EdgeInsets.symmetric(vertical: 4),
       child: Text(
         widget.memos[_currentIndex],
-        style: AppTextStyle.caption.copyWith(color: AppColors.lightGrey),
+        style: AppTextStyle.caption.copyWith(color: AppColors.textSecondary),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

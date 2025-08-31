@@ -10,23 +10,23 @@ import 'package:medical_records/services/database_service.dart';
 class CalendarBottomSheet extends StatefulWidget {
   final double bottomSheetHeight;
   final DateTime? selectedDay;
-  final Map<int, RecordInfo>? dayRecordSlots;
-  final Map<String, String>? recordTitles;
+  final Future<List<Map<String, dynamic>>> Function() selectedDayRecordsFetcher;
   final Function(double) onHeightChanged;
   final Function(DateTime) onDateChanged;
   final VoidCallback? onDataChanged;
   final Function(int)? onPageChanged;
+  final int dataVersion;
 
   const CalendarBottomSheet({
     Key? key,
     required this.bottomSheetHeight,
     required this.selectedDay,
-    this.dayRecordSlots,
-    this.recordTitles,
+    required this.selectedDayRecordsFetcher,
     required this.onHeightChanged,
     required this.onDateChanged,
     this.onDataChanged,
     this.onPageChanged,
+    required this.dataVersion,
   }) : super(key: key);
 
   @override
@@ -59,6 +59,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
   @override
   void didUpdateWidget(CalendarBottomSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (oldWidget.bottomSheetHeight == 0 && widget.bottomSheetHeight > 0) {
       // 바텀시트가 다시 열렸을 때 상태 초기화
       setState(() {
@@ -81,6 +82,10 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
       });
       _resetToListView();
     }
+
+    if (widget.dataVersion != oldWidget.dataVersion) {
+      _loadDayRecords();
+    }
   }
 
   @override
@@ -89,39 +94,23 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
     super.dispose();
   }
 
-  void refreshData() {
-    _loadDayRecords();
-    // 현재 선택된 레코드가 있다면 해당 레코드도 다시 로드
+  Future<void> onRecordUpdated() async {
+    await _loadDayRecords();
+
     if (_selectedRecord != null) {
-      _refreshSelectedRecord();
-    }
-  }
-
-  Future<void> _refreshSelectedRecord() async {
-    if (_selectedRecord == null) return;
-
-    try {
       final recordId = _selectedRecord!['record_id'];
+
       final updatedRecord = _dayRecords.firstWhere(
-        (record) => record['record_id'] == recordId,
-        orElse: () => <String, dynamic>{},
+        (r) => r['record_id'] == recordId,
+        orElse: () => _selectedRecord!,
       );
 
-      if (mounted && updatedRecord.isNotEmpty) {
-        setState(() {
-          _selectedRecord = updatedRecord;
-        });
-      } else {
-        // 레코드가 날짜 범위를 벗어났거나 삭제된 경우
-        setState(() {
-          _selectedRecord = null;
-          _currentPageIndex = 0;
-        });
-        _resetToListView();
-      }
-    } catch (e) {
-      print('레코드 새로고침 실패: $e');
+      setState(() {
+        _selectedRecord = updatedRecord;
+      });
     }
+
+    widget.onDataChanged?.call();
   }
 
   Future<void> _loadDayRecords() async {
@@ -130,47 +119,8 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
     setState(() => _isLoading = true);
 
     try {
-      List<Map<String, dynamic>> records = [];
-      print('widget.dayRecordSlots: ${widget.dayRecordSlots}');
-      print('widget.recordTitles: ${widget.recordTitles}');
-      // 전달받은 슬롯 정보가 있으면 사용
-      if (widget.dayRecordSlots != null && widget.recordTitles != null) {
-        final recordIds =
-            widget.dayRecordSlots!.values
-                .map((info) => info.recordId)
-                .toList()
-                .toSet();
-        ;
-
-        for (final recordId in recordIds) {
-          final record = await DatabaseService().getRecord(int.parse(recordId));
-          if (record != null) {
-            records.add(record);
-          }
-        }
-      } else {
-        // 기존 로직 (슬롯 정보가 없을 때)
-        final startOfDay = DateTime(
-          widget.selectedDay!.year,
-          widget.selectedDay!.month,
-          widget.selectedDay!.day,
-        );
-        final endOfDay = startOfDay
-            .add(const Duration(days: 1))
-            .subtract(const Duration(microseconds: 1));
-
-        records = await DatabaseService().getRecordsByDateRange(
-          startDate: startOfDay,
-          endDate: endOfDay,
-        );
-      }
-
-      // 레코드 정렬
-      records.sort((a, b) {
-        final aDate = DateTime.parse(a['start_date']).toLocal();
-        final bDate = DateTime.parse(b['start_date']).toLocal();
-        return aDate.compareTo(bDate);
-      });
+      // Future에서 데이터 가져오기
+      final records = await widget.selectedDayRecordsFetcher();
 
       // 각 레코드의 histories, images, memos 로드
       Map<int, List<Map<String, dynamic>>> histories = {};
@@ -194,10 +144,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
             final imageId = image['image_id'] as int;
             if (!addedImageIds.contains(imageId)) {
               addedImageIds.add(imageId);
-              allImages.add({
-                ...image,
-                'record_date': history['record_date'], // history의 날짜 정보 추가
-              });
+              allImages.add({...image, 'record_date': history['record_date']});
             }
           }
 
@@ -207,8 +154,6 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
           }
         }
 
-        // 이미지를 record_date 기준으로 정렬 (필요한 경우)
-        // recordHistories가 이미 정렬되어 있다면 이 단계는 불필요할 수 있음
         allImages.sort(
           (a, b) => DateTime.parse(
             a['record_date'],
@@ -286,14 +231,6 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
     _navigateToPage(0);
   }
 
-  Future<void> _onRecordUpdated() async {
-    await _loadDayRecords();
-    if (_selectedRecord != null) {
-      await _refreshSelectedRecord();
-    }
-    widget.onDataChanged?.call(); // 부모 위젯에 알림
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -336,7 +273,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                 currentHeight: widget.bottomSheetHeight,
                 onHeightChanged: widget.onHeightChanged,
                 onBackPressed: _onBackToList,
-                onRecordUpdated: _onRecordUpdated,
+                onRecordUpdated: onRecordUpdated,
                 onDateChanged: widget.onDateChanged,
               ),
             ),
@@ -355,6 +292,9 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                   children: [
                     // 첫 번째 페이지: 레코드 리스트
                     CalendarRecordsList(
+                      key: ValueKey(
+                        'records_${widget.dataVersion}_${widget.selectedDay?.toIso8601String()}',
+                      ),
                       dayRecords: _dayRecords,
                       histories: _recordHistories,
                       recordImages: _recordImages,
@@ -377,7 +317,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                               _recordMemos[_selectedRecord!['record_id']] ?? [],
                           onBackPressed: _onBackToList,
                           pageIndex: _currentPageIndex,
-                          onDataUpdated: refreshData,
+                          onDataUpdated: onRecordUpdated,
                         )
                         : Container(),
                   ],

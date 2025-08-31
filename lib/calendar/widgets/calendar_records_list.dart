@@ -123,7 +123,34 @@ class _CalendarRecordsListState extends State<CalendarRecordsList> {
                     padding: context.paddingHorizSM,
                     itemCount: widget.dayRecords.length,
                     itemBuilder: (context, index) {
-                      final record = widget.dayRecords[index];
+                      final sortedRecords = List<Map<String, dynamic>>.from(
+                        widget.dayRecords,
+                      )..sort((a, b) {
+                        // 1. status가 PROGRESS인 것 우선 (PROGRESS가 없으면 end_date가 null인 것)
+                        final aInProgress = a['end_date'] == null;
+                        final bInProgress = b['end_date'] == null;
+                        if (aInProgress != bInProgress) {
+                          return aInProgress ? -1 : 1;
+                        }
+
+                        // 2. start_date가 이른 것 우선
+                        final aStartDate = DateTime.parse(a['start_date']);
+                        final bStartDate = DateTime.parse(b['start_date']);
+                        final dateComparison = aStartDate.compareTo(bStartDate);
+                        if (dateComparison != 0) return dateComparison;
+
+                        // 3. symptom_name ASC
+                        final symptomComparison = (a['symptom_name'] as String)
+                            .compareTo(b['symptom_name'] as String);
+                        if (symptomComparison != 0) return symptomComparison;
+
+                        // 4. spot_name ASC
+                        final aSpotName = a['spot_name'] ?? '';
+                        final bSpotName = b['spot_name'] ?? '';
+                        return aSpotName.compareTo(bSpotName);
+                      });
+
+                      final record = sortedRecords[index];
                       return _buildRecordItem(context, record);
                     },
                   ),
@@ -142,6 +169,8 @@ class _CalendarRecordsListState extends State<CalendarRecordsList> {
     final memos = widget.recordMemos[recordId] ?? [];
     final showStart = _showStartStates[recordId] ?? true;
 
+    final bool isComplete = record['end_date'] != null;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -150,6 +179,11 @@ class _CalendarRecordsListState extends State<CalendarRecordsList> {
       },
       child: Container(
         margin: EdgeInsets.only(bottom: context.hp(1)),
+        padding: context.paddingHorizXS,
+        decoration: BoxDecoration(
+          color: isComplete ? AppColors.surface : AppColors.background,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -182,7 +216,10 @@ class _CalendarRecordsListState extends State<CalendarRecordsList> {
                               record['symptom_name'],
                               style: AppTextStyle.body.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color:
+                                    isComplete
+                                        ? AppColors.textSecondary
+                                        : AppColors.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -191,7 +228,7 @@ class _CalendarRecordsListState extends State<CalendarRecordsList> {
                             Text(
                               record['spot_name'] ?? '부위 없음',
                               style: AppTextStyle.caption.copyWith(
-                                color: AppColors.lightGrey,
+                                color: AppColors.textSecondary,
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -229,8 +266,6 @@ class _CalendarRecordsListState extends State<CalendarRecordsList> {
               SizedBox(height: context.hp(1)),
               RecordListMemosWidget(memos: memos),
             ],
-
-            SizedBox(height: context.hp(2)),
           ],
         ),
       ),

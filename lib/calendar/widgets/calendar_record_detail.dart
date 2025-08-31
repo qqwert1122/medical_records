@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/calendar/widgets/full_screen_image_gallery.dart';
 import 'package:medical_records/calendar/widgets/record_detail_info.dart';
 import 'package:medical_records/calendar/widgets/record_detail_horiz_time_line.dart';
@@ -8,7 +6,6 @@ import 'package:medical_records/calendar/widgets/record_detail_image_widget.dart
 import 'package:medical_records/calendar/widgets/record_detail_time_line.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
-import 'package:medical_records/styles/app_text_style.dart';
 
 class CalendarRecordDetail extends StatefulWidget {
   final Map<String, dynamic> record;
@@ -91,6 +88,7 @@ class _CalendarRecordDetailState extends State<CalendarRecordDetail> {
                 RecordDetailInfo(
                   record: widget.record,
                   onRecordUpdated: widget.onDataUpdated,
+                  onBackPressed: widget.onBackPressed,
                 ),
                 SizedBox(height: context.hp(20)),
               ],

@@ -7,8 +7,8 @@ class DragHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 60,
-      height: 5,
+      width: 30,
+      height: 4,
       margin: EdgeInsets.only(top: 10, bottom: 20),
       decoration: BoxDecoration(
         color: AppColors.backgroundSecondary,
