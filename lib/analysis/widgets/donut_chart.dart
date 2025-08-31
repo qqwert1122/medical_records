@@ -117,7 +117,7 @@ class DonutChart extends StatelessWidget {
                                   : '',
                           titleStyle: AppTextStyle.caption.copyWith(
                             color: AppColors.white,
-                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
                           ),
                         ),
                     ],

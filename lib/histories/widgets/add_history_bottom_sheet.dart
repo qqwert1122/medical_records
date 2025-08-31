@@ -317,6 +317,7 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
     final result = await showModalBottomSheet<DateTime>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder:
           (context) => DateTimePickerBottomSheet(
@@ -482,53 +483,66 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: context.hp(_height),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+    final insets = MediaQuery.viewInsetsOf(context);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: insets,
+        child: Container(
+          height: context.hp(_height),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              DragHandle(),
+              Padding(
+                padding: context.paddingSM,
+                child: Text(
+                  _title,
+                  style: AppTextStyle.subTitle.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.symmetric(horizontal: context.wp(4)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.recordType == 'TREATMENT') ...[
+                        _buildTreatmentSection(),
+                        SizedBox(height: context.hp(1)),
+                      ],
+                      _buildDateTimeSection(),
+                      SizedBox(height: context.hp(1)),
+                      _buildMemoSection(),
+                      SizedBox(height: context.hp(1)),
+                      if (widget.recordType != 'COMPLETE') ...[
+                        _buildImageSection(),
+                        SizedBox(height: context.hp(1)),
+                      ],
+                      SizedBox(height: context.hp(10)), // 버튼 공간 확보
+                    ],
+                  ),
+                ),
+              ),
+              _buildBottomButtons(),
+            ],
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          DragHandle(),
-          Padding(
-            padding: context.paddingSM,
-            child: Text(
-              _title,
-              style: AppTextStyle.subTitle.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: context.wp(4)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.recordType == 'TREATMENT') ...[
-                    _buildTreatmentSection(),
-                    SizedBox(height: context.hp(1)),
-                  ],
-                  _buildDateTimeSection(),
-                  SizedBox(height: context.hp(1)),
-                  _buildMemoSection(),
-                  SizedBox(height: context.hp(1)),
-                  if (widget.recordType != 'COMPLETE') ...[
-                    _buildImageSection(),
-                    SizedBox(height: context.hp(1)),
-                  ],
-                  SizedBox(height: context.hp(10)), // 버튼 공간 확보
-                ],
-              ),
-            ),
-          ),
-          _buildBottomButtons(),
-        ],
       ),
     );
   }
@@ -685,6 +699,8 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
           child: TextField(
             style: AppTextStyle.body.copyWith(color: AppColors.textPrimary),
             controller: _memoController,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => FocusScope.of(context).unfocus(),
             decoration: InputDecoration(
               hintText: _memoHint,
               hintStyle: AppTextStyle.hint,

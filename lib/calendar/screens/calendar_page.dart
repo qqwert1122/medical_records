@@ -215,10 +215,10 @@ class _CalendarPageState extends State<CalendarPage> {
     setState(() {
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
-      _bottomSheetHeight = 0.4;
+      _bottomSheetHeight = 0.5;
       _currentBottomSheetPage = 0;
     });
-    widget.onBottomSheetHeightChanged?.call(0.4);
+    widget.onBottomSheetHeightChanged?.call(0.5);
     _loadRecords();
   }
 
@@ -344,6 +344,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         width: 48,
                         child: FloatingActionButton(
                           key: const ValueKey('add_fab'),
+                          elevation: 2,
                           shape: const CircleBorder(),
                           onPressed: () async {
                             HapticFeedback.mediumImpact();
@@ -428,10 +429,10 @@ class _CalendarPageState extends State<CalendarPage> {
       onDaySelected: (date) {
         setState(() {
           _selectedDay = date;
-          _bottomSheetHeight = 0.4;
+          _bottomSheetHeight = 0.5;
         });
 
-        widget.onBottomSheetHeightChanged?.call(0.4);
+        widget.onBottomSheetHeightChanged?.call(0.5);
       },
     );
   }

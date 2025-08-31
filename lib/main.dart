@@ -267,6 +267,7 @@ class _MainNavigationState extends State<MainNavigation>
     if (index == 0) {
       return Expanded(
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => onNavTap(index),
           child: SizedBox(
             height: 48,
@@ -349,8 +350,9 @@ class _MainNavigationState extends State<MainNavigation>
     // 다른 아이콘들은 기존 방식대로
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => onNavTap(index),
-        child: Container(
+        child: SizedBox(
           height: 48,
           child: Icon(
             icon,

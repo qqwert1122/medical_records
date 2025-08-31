@@ -291,7 +291,7 @@ class _ImagesPageState extends State<ImagesPage> {
                                   Text(
                                     dateKey,
                                     style: AppTextStyle.body.copyWith(
-                                      fontWeight: FontWeight.w900,
+                                      fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,
                                     ),
                                   ),

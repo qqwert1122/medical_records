@@ -23,7 +23,7 @@ class SummaryCard extends StatelessWidget {
       padding: context.paddingXS,
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: AppColors.shadow.withValues(alpha: 0.1),
@@ -63,7 +63,7 @@ class SummaryCard extends StatelessWidget {
               value,
               style: AppTextStyle.title.copyWith(
                 fontSize: 24,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
