@@ -17,6 +17,8 @@ class _TreatmentInsightSectionState extends State<TreatmentInsightSection> {
   final DatabaseService _db = DatabaseService();
   bool _loading = true;
 
+  bool _showAllTreatments = false;
+
   Map<String, double> _treatRate7d = {};
   Map<String, double> _treatRate14d = {};
   Map<String, double> _treatAvgGapDays = {};
@@ -197,7 +199,11 @@ class _TreatmentInsightSectionState extends State<TreatmentInsightSection> {
           (a, b) =>
               (_treatRate14d[b.key] ?? 0).compareTo(_treatRate14d[a.key] ?? 0),
         );
-    final top = rows.take(5).map((e) => e.key).toList();
+    final top =
+        _showAllTreatments
+            ? rows.map((e) => e.key).toList()
+            : rows.take(5).map((e) => e.key).toList();
+    final showMore = rows.length > 5;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -414,6 +420,26 @@ class _TreatmentInsightSectionState extends State<TreatmentInsightSection> {
               ),
             ),
           ),
+          if (showMore)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Center(
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _showAllTreatments = !_showAllTreatments;
+                    });
+                  },
+
+                  child: Text(
+                    _showAllTreatments ? '접기' : '더보기 (${rows.length - 5}개)',
+                    style: AppTextStyle.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           SizedBox(height: 10),
           Container(
             width: double.infinity,

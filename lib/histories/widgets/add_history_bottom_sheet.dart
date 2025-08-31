@@ -246,7 +246,7 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
     if (existingImages.isNotEmpty) {
       setState(() {
         _imagePaths =
-            existingImages.map((img) => img['file_path'] as String).toList();
+            existingImages.map((img) => img['image_url'] as String).toList();
       });
     }
   }

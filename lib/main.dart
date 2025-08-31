@@ -428,7 +428,7 @@ class _MainNavigationState extends State<MainNavigation>
           AnimatedPositioned(
             duration: Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            bottom: _showNavBar ? 16 : -64,
+            bottom: _showNavBar ? 24 : -64,
             left: context.wp(20),
             right: context.wp(20),
             child: Container(
@@ -451,7 +451,9 @@ class _MainNavigationState extends State<MainNavigation>
                     duration: Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                     top: (48 - _circleHeight) / 2,
-                    left: context.wp(60) / 4 * selectedIndex + 15,
+                    left:
+                        context.wp(60) / 4 * selectedIndex +
+                        (context.wp(60) / 8 - _circleHeight / 2),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,

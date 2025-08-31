@@ -24,6 +24,7 @@ class _CorrelationTableState extends State<CorrelationTable> {
   int? _selectedSpotId;
 
   bool _loading = true;
+  bool _showAllRows = false;
 
   // 드롭다운 데이터
   late List<Map<String, dynamic>> _symptoms = [];
@@ -356,6 +357,9 @@ class _CorrelationTableState extends State<CorrelationTable> {
   }
 
   Widget _buildTable(BuildContext context) {
+    final displayRows = _showAllRows ? _rows : _rows.take(5).toList();
+    final hasMore = _rows.length > 5;
+
     return Container(
       padding: context.paddingSM,
       child: Column(
@@ -372,8 +376,8 @@ class _CorrelationTableState extends State<CorrelationTable> {
           ),
           const SizedBox(height: 6),
           // 바디
-          ...List.generate(_rows.length, (i) {
-            final r = _rows[i];
+          ...List.generate(displayRows.length, (i) {
+            final r = displayRows[i];
             final rank = i + 1;
 
             final rel = _reliabilityLabel(r);
@@ -421,6 +425,25 @@ class _CorrelationTableState extends State<CorrelationTable> {
               ),
             );
           }),
+          if (hasMore)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Center(
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _showAllRows = !_showAllRows;
+                    });
+                  },
+                  child: Text(
+                    _showAllRows ? '접기' : '더보기 (${_rows.length - 5}개)',
+                    style: AppTextStyle.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

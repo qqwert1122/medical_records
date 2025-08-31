@@ -333,7 +333,7 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
 
           Positioned(
-            bottom: 16,
+            bottom: 24,
             right: 16,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
