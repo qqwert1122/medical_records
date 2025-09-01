@@ -56,9 +56,11 @@ class _SpotBottomSheetState extends State<SpotBottomSheet> {
         {...s, 'last_used_at': lastMap[s['spot_id'] as int]},
     ];
 
-    setState(() {
-      spotsWithLastUsedAt = result;
-    });
+    if (mounted) {
+      setState(() {
+        spotsWithLastUsedAt = result;
+      });
+    }
   }
 
   void _showSpotDialog({Map<String, dynamic>? spot}) {

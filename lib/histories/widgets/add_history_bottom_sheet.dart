@@ -66,9 +66,10 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
     super.dispose();
   }
 
-  DateTime? _exclusiveMin(DateTime? dt) => dt?.add(const Duration(minutes: 1));
+  DateTime? _exclusiveMin(DateTime? dt) =>
+      dt?.add(const Duration(milliseconds: 1));
   DateTime? _exclusiveMax(DateTime? dt) =>
-      dt?.subtract(const Duration(minutes: 1));
+      dt?.subtract(const Duration(milliseconds: 1));
 
   Future<void> _loadDateConstraints() async {
     if (widget.recordType == 'TREATMENT' || widget.recordType == 'PROGRESS') {
@@ -83,129 +84,50 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
         orElse: () => {},
       );
 
-      setState(() {
-        _initialDate =
-            (initialHistory.isNotEmpty && initialHistory['record_date'] != null)
-                ? DateTime.parse(initialHistory['record_date'])
-                : null;
+      if (mounted) {
+        setState(() {
+          _initialDate =
+              (initialHistory.isNotEmpty &&
+                      initialHistory['record_date'] != null)
+                  ? DateTime.parse(initialHistory['record_date'])
+                  : null;
 
-        _completeDate =
-            (completeHistory.isNotEmpty &&
-                    completeHistory['record_date'] != null)
-                ? DateTime.parse(completeHistory['record_date'])
-                : null;
-      });
+          _completeDate =
+              (completeHistory.isNotEmpty &&
+                      completeHistory['record_date'] != null)
+                  ? DateTime.parse(completeHistory['record_date'])
+                  : null;
+        });
+      }
     } else if (widget.recordType == 'COMPLETE') {
       final lastDate = await _getLastHistoryDate();
-      setState(() {
-        _lastHistoryDate = lastDate;
-      });
+      if (mounted) {
+        setState(() {
+          _lastHistoryDate = lastDate;
+        });
+      }
     }
   }
 
   Future<(DateTime?, DateTime?)> _computeDateBounds() async {
+    final now = DateTime.now();
+
     // COMPLETE: 마지막 일반 히스토리 '이후'만 허용
     if (widget.recordType == 'COMPLETE') {
       final minBase = _lastHistoryDate ?? await _getLastHistoryDate();
       final min = _exclusiveMin(minBase); // > last history
-      final max = DateTime.now(); // now는 굳이 배타 안 해도 OK
-      return (min, max);
+      return (min, now);
     }
 
     // PROGRESS / TREATMENT
     if (widget.recordType == 'PROGRESS' || widget.recordType == 'TREATMENT') {
-      // 기본 범위: INITIAL 이후, COMPLETE 이전
       final baseMin = _exclusiveMin(_initialDate); // > INITIAL
-      final baseMax =
-          _completeDate != null
-              ? _exclusiveMax(_completeDate) // < COMPLETE
-              : DateTime.now(); // COMPLETE 없으면 now까지
+      final baseMax = _completeDate ?? now;
 
-      // 신규 기록이면 기본 범위 반환
-      if (!widget.isEditMode || widget.existingHistory == null) {
-        return (baseMin, baseMax);
-      }
-
-      // 수정 기록이면 직전/직후 히스토리로 더 좁힘
-      final histories = await _getHistoriesSorted();
-      final currentId = widget.existingHistory!['history_id'];
-      final idx = histories.indexWhere((h) => h['history_id'] == currentId);
-
-      DateTime? prev; // 직전 히스토리 시각
-      DateTime? next; // 직후 히스토리 시각
-
-      if (idx != -1) {
-        // prev
-        for (int i = idx - 1; i >= 0; i--) {
-          final s = histories[i]['record_date'] ?? histories[i]['event_date'];
-          if (s != null) {
-            prev = DateTime.parse(s);
-            break;
-          }
-        }
-        // next
-        for (int i = idx + 1; i < histories.length; i++) {
-          final s = histories[i]['record_date'] ?? histories[i]['event_date'];
-          if (s != null) {
-            next = DateTime.parse(s);
-            break;
-          }
-        }
-      }
-
-      // 직전은 > prev, 직후는 < next 로 배타 처리
-      final prevEx = _exclusiveMin(prev);
-      final nextEx = _exclusiveMax(next);
-
-      // 최종 min = max(baseMin, prevEx), max = min(baseMax, nextEx)
-      DateTime? min = baseMin;
-      if (prevEx != null) {
-        min = (min == null) ? prevEx : (prevEx.isAfter(min) ? prevEx : min);
-      }
-
-      DateTime? max = baseMax;
-      if (nextEx != null) {
-        max = (max == null) ? nextEx : (nextEx.isBefore(max) ? nextEx : max);
-      }
-
-      // (옵션) 가드: 선택 가능 구간이 없을 때의 대비
-      if (min != null && max != null && !min.isBefore(max)) {
-        // 여기서는 그대로 반환해서 피커가 선택 불가 상태를 보여주게 두거나,
-        // max를 min + 1분으로 살짝 열어줄 수도 있음 (선호에 따라 결정)
-        // max = min.add(const Duration(minutes: 1));
-      }
-
-      return (min, max);
+      return (baseMin, baseMax);
     }
 
-    // 기본
-    return (null, DateTime.now());
-  }
-
-  Future<List<Map<String, dynamic>>> _getHistoriesSorted() async {
-    // UnmodifiableListView 방지: 가변 리스트로 복사
-    final raw = await DatabaseService().getHistories(widget.recordId);
-    final list = List<Map<String, dynamic>>.from(raw);
-
-    DateTime? _p(dynamic s) {
-      if (s == null) return null;
-      try {
-        return DateTime.parse(s as String);
-      } catch (_) {
-        return null;
-      }
-    }
-
-    list.sort((a, b) {
-      final ad = _p(a['record_date'] ?? a['event_date']);
-      final bd = _p(b['record_date'] ?? b['event_date']);
-      if (ad == null && bd == null) return 0; // 둘 다 없으면 그대로
-      if (ad == null) return 1; // null을 뒤로
-      if (bd == null) return -1;
-      return ad.compareTo(bd); // 날짜만 비교
-    });
-
-    return list;
+    return (null, now);
   }
 
   Future<DateTime?> _getLastHistoryDate() async {
@@ -243,7 +165,7 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
     final existingImages = await DatabaseService().getImages(
       history['history_id'],
     );
-    if (existingImages.isNotEmpty) {
+    if (existingImages.isNotEmpty && mounted) {
       setState(() {
         _imagePaths =
             existingImages.map((img) => img['image_url'] as String).toList();
@@ -282,7 +204,7 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
 
   Future<void> _loadInitialTreatment() async {
     final treatments = await DatabaseService().getTreatments();
-    if (treatments.isNotEmpty) {
+    if (treatments.isNotEmpty && mounted) {
       setState(() {
         selectedTreatment = treatments.first;
       });
@@ -290,24 +212,24 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
   }
 
   Future<void> _pickImages() async {
-    if (_isPickingImages) return;
-
+    if (_isPickingImages || !mounted) return;
     setState(() {
       _isPickingImages = true;
     });
-
     try {
       final picker = ImagePicker();
       final images = await picker.pickMultiImage();
-      if (images.isNotEmpty) {
+      if (images.isNotEmpty && mounted) {
         setState(() {
           _imagePaths.addAll(images.map((image) => image.path));
         });
       }
     } finally {
-      setState(() {
-        _isPickingImages = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isPickingImages = false;
+        });
+      }
     }
   }
 
@@ -327,7 +249,7 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
           ),
     );
 
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() {
         _selectedDateTime = result;
       });
@@ -335,9 +257,11 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
   }
 
   void _removeImage(int index) {
-    setState(() {
-      _imagePaths.removeAt(index);
-    });
+    if (mounted) {
+      setState(() {
+        _imagePaths.removeAt(index);
+      });
+    }
   }
 
   void createNewHistory() async {
@@ -552,7 +476,7 @@ class _AddHistoryBottomSheetState extends State<AddHistoryBottomSheet> {
       context,
       selectedTreatment: selectedTreatment,
     );
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() {
         selectedTreatment = result;
       });

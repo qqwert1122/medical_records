@@ -78,9 +78,11 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
                 ),
             pageController: _pageController,
             onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
+              if (mounted) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              }
             },
             backgroundDecoration: const BoxDecoration(color: Colors.black),
           ),

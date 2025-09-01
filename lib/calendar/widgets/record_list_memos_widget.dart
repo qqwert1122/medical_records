@@ -26,9 +26,11 @@ class _RecordListMemosWidgetState extends State<RecordListMemosWidget> {
     super.initState();
     if (widget.memos.length > 1) {
       _timer = Timer.periodic(Duration(seconds: 3), (timer) {
-        setState(() {
-          _currentIndex = (_currentIndex + 1) % widget.memos.length;
-        });
+        if (mounted) {
+          setState(() {
+            _currentIndex = (_currentIndex + 1) % widget.memos.length;
+          });
+        }
       });
     }
   }

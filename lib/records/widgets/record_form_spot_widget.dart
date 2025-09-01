@@ -38,12 +38,14 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
         final spot = spots.firstWhere(
           (spot) => spot['spot_id'] == widget.initialSpotId,
         );
-        setState(() {
-          selectedSpot = spot;
-        });
+        if (mounted) {
+          setState(() {
+            selectedSpot = spot;
+          });
+        }
       } catch (e) {
         // 해당 spot을 찾지 못한 경우 첫 번째 spot 선택
-        if (spots.isNotEmpty) {
+        if (spots.isNotEmpty && mounted) {
           setState(() {
             selectedSpot = spots.first;
           });
@@ -51,7 +53,7 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
       }
     } else {
       // 추가 모드: 첫 번째 spot 선택
-      if (spots.isNotEmpty) {
+      if (spots.isNotEmpty && mounted) {
         setState(() {
           selectedSpot = spots.first;
         });
@@ -128,7 +130,7 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
       context,
       selectedSpot: selectedSpot,
     );
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() {
         selectedSpot = result;
       });

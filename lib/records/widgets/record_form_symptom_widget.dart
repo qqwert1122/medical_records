@@ -40,12 +40,14 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
         final symptom = symptoms.firstWhere(
           (symptom) => symptom['symptom_id'] == widget.initialSymptomId,
         );
-        setState(() {
-          selectedSymptom = symptom;
-        });
+        if (mounted) {
+          setState(() {
+            selectedSymptom = symptom;
+          });
+        }
       } catch (e) {
         // 해당 symptom을 찾지 못한 경우 첫 번째 symptom 선택
-        if (symptoms.isNotEmpty) {
+        if (symptoms.isNotEmpty && mounted) {
           setState(() {
             selectedSymptom = symptoms.first;
           });
@@ -53,7 +55,7 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
       }
     } else {
       // 추가 모드: 첫 번째 symptom 선택
-      if (symptoms.isNotEmpty) {
+      if (symptoms.isNotEmpty && mounted) {
         setState(() {
           selectedSymptom = symptoms.first;
         });
@@ -130,7 +132,7 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
       context,
       selectedSymptom: selectedSymptom,
     );
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() {
         selectedSymptom = result;
       });

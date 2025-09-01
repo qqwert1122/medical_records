@@ -67,9 +67,11 @@ class _MainNavigationState extends State<MainNavigation>
     CalendarPage(
       isMonthlyView: isMonthlyView,
       onBottomSheetHeightChanged: (height) {
-        setState(() {
-          _showNavBar = height == 0;
-        });
+        if (mounted) {
+          setState(() {
+            _showNavBar = height == 0;
+          });
+        }
       },
     ),
     ImagesPage(),
@@ -128,7 +130,7 @@ class _MainNavigationState extends State<MainNavigation>
     await _reloadSecurityFlag();
     if (!mounted) return;
 
-    if (_securityEnabled) {
+    if (_securityEnabled && mounted) {
       setState(() => _locked = true);
       // 프레임 이후 인증 호출 (UI가 뜬 뒤)
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -169,16 +171,18 @@ class _MainNavigationState extends State<MainNavigation>
           stickyAuth: true, // 루프 발생 시 false로도 테스트 가능
         ),
       );
-      if (!mounted) return;
-      setState(() => _locked = !ok);
+      if (mounted) {
+        setState(() => _locked = !ok);
+      }
     } on PlatformException catch (e) {
       if (e.code == 'NotAvailable' || e.code == 'NotEnrolled') {
         _authInProgress = false;
         await _showPinDialog();
         return;
       }
-      if (!mounted) return;
-      setState(() => _locked = true);
+      if (mounted) {
+        setState(() => _locked = true);
+      }
     } finally {
       _authInProgress = false;
     }
@@ -197,11 +201,15 @@ class _MainNavigationState extends State<MainNavigation>
             onSubmit: (pin) async {
               if (stored == null) {
                 await _storage.write(key: _kPinCodeKey, value: pin);
-                setState(() => _locked = false);
+                if (mounted) {
+                  setState(() => _locked = false);
+                }
                 _pinDialogOpen = false;
                 Navigator.pop(context);
               } else if (stored == pin) {
-                setState(() => _locked = false);
+                if (mounted) {
+                  setState(() => _locked = false);
+                }
                 _pinDialogOpen = false;
                 Navigator.pop(context);
               } else {
@@ -220,18 +228,21 @@ class _MainNavigationState extends State<MainNavigation>
   }
 
   void _animateCircle(int index) {
-    setState(() {
-      // 애니메이션 상태 변경
-      _circleWidth = 30;
-      _circleHeight = 2;
-    });
-
-    Future.delayed(const Duration(milliseconds: 150), () {
+    if (mounted) {
       setState(() {
         _circleWidth = 30;
-        _circleHeight = 30;
-        selectedIndex = index;
+        _circleHeight = 2;
       });
+    }
+
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) {
+        setState(() {
+          _circleWidth = 30;
+          _circleHeight = 30;
+          selectedIndex = index;
+        });
+      }
     });
   }
 
@@ -239,7 +250,7 @@ class _MainNavigationState extends State<MainNavigation>
     HapticFeedback.lightImpact();
 
     // 캘린더 아이콘 클릭 시
-    if (index == 0 && selectedIndex == 0) {
+    if (index == 0 && selectedIndex == 0 && mounted) {
       setState(() {
         isMonthlyView = !isMonthlyView;
       });
@@ -247,14 +258,16 @@ class _MainNavigationState extends State<MainNavigation>
     }
 
     // 다른 탭에서 캘린더 탭으로 돌아올 때는 월간 뷰로 초기화
-    if (index == 0 && selectedIndex != 0) {
+    if (index == 0 && selectedIndex != 0 && mounted) {
       setState(() {
         isMonthlyView = true;
       });
     }
 
     _animateCircle(index);
-    setState(() => selectedIndex = index);
+    if (mounted) {
+      setState(() => selectedIndex = index);
+    }
     pageController.animateToPage(
       index,
       duration: Duration(milliseconds: 300),

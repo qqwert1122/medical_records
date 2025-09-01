@@ -66,9 +66,14 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
                           itemExtent: 40,
                           onSelectedItemChanged: (index) {
                             HapticFeedback.lightImpact();
-                            setState(() {
-                              tempDate = DateTime(2020 + index, tempDate.month);
-                            });
+                            if (mounted) {
+                              setState(() {
+                                tempDate = DateTime(
+                                  2020 + index,
+                                  tempDate.month,
+                                );
+                              });
+                            }
                           },
                           children: List.generate(11, (index) {
                             bool isSelected = index == tempDate.year - 2020;
@@ -98,9 +103,11 @@ class _MonthPickerBottomSheetState extends State<MonthPickerBottomSheet> {
                             itemExtent: 40,
                             onSelectedItemChanged: (index) {
                               HapticFeedback.lightImpact();
-                              setState(() {
-                                tempDate = DateTime(tempDate.year, index + 1);
-                              });
+                              if (mounted) {
+                                setState(() {
+                                  tempDate = DateTime(tempDate.year, index + 1);
+                                });
+                              }
                             },
                             children: List.generate(12, (index) {
                               bool isSelected = index == tempDate.month - 1;

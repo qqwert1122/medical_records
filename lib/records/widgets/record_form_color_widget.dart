@@ -152,9 +152,11 @@ class RecordFormColorWidgetState extends State<RecordFormColorWidget> {
                 return GestureDetector(
                   onTap: () {
                     HapticFeedback.mediumImpact();
-                    setState(() {
-                      selectedColor = color;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        selectedColor = color;
+                      });
+                    }
                     Navigator.pop(context);
                   },
                   child: Container(

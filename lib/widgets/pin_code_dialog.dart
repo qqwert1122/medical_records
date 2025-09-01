@@ -106,6 +106,7 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
   }
 
   Future<void> _registerFail() async {
+    if (!mounted) return;
     _failCount += 1;
     await _storage.write(key: _kPinFailCountKey, value: '$_failCount');
 
@@ -116,17 +117,21 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
         value: _lockUntil!.millisecondsSinceEpoch.toString(),
       );
       _startCountdown();
-      setState(() {
-        _error = '잠금됨: $_lockoutSeconds초 후 다시 시도하세요';
-        _pin = '';
-        _confirmPin = '';
-        _isConfirming = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = '잠금됨: $_lockoutSeconds초 후 다시 시도하세요';
+          _pin = '';
+          _confirmPin = '';
+          _isConfirming = false;
+        });
+      }
     } else {
-      setState(() {
-        _error = '잘못된 PIN입니다 ($_failCount/$_lockoutThreshold)';
-        _pin = '';
-      });
+      if (mounted) {
+        setState(() {
+          _error = '잘못된 PIN입니다 ($_failCount/$_lockoutThreshold)';
+          _pin = '';
+        });
+      }
     }
     HapticFeedback.mediumImpact();
   }
@@ -138,7 +143,7 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
 
   void _onNumberTap(String number) async {
     HapticFeedback.lightImpact();
-    if (_isLocked) {
+    if (_isLocked && mounted) {
       setState(() {
         final remain =
             _remainingSecs > 0
@@ -148,31 +153,35 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
       });
       return;
     }
-    if (_error != null) setState(() => _error = null);
+    if (_error != null && mounted) setState(() => _error = null);
 
     if (_isConfirming) {
-      if (_confirmPin.length < 4) {
+      if (_confirmPin.length < 4 && mounted) {
         setState(() => _confirmPin += number);
         if (_confirmPin.length == 4) {
           if (_confirmPin == _pin) {
-            await _registerSuccess(_pin); // 설정 성공
+            if (mounted) {
+              await _registerSuccess(_pin); // 설정 성공
+            }
           } else {
-            setState(() {
-              _error = 'PIN이 일치하지 않습니다';
-              _confirmPin = '';
-              _pin = '';
-              _isConfirming = false;
-            });
+            if (mounted) {
+              setState(() {
+                _error = 'PIN이 일치하지 않습니다';
+                _confirmPin = '';
+                _pin = '';
+                _isConfirming = false;
+              });
+            }
             HapticFeedback.mediumImpact();
           }
         }
       }
       return;
     }
-    if (_pin.length < 4) {
+    if (_pin.length < 4 && mounted) {
       setState(() => _pin += number);
       if (_pin.length == 4) {
-        if (widget.isSetup) {
+        if (widget.isSetup && mounted) {
           setState(() => _isConfirming = true);
         } else {
           // 해제 모드
@@ -192,17 +201,19 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
 
   void _onDelete() {
     HapticFeedback.lightImpact();
-    setState(() {
-      if (_isConfirming) {
-        if (_confirmPin.isNotEmpty) {
-          _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+    if (mounted) {
+      setState(() {
+        if (_isConfirming) {
+          if (_confirmPin.isNotEmpty) {
+            _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+          }
+        } else {
+          if (_pin.isNotEmpty) {
+            _pin = _pin.substring(0, _pin.length - 1);
+          }
         }
-      } else {
-        if (_pin.isNotEmpty) {
-          _pin = _pin.substring(0, _pin.length - 1);
-        }
-      }
-    });
+      });
+    }
   }
 
   @override

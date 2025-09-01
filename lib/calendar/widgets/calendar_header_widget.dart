@@ -71,12 +71,13 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
           tempTreatmentCount++;
       }
 
-      if (!mounted) return;
-      setState(() {
-        thisMonthCount = tempThisMonthCount;
-        totalLiveCount = tempTotalLiveCount;
-        treatmentCount = tempTreatmentCount;
-      });
+      if (mounted) {
+        setState(() {
+          thisMonthCount = tempThisMonthCount;
+          totalLiveCount = tempTotalLiveCount;
+          treatmentCount = tempTreatmentCount;
+        });
+      }
     } finally {
       _isLoadingCounts = false;
     }

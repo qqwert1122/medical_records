@@ -48,9 +48,11 @@ class RecordFormDateWidgetState extends State<RecordFormDateWidget> {
 
   DateTime? getSelectedDate() => _selectedDate;
   void setSelectedDate(DateTime? date) {
-    setState(() {
-      _selectedDate = date;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedDate = date;
+      });
+    }
   }
 
   DateTime _clampToBounds(DateTime value, {DateTime? min, DateTime? max}) {
@@ -82,7 +84,7 @@ class RecordFormDateWidgetState extends State<RecordFormDateWidget> {
     );
 
     // 4) 반영
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() {
         _selectedDate = picked;
       });
@@ -91,9 +93,11 @@ class RecordFormDateWidgetState extends State<RecordFormDateWidget> {
   }
 
   void _clearDate() {
-    setState(() {
-      _selectedDate = null;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedDate = null;
+      });
+    }
     widget.onDateChanged?.call(null);
   }
 

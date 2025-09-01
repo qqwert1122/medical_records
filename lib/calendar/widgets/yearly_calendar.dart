@@ -41,8 +41,9 @@ class YearlyCalendarState extends State<YearlyCalendar> {
   }
 
   Future<void> _loadYearlyRecords() async {
-    setState(() => _isLoading = true);
-
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
     try {
       // 1월 1일부터 12월 31일까지 조회
       final startOfYear = DateTime(widget.focusedDay.year, 1, 1);
@@ -53,31 +54,33 @@ class YearlyCalendarState extends State<YearlyCalendar> {
         endDate: endOfYear,
       );
 
-      setState(() {
-        _yearlyRecords.clear();
+      if (mounted) {
+        setState(() {
+          _yearlyRecords.clear();
 
-        for (final record
-            in records.toList()
-              ..sort((a, b) => a['start_date'].compareTo(b['start_date']))) {
-          final startDate = DateTime.parse(record['start_date']).toLocal();
-          final dateKey = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day,
-          );
+          for (final record
+              in records.toList()
+                ..sort((a, b) => a['start_date'].compareTo(b['start_date']))) {
+            final startDate = DateTime.parse(record['start_date']).toLocal();
+            final dateKey = DateTime(
+              startDate.year,
+              startDate.month,
+              startDate.day,
+            );
 
-          final colorString = record['color'] as String;
-          final color = Color(int.parse(colorString));
+            final colorString = record['color'] as String;
+            final color = Color(int.parse(colorString));
 
-          if (_yearlyRecords.containsKey(dateKey)) {
-            _yearlyRecords[dateKey]!.add(color);
-          } else {
-            _yearlyRecords[dateKey] = [color];
+            if (_yearlyRecords.containsKey(dateKey)) {
+              _yearlyRecords[dateKey]!.add(color);
+            } else {
+              _yearlyRecords[dateKey] = [color];
+            }
           }
-        }
 
-        _isLoading = false;
-      });
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('연간 레코드 로드 실패: $e');
       if (mounted) {

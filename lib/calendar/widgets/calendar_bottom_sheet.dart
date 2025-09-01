@@ -62,10 +62,12 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
     if (oldWidget.bottomSheetHeight == 0 && widget.bottomSheetHeight > 0) {
       // 바텀시트가 다시 열렸을 때 상태 초기화
-      setState(() {
-        _selectedRecord = null;
-        _currentPageIndex = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedRecord = null;
+          _currentPageIndex = 0;
+        });
+      }
       _resetToListView();
 
       if (widget.selectedDay != null) {
@@ -76,10 +78,12 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
     if (widget.selectedDay != oldWidget.selectedDay &&
         widget.selectedDay != null) {
       _loadDayRecords();
-      setState(() {
-        _selectedRecord = null;
-        _currentPageIndex = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedRecord = null;
+          _currentPageIndex = 0;
+        });
+      }
       _resetToListView();
     }
 
@@ -105,16 +109,18 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
         orElse: () => _selectedRecord!,
       );
 
-      setState(() {
-        _selectedRecord = updatedRecord;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedRecord = updatedRecord;
+        });
+      }
     }
 
     widget.onDataChanged?.call();
   }
 
   Future<void> _loadDayRecords() async {
-    if (widget.selectedDay == null) return;
+    if (widget.selectedDay == null || !mounted) return;
 
     setState(() => _isLoading = true);
 
@@ -185,10 +191,12 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
   // pageView 관련
   void _resetToListView() {
-    setState(() {
-      _selectedRecord = null;
-      _currentPageIndex = 0;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedRecord = null;
+        _currentPageIndex = 0;
+      });
+    }
     if (_currentPageIndex != 0) {
       _navigateToPage(0);
     }
@@ -197,10 +205,11 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
   void _navigateToPage(int pageIndex) {
     if (_isAnimating || !_pageController.hasClients) return;
 
-    setState(() {
-      _isAnimating = true;
-    });
-
+    if (mounted) {
+      setState(() {
+        _isAnimating = true;
+      });
+    }
     _pageController
         .animateToPage(
           pageIndex,
@@ -220,9 +229,11 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
 
   void _onRecordTap(Map<String, dynamic> record) {
     HapticFeedback.lightImpact();
-    setState(() {
-      _selectedRecord = record;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedRecord = record;
+      });
+    }
     _navigateToPage(1);
   }
 
@@ -284,9 +295,11 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (index) {
-                    setState(() {
-                      _currentPageIndex = index;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _currentPageIndex = index;
+                      });
+                    }
                     widget.onPageChanged?.call(index);
                   },
                   children: [

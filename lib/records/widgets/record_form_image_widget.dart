@@ -43,9 +43,11 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
   }
 
   void _updateImagePaths() {
-    setState(() {
-      _allImagePaths = List.from(widget.initialImagePaths ?? []);
-    });
+    if (mounted) {
+      setState(() {
+        _allImagePaths = List.from(widget.initialImagePaths ?? []);
+      });
+    }
   }
 
   List<String> getSelectedImagePaths() {
@@ -53,7 +55,7 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
   }
 
   Future<void> _pickImages() async {
-    if (_isPickingImages) return;
+    if (_isPickingImages || !mounted) return;
 
     setState(() {
       _isPickingImages = true;
@@ -62,20 +64,22 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
     try {
       final picker = ImagePicker();
       final images = await picker.pickMultiImage();
-      if (images.isNotEmpty) {
+      if (images.isNotEmpty && mounted) {
         setState(() {
           _allImagePaths.addAll(images.map((image) => image.path));
         });
       }
     } finally {
-      setState(() {
-        _isPickingImages = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isPickingImages = false;
+        });
+      }
     }
   }
 
   void _removeImage(int index) {
-    if (index >= 0 && index < _allImagePaths.length) {
+    if (index >= 0 && index < _allImagePaths.length && mounted) {
       setState(() {
         _allImagePaths.removeAt(index);
         if (_currentIndex >= _allImagePaths.length &&
@@ -150,9 +154,11 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
               enableInfiniteScroll: false,
               viewportFraction: 1,
               onPageChanged: (index, reason) {
-                setState(() {
-                  _currentIndex = index;
-                });
+                if (mounted) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                }
               },
             ),
             items:
@@ -285,9 +291,11 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
                 return GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    setState(() {
-                      _currentIndex = index;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    }
                     _carouselController.jumpToPage(index);
                   },
                   child: Container(

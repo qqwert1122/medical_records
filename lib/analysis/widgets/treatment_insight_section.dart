@@ -132,8 +132,9 @@ class _TreatmentInsightSectionState extends State<TreatmentInsightSection> {
     lb.sort((a, b) => b.$2.compareTo(a.$2));
     _treatLeaderboard = lb.where((t) => t.$3 >= 3).take(5).toList();
 
-    if (!mounted) return;
-    setState(() => _loading = false);
+    if (mounted) {
+      setState(() => _loading = false);
+    }
   }
 
   double _daysBetween(DateTime a, DateTime b) => b.difference(a).inHours / 24.0;
@@ -426,9 +427,11 @@ class _TreatmentInsightSectionState extends State<TreatmentInsightSection> {
               child: Center(
                 child: TextButton(
                   onPressed: () {
-                    setState(() {
-                      _showAllTreatments = !_showAllTreatments;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _showAllTreatments = !_showAllTreatments;
+                      });
+                    }
                   },
 
                   child: Text(

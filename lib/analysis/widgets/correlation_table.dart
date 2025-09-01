@@ -46,10 +46,10 @@ class _CorrelationTableState extends State<CorrelationTable> {
   }
 
   Future<void> _loadAll() async {
-    setState(() => _loading = true);
+    if (mounted) {
+      setState(() => _loading = true);
+    }
     try {
-      if (!mounted) return;
-
       final analysis = AnalysisService();
 
       // 드롭다운용 마스터
@@ -59,27 +59,31 @@ class _CorrelationTableState extends State<CorrelationTable> {
       // φ 계산용 베이스 (a, a+b, a+c, N)
       final base = await analysis.buildSymptomSpotCounts();
 
-      setState(() {
-        _symptoms = symptoms;
-        _spots = spots;
-        _cooc = base.cooc; // Map<(int,int), int>
-        _symTotals = base.symTotals; // Map<int, int>
-        _spotTotals = base.spotTotals; // Map<int, int>
-        _N = base.N; // int
-      });
+      if (mounted) {
+        setState(() {
+          _symptoms = symptoms;
+          _spots = spots;
+          _cooc = base.cooc; // Map<(int,int), int>
+          _symTotals = base.symTotals; // Map<int, int>
+          _spotTotals = base.spotTotals; // Map<int, int>
+          _N = base.N; // int
+        });
+      }
 
       _recompute(); // 초기(전체) 결과 산출
     } catch (e) {
       if (!mounted) return;
       debugPrint('Correlation load error: $e');
-      setState(() {
-        _symptoms = [];
-        _spots = [];
-        _cooc = {};
-        _symTotals = {};
-        _spotTotals = {};
-        _N = 0;
-      });
+      if (mounted) {
+        setState(() {
+          _symptoms = [];
+          _spots = [];
+          _cooc = {};
+          _symTotals = {};
+          _spotTotals = {};
+          _N = 0;
+        });
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -157,7 +161,9 @@ class _CorrelationTableState extends State<CorrelationTable> {
       return (x.symptomName + x.spotName).compareTo(y.symptomName + y.spotName);
     });
 
-    setState(() => _rows = rows);
+    if (mounted) {
+      setState(() => _rows = rows);
+    }
   }
 
   double _tanh(double x) {
@@ -168,10 +174,12 @@ class _CorrelationTableState extends State<CorrelationTable> {
   }
 
   void _resetFilters() {
-    setState(() {
-      _selectedSymptomId = null;
-      _selectedSpotId = null;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedSymptomId = null;
+        _selectedSpotId = null;
+      });
+    }
     _recompute();
   }
 
@@ -282,7 +290,10 @@ class _CorrelationTableState extends State<CorrelationTable> {
                   s['symptom_name'] as String,
                   style: AppTextStyle.caption.copyWith(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w900,
+                    fontWeight:
+                        s['symptom_id'] == _selectedSymptomId
+                            ? FontWeight.w900
+                            : FontWeight.w400,
                     fontSize: 14,
                   ),
                 ),
@@ -296,7 +307,9 @@ class _CorrelationTableState extends State<CorrelationTable> {
           },
           onChanged: (v) {
             HapticFeedback.lightImpact();
-            setState(() => _selectedSymptomId = v);
+            if (mounted) {
+              setState(() => _selectedSymptomId = v);
+            }
             _recompute();
           },
         ),
@@ -312,7 +325,10 @@ class _CorrelationTableState extends State<CorrelationTable> {
                   p['spot_name'] as String,
                   style: AppTextStyle.caption.copyWith(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w900,
+                    fontWeight:
+                        p['spot_id'] == _selectedSpotId
+                            ? FontWeight.w900
+                            : FontWeight.w400,
                     fontSize: 14,
                   ),
                 ),
@@ -324,7 +340,9 @@ class _CorrelationTableState extends State<CorrelationTable> {
           },
           onChanged: (v) {
             HapticFeedback.lightImpact();
-            setState(() => _selectedSpotId = v);
+            if (mounted) {
+              setState(() => _selectedSpotId = v);
+            }
             _recompute();
           },
         ),
@@ -431,9 +449,11 @@ class _CorrelationTableState extends State<CorrelationTable> {
               child: Center(
                 child: TextButton(
                   onPressed: () {
-                    setState(() {
-                      _showAllRows = !_showAllRows;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _showAllRows = !_showAllRows;
+                      });
+                    }
                   },
                   child: Text(
                     _showAllRows ? '접기' : '더보기 (${_rows.length - 5}개)',

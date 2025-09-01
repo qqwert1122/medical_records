@@ -65,11 +65,11 @@ class _ImagesPageState extends State<ImagesPage> {
   }
 
   Future<void> _loadImages() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     // 필터에 따른 records 조회
     final records = await _dbService.getRecords(
@@ -173,11 +173,13 @@ class _ImagesPageState extends State<ImagesPage> {
                   GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
-                      setState(() {
-                        _selectedSpotId = null;
-                        _selectedSymptomId = null;
-                        _selectedTreatmentId = null;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _selectedSpotId = null;
+                          _selectedSymptomId = null;
+                          _selectedTreatmentId = null;
+                        });
+                      }
                       _loadImages();
                     },
                     child: Container(
@@ -207,9 +209,11 @@ class _ImagesPageState extends State<ImagesPage> {
                     nameKey: 'spot_name',
                     onChanged: (value) {
                       HapticFeedback.lightImpact();
-                      setState(() {
-                        _selectedSpotId = value;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _selectedSpotId = value;
+                        });
+                      }
                       _loadImages();
                     },
                   ),
@@ -222,9 +226,11 @@ class _ImagesPageState extends State<ImagesPage> {
                     nameKey: 'symptom_name',
                     onChanged: (value) {
                       HapticFeedback.lightImpact();
-                      setState(() {
-                        _selectedSymptomId = value;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _selectedSymptomId = value;
+                        });
+                      }
                       _loadImages();
                     },
                   ),
@@ -237,9 +243,11 @@ class _ImagesPageState extends State<ImagesPage> {
                     nameKey: 'treatment_name',
                     onChanged: (value) {
                       HapticFeedback.lightImpact();
-                      setState(() {
-                        _selectedTreatmentId = value;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _selectedTreatmentId = value;
+                        });
+                      }
                       _loadImages();
                     },
                   ),
@@ -358,7 +366,6 @@ class _ImagesPageState extends State<ImagesPage> {
                                 );
                               },
                             ),
-                            const SizedBox(height: 16),
                           ],
                         );
                       },

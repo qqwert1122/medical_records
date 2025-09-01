@@ -45,8 +45,9 @@ class _AnalysisPageState extends State<AnalysisPage> {
   }
 
   Future<void> _loadAnalysis() async {
-    if (!mounted) return;
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final now = DateTime.now();
@@ -190,7 +191,9 @@ class _AnalysisPageState extends State<AnalysisPage> {
               child: RangeSelector(
                 value: _selectedRange,
                 onChanged: (v) {
-                  setState(() => _selectedRange = v);
+                  if (mounted) {
+                    setState(() => _selectedRange = v);
+                  }
                   _loadAnalysis();
                 },
               ),

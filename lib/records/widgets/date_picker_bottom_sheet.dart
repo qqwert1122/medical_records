@@ -220,14 +220,16 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                             final newDay = _dateOnly(
                               _startBound.add(Duration(days: index)),
                             );
-                            setState(() {
-                              _dayIndex = index;
-                              _applyAndSync(
-                                newDay,
-                                _selectedHour,
-                                _selectedMinute,
-                              );
-                            });
+                            if (mounted) {
+                              setState(() {
+                                _dayIndex = index;
+                                _applyAndSync(
+                                  newDay,
+                                  _selectedHour,
+                                  _selectedMinute,
+                                );
+                              });
+                            }
                           },
                           children: List.generate(_dayCount, (i) {
                             final day = _startBound.add(Duration(days: i));
@@ -304,13 +306,15 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                               newHour = _endBound.hour;
                             }
 
-                            setState(() {
-                              _applyAndSync(
-                                _dateOnly(_selectedDate),
-                                newHour,
-                                _selectedMinute,
-                              );
-                            });
+                            if (mounted) {
+                              setState(() {
+                                _applyAndSync(
+                                  _dateOnly(_selectedDate),
+                                  newHour,
+                                  _selectedMinute,
+                                );
+                              });
+                            }
                           },
                           children: List.generate(24, (h) {
                             final isSelected = _selectedHour == h;
@@ -374,13 +378,15 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
                               newMinute = _endBound.minute;
                             }
 
-                            setState(() {
-                              _applyAndSync(
-                                _dateOnly(_selectedDate),
-                                _selectedHour,
-                                newMinute,
-                              );
-                            });
+                            if (mounted) {
+                              setState(() {
+                                _applyAndSync(
+                                  _dateOnly(_selectedDate),
+                                  _selectedHour,
+                                  newMinute,
+                                );
+                              });
+                            }
                           },
                           children: List.generate(60, (m) {
                             final isSelected = _selectedMinute == m;

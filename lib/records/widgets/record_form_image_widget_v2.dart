@@ -59,13 +59,15 @@ class RecordFormImageWidgetV2State extends State<RecordFormImageWidgetV2>
   }
 
   void _updateImagePaths() {
-    setState(() {
-      _allImagePaths = List.from(widget.initialImagePaths ?? []);
-      // 각 이미지에 대한 랜덤 틸트 각도 생성 (-5도 ~ 5도)
-      for (int i = 0; i < _allImagePaths.length; i++) {
-        _tiltAngles[i] = (_random.nextDouble() - 0.5) * 10 * (math.pi / 180);
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _allImagePaths = List.from(widget.initialImagePaths ?? []);
+        // 각 이미지에 대한 랜덤 틸트 각도 생성 (-5도 ~ 5도)
+        for (int i = 0; i < _allImagePaths.length; i++) {
+          _tiltAngles[i] = (_random.nextDouble() - 0.5) * 10 * (math.pi / 180);
+        }
+      });
+    }
   }
 
   List<String> getSelectedImagePaths() {
@@ -75,14 +77,16 @@ class RecordFormImageWidgetV2State extends State<RecordFormImageWidgetV2>
   Future<void> _pickImages() async {
     if (_isPickingImages) return;
 
-    setState(() {
-      _isPickingImages = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isPickingImages = true;
+      });
+    }
 
     try {
       final picker = ImagePicker();
       final images = await picker.pickMultiImage();
-      if (images.isNotEmpty) {
+      if (images.isNotEmpty && mounted) {
         setState(() {
           final startIndex = _allImagePaths.length;
           _allImagePaths.addAll(images.map((image) => image.path));
@@ -94,9 +98,11 @@ class RecordFormImageWidgetV2State extends State<RecordFormImageWidgetV2>
         });
       }
     } finally {
-      setState(() {
-        _isPickingImages = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isPickingImages = false;
+        });
+      }
     }
   }
 
@@ -105,23 +111,26 @@ class RecordFormImageWidgetV2State extends State<RecordFormImageWidgetV2>
       // 현재 표시 중인 인덱스 저장
       final currentActualIndex = _currentIndex % _allImagePaths.length;
 
-      setState(() {
-        _allImagePaths.removeAt(index);
-        // 틸트 각도 맵 재구성
-        _tiltAngles.clear();
-        for (int i = 0; i < _allImagePaths.length; i++) {
-          _tiltAngles[i] = (_random.nextDouble() - 0.5) * 10 * (math.pi / 180);
-        }
-
-        // 삭제 후 인덱스 조정
-        if (_allImagePaths.isNotEmpty) {
-          if (index <= currentActualIndex) {
-            _currentIndex = math.max(0, _currentIndex - 1);
+      if (mounted) {
+        setState(() {
+          _allImagePaths.removeAt(index);
+          // 틸트 각도 맵 재구성
+          _tiltAngles.clear();
+          for (int i = 0; i < _allImagePaths.length; i++) {
+            _tiltAngles[i] =
+                (_random.nextDouble() - 0.5) * 10 * (math.pi / 180);
           }
-        } else {
-          _currentIndex = 0;
-        }
-      });
+
+          // 삭제 후 인덱스 조정
+          if (_allImagePaths.isNotEmpty) {
+            if (index <= currentActualIndex) {
+              _currentIndex = math.max(0, _currentIndex - 1);
+            }
+          } else {
+            _currentIndex = 0;
+          }
+        });
+      }
     }
   }
 
@@ -350,9 +359,11 @@ class RecordFormImageWidgetV2State extends State<RecordFormImageWidgetV2>
                       vertical: true, // 상하좌우 모두 가능
                     ),
                     onSwipe: (previousIndex, currentIndex, direction) {
-                      setState(() {
-                        _currentIndex = currentIndex ?? 0;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _currentIndex = currentIndex ?? 0;
+                        });
+                      }
 
                       // 스와이프 방향에 따른 다른 햅틱
                       if (direction == CardSwiperDirection.left ||

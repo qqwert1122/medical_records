@@ -38,8 +38,9 @@ class _SettingPageState extends State<SettingPage> {
   Future<void> _loadSecurity() async {
     final enabled = await storage.read(key: _kSecurityEnabledKey);
     _securityEnabled = enabled == 'true';
-    if (!mounted) return;
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<BioState> _bioState() async {
@@ -232,8 +233,7 @@ class _SettingPageState extends State<SettingPage> {
   Future<void> _handleToggle(bool next) async {
     if (next == _securityEnabled) return;
     final ok = next ? await _enableSecurity() : await _disableSecurity();
-    if (!mounted) return;
-    if (ok) setState(() => _securityEnabled = next);
+    if (ok && mounted) setState(() => _securityEnabled = next);
   }
 
   Future<bool> _enableSecurity() async {

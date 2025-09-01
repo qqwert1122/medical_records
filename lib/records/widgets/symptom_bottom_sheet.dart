@@ -55,9 +55,11 @@ class _SymptomBottomSheetState extends State<SymptomBottomSheet> {
         {...s, 'last_used_at': lastMap[s['symptom_id'] as int]},
     ];
 
-    setState(() {
-      symptomsWithLastUsedAt = result;
-    });
+    if (mounted) {
+      setState(() {
+        symptomsWithLastUsedAt = result;
+      });
+    }
   }
 
   void _showSymptomDialog({Map<String, dynamic>? symptom}) {

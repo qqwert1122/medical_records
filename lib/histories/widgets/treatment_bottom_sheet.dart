@@ -58,9 +58,11 @@ class _TreatmentBottomSheetState extends State<TreatmentBottomSheet> {
         {...s, 'last_used_at': lastMap[s['treatment_id'] as int]},
     ];
 
-    setState(() {
-      treatmentsWithLastUsedAt = result;
-    });
+    if (mounted) {
+      setState(() {
+        treatmentsWithLastUsedAt = result;
+      });
+    }
   }
 
   void _showTreatmentDialog({Map<String, dynamic>? treatment}) {

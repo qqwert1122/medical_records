@@ -49,14 +49,18 @@ class _RecordFormPageState extends State<RecordFormPage> {
       _existingImages = await _getExistingImages();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+    } else {
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+      }
     }
   }
 
@@ -340,8 +344,9 @@ class _RecordFormPageState extends State<RecordFormPage> {
         alignment: Alignment.center,
         child: Text(
           title,
-          style: AppTextStyle.subTitle.copyWith(
+          style: AppTextStyle.body.copyWith(
             color: AppColors.textSecondary.withValues(alpha: 0.5),
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -480,7 +485,10 @@ class _RecordFormPageState extends State<RecordFormPage> {
                                 currentEnd,
                               ); // end - 1분
                             }
-                            final maxDate = _minDt(maxByNext, currentEnd);
+                            final maxDate = _minDt(
+                              _minDt(maxByNext, currentEnd),
+                              DateTime.now(),
+                            );
                             return (null, maxDate);
                           },
                           onDateChanged: (DateTime? date) {

@@ -63,11 +63,13 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
       behavior: HitTestBehavior.opaque,
       dragStartBehavior: DragStartBehavior.down,
       onVerticalDragStart: (details) {
-        setState(() {
-          _isDragging = true;
-          _dragStartHeight = widget.currentHeight; // 시작 높이 고정
-          _dragStartDy = details.globalPosition.dy; // 시작 Y 고정
-        });
+        if (mounted) {
+          setState(() {
+            _isDragging = true;
+            _dragStartHeight = widget.currentHeight; // 시작 높이 고정
+            _dragStartDy = details.globalPosition.dy; // 시작 Y 고정
+          });
+        }
       },
       onVerticalDragUpdate: (details) {
         if (!_isDragging) return;
@@ -82,7 +84,7 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
         widget.onHeightChanged(newHeight);
       },
       onVerticalDragEnd: (details) {
-        if (!_isDragging) return;
+        if (!_isDragging || !mounted) return;
         setState(() => _isDragging = false);
 
         final current = widget.currentHeight;

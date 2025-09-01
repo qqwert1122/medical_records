@@ -65,9 +65,11 @@ class _RecordDetailImageWidgetState extends State<RecordDetailImageWidget> {
               enableInfiniteScroll: false,
               viewportFraction: 1,
               onPageChanged: (index, reason) {
-                setState(() {
-                  _currentImageIndex = index;
-                });
+                if (mounted) {
+                  setState(() {
+                    _currentImageIndex = index;
+                  });
+                }
               },
             ),
             items:
@@ -214,9 +216,11 @@ class _RecordDetailImageWidgetState extends State<RecordDetailImageWidget> {
 
                   return GestureDetector(
                     onTap: () {
-                      setState(() {
-                        _currentImageIndex = index;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _currentImageIndex = index;
+                        });
+                      }
                       _carouselController.jumpToPage(index);
                     },
                     child: Container(

@@ -97,7 +97,20 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
       ..sort((a, b) {
         final dateA = DateTime.parse(a['record_date']);
         final dateB = DateTime.parse(b['record_date']);
-        return dateA.compareTo(dateB);
+        final dateComparison = dateA.compareTo(dateB);
+
+        if (dateComparison != 0) return dateComparison;
+
+        // 같은 시간일 경우 우선순위: INITIAL -> PROGRESS -> TREATMENT -> COMPLETE
+        final priority = {
+          'INITIAL': 0,
+          'PROGRESS': 1,
+          'TREATMENT': 2,
+          'COMPLETE': 3,
+        };
+        final priorityA = priority[a['event_type']] ?? 1;
+        final priorityB = priority[b['event_type']] ?? 1;
+        return priorityA.compareTo(priorityB);
       });
 
     return Container(
@@ -130,9 +143,11 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                   onSelected: (String result) {
                     // 선택된 메뉴 아이템에 따라 다른 동작을 수행
                     // 예를 들어 'edit'을 선택하면 수정 함수를 호출
-                    setState(() {
-                      _showActions = !_showActions;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _showActions = !_showActions;
+                      });
+                    }
                   },
                   itemBuilder:
                       (BuildContext context) => <PopupMenuEntry<String>>[
@@ -597,9 +612,11 @@ class _RecordDetailTimelineState extends State<RecordDetailTimeline> {
                           if (result == true) {
                             widget.onHistoryAdded?.call();
                           }
-                          setState(() {
-                            _showActions = !_showActions;
-                          });
+                          if (mounted) {
+                            setState(() {
+                              _showActions = !_showActions;
+                            });
+                          }
                         },
                         child: Container(
                           padding: EdgeInsets.all(8),

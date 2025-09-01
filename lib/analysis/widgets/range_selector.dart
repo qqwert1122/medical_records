@@ -39,7 +39,7 @@ class RangeSelector extends StatelessWidget {
                 e.$1,
                 style: AppTextStyle.caption.copyWith(
                   fontSize: 14,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: e.$2 == value ? FontWeight.w900 : FontWeight.w400,
                   color: AppColors.textPrimary,
                 ),
               ),

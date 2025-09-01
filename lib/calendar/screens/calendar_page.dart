@@ -55,6 +55,7 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Future<void> _loadRecords() async {
+    if (!mounted) return;
     final firstDay = DateTime(_focusedDay.year, _focusedDay.month, 1);
     final lastDay = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
 
@@ -66,128 +67,132 @@ class _CalendarPageState extends State<CalendarPage> {
       endDate: endOfWeek,
     );
 
-    setState(() {
-      _dayRecords.clear();
-      _weekRecordSlots.clear();
-      _recordTitles.clear();
+    if (mounted) {
+      setState(() {
+        _dayRecords.clear();
+        _weekRecordSlots.clear();
+        _recordTitles.clear();
 
-      // record_id별 시작/종료 날짜 추적
-      Map<String, DateTime> recordStartDates = {};
-      Map<String, DateTime> recordEndDates = {};
-      Map<DateTime, List<MapEntry<String, Color>>> dailyActiveRecords = {};
+        // record_id별 시작/종료 날짜 추적
+        Map<String, DateTime> recordStartDates = {};
+        Map<String, DateTime> recordEndDates = {};
+        Map<DateTime, List<MapEntry<String, Color>>> dailyActiveRecords = {};
 
-      for (final record
-          in records.toList()
-            ..sort((a, b) => a['start_date'].compareTo(b['start_date']))) {
-        final startDate = DateTime.parse(record['start_date']).toLocal();
-        final today = DateTime.now();
-        final endDate =
-            record['end_date'] != null
-                ? DateTime.parse(record['end_date']).toLocal()
-                : today.isAfter(endOfWeek)
-                ? endOfWeek
-                : today;
+        for (final record
+            in records.toList()
+              ..sort((a, b) => a['start_date'].compareTo(b['start_date']))) {
+          final startDate = DateTime.parse(record['start_date']).toLocal();
+          final today = DateTime.now();
+          final endDate =
+              record['end_date'] != null
+                  ? DateTime.parse(record['end_date']).toLocal()
+                  : today.isAfter(endOfWeek)
+                  ? endOfWeek
+                  : today;
 
-        final color = Color(int.parse(record['color'] as String));
-        final recordId = record['record_id'].toString();
+          final color = Color(int.parse(record['color'] as String));
+          final recordId = record['record_id'].toString();
 
-        // 레코드 타이틀 저장
-        _recordTitles[recordId] = record['symptom_name'] ?? '';
+          // 레코드 타이틀 저장
+          _recordTitles[recordId] = record['symptom_name'] ?? '';
 
-        final displayStart =
-            startDate.isBefore(startOfWeek) ? startOfWeek : startDate;
-        final displayEnd = endDate.isAfter(endOfWeek) ? endOfWeek : endDate;
+          final displayStart =
+              startDate.isBefore(startOfWeek) ? startOfWeek : startDate;
+          final displayEnd = endDate.isAfter(endOfWeek) ? endOfWeek : endDate;
 
-        final normalizedStart = DateTime(
-          displayStart.year,
-          displayStart.month,
-          displayStart.day,
-        );
-        final normalizedEnd = DateTime(
-          displayEnd.year,
-          displayEnd.month,
-          displayEnd.day,
-        );
-
-        // 시작/종료 날짜 저장
-        recordStartDates[recordId] = DateTime(
-          startDate.year,
-          startDate.month,
-          startDate.day,
-        );
-        recordEndDates[recordId] = DateTime(
-          endDate.year,
-          endDate.month,
-          endDate.day,
-        );
-
-        for (
-          DateTime date = normalizedStart;
-          !date.isAfter(normalizedEnd);
-          date = date.add(Duration(days: 1))
-        ) {
-          final dateKey = DateTime(date.year, date.month, date.day);
-
-          if (_dayRecords.containsKey(dateKey)) {
-            _dayRecords[dateKey]!.add(color);
-          } else {
-            _dayRecords[dateKey] = [color];
-          }
-
-          if (!dailyActiveRecords.containsKey(dateKey)) {
-            dailyActiveRecords[dateKey] = [];
-          }
-          dailyActiveRecords[dateKey]!.add(MapEntry(recordId, color));
-        }
-      }
-
-      Map<String, Map<String, int>> weekRecordSlots = {};
-
-      for (final entry in dailyActiveRecords.entries) {
-        final date = entry.key;
-        final weekKey = _getWeekKey(date);
-
-        if (!weekRecordSlots.containsKey(weekKey)) {
-          weekRecordSlots[weekKey] = {};
-        }
-
-        for (final record in entry.value) {
-          final recordId = record.key;
-          final color = record.value;
-
-          int slot;
-          if (weekRecordSlots[weekKey]!.containsKey(recordId)) {
-            slot = weekRecordSlots[weekKey]![recordId]!;
-          } else {
-            final usedSlots =
-                entry.value
-                    .where((r) => weekRecordSlots[weekKey]!.containsKey(r.key))
-                    .map((r) => weekRecordSlots[weekKey]![r.key]!)
-                    .toSet();
-
-            slot = 0;
-            while (usedSlots.contains(slot)) {
-              slot++;
-            }
-            weekRecordSlots[weekKey]![recordId] = slot;
-          }
-
-          if (!_weekRecordSlots.containsKey(date)) {
-            _weekRecordSlots[date] = {};
-          }
-
-          _weekRecordSlots[date]![slot] = RecordInfo(
-            recordId: recordId,
-            title: _recordTitles[recordId] ?? '',
-            color: color,
+          final normalizedStart = DateTime(
+            displayStart.year,
+            displayStart.month,
+            displayStart.day,
           );
-        }
-      }
+          final normalizedEnd = DateTime(
+            displayEnd.year,
+            displayEnd.month,
+            displayEnd.day,
+          );
 
-      // 시작/종료 날짜 정보도 함께 저장
-      _recordStartDates = recordStartDates;
-      _recordEndDates = recordEndDates;
-    });
+          // 시작/종료 날짜 저장
+          recordStartDates[recordId] = DateTime(
+            startDate.year,
+            startDate.month,
+            startDate.day,
+          );
+          recordEndDates[recordId] = DateTime(
+            endDate.year,
+            endDate.month,
+            endDate.day,
+          );
+
+          for (
+            DateTime date = normalizedStart;
+            !date.isAfter(normalizedEnd);
+            date = date.add(Duration(days: 1))
+          ) {
+            final dateKey = DateTime(date.year, date.month, date.day);
+
+            if (_dayRecords.containsKey(dateKey)) {
+              _dayRecords[dateKey]!.add(color);
+            } else {
+              _dayRecords[dateKey] = [color];
+            }
+
+            if (!dailyActiveRecords.containsKey(dateKey)) {
+              dailyActiveRecords[dateKey] = [];
+            }
+            dailyActiveRecords[dateKey]!.add(MapEntry(recordId, color));
+          }
+        }
+
+        Map<String, Map<String, int>> weekRecordSlots = {};
+
+        for (final entry in dailyActiveRecords.entries) {
+          final date = entry.key;
+          final weekKey = _getWeekKey(date);
+
+          if (!weekRecordSlots.containsKey(weekKey)) {
+            weekRecordSlots[weekKey] = {};
+          }
+
+          for (final record in entry.value) {
+            final recordId = record.key;
+            final color = record.value;
+
+            int slot;
+            if (weekRecordSlots[weekKey]!.containsKey(recordId)) {
+              slot = weekRecordSlots[weekKey]![recordId]!;
+            } else {
+              final usedSlots =
+                  entry.value
+                      .where(
+                        (r) => weekRecordSlots[weekKey]!.containsKey(r.key),
+                      )
+                      .map((r) => weekRecordSlots[weekKey]![r.key]!)
+                      .toSet();
+
+              slot = 0;
+              while (usedSlots.contains(slot)) {
+                slot++;
+              }
+              weekRecordSlots[weekKey]![recordId] = slot;
+            }
+
+            if (!_weekRecordSlots.containsKey(date)) {
+              _weekRecordSlots[date] = {};
+            }
+
+            _weekRecordSlots[date]![slot] = RecordInfo(
+              recordId: recordId,
+              title: _recordTitles[recordId] ?? '',
+              color: color,
+            );
+          }
+        }
+
+        // 시작/종료 날짜 정보도 함께 저장
+        _recordStartDates = recordStartDates;
+        _recordEndDates = recordEndDates;
+      });
+    }
   }
 
   Future<List<Map<String, dynamic>>> _getDayRecords(DateTime? day) async {
@@ -212,12 +217,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     HapticFeedback.lightImpact();
-    setState(() {
-      _selectedDay = selectedDay;
-      _focusedDay = focusedDay;
-      _bottomSheetHeight = 0.5;
-      _currentBottomSheetPage = 0;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+        _bottomSheetHeight = 0.5;
+        _currentBottomSheetPage = 0;
+      });
+    }
     widget.onBottomSheetHeightChanged?.call(0.5);
     _loadRecords();
   }
@@ -234,7 +241,7 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
     );
 
-    if (selectedDate != null) {
+    if (selectedDate != null && mounted) {
       setState(() {
         _focusedDay = selectedDate;
       });
@@ -247,9 +254,11 @@ class _CalendarPageState extends State<CalendarPage> {
     try {
       _yearlyCalendarKey.currentState?.refreshData();
       await _loadRecords();
-      setState(() {
-        _dataVersion++;
-      });
+      if (mounted) {
+        setState(() {
+          _dataVersion++;
+        });
+      }
     } finally {
       _isRefreshing = false;
     }
@@ -293,10 +302,12 @@ class _CalendarPageState extends State<CalendarPage> {
                         child: GestureDetector(
                           onTap: () {
                             final today = DateTime.now();
-                            setState(() {
-                              _focusedDay = today;
-                              _selectedDay = today;
-                            });
+                            if (mounted) {
+                              setState(() {
+                                _focusedDay = today;
+                                _selectedDay = today;
+                              });
+                            }
                             _loadRecords();
                           },
                           child: Container(
@@ -338,7 +349,8 @@ class _CalendarPageState extends State<CalendarPage> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child:
-                  _currentBottomSheetPage == 0
+                  _currentBottomSheetPage == 0 &&
+                          !(_selectedDay?.isAfter(DateTime.now()) ?? false)
                       ? SizedBox(
                         height: 48,
                         width: 48,
@@ -407,16 +419,20 @@ class _CalendarPageState extends State<CalendarPage> {
       onDaySelected: _onDaySelected,
       onPageChanged: (focusedDay) {
         HapticFeedback.lightImpact();
-        setState(() {
-          _focusedDay = focusedDay;
-        });
+        if (mounted) {
+          setState(() {
+            _focusedDay = focusedDay;
+          });
+        }
         _loadRecords();
       },
       onHeightChanged: (factor) {
-        setState(() {
-          _bottomSheetHeight = factor;
-          widget.onBottomSheetHeightChanged?.call(factor);
-        });
+        if (mounted) {
+          setState(() {
+            _bottomSheetHeight = factor;
+            widget.onBottomSheetHeightChanged?.call(factor);
+          });
+        }
       },
     );
   }
@@ -427,10 +443,12 @@ class _CalendarPageState extends State<CalendarPage> {
       focusedDay: _focusedDay,
       selectedDay: _selectedDay,
       onDaySelected: (date) {
-        setState(() {
-          _selectedDay = date;
-          _bottomSheetHeight = 0.5;
-        });
+        if (mounted) {
+          setState(() {
+            _selectedDay = date;
+            _bottomSheetHeight = 0.5;
+          });
+        }
 
         widget.onBottomSheetHeightChanged?.call(0.5);
       },
@@ -444,25 +462,31 @@ class _CalendarPageState extends State<CalendarPage> {
       selectedDay: _selectedDay,
       selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
       onHeightChanged: (newHeight) {
-        setState(() {
-          _bottomSheetHeight = newHeight;
-          if (newHeight == 0) {
-            _currentBottomSheetPage = 0;
-          }
-          widget.onBottomSheetHeightChanged?.call(newHeight);
-        });
+        if (mounted) {
+          setState(() {
+            _bottomSheetHeight = newHeight;
+            if (newHeight == 0) {
+              _currentBottomSheetPage = 0;
+            }
+            widget.onBottomSheetHeightChanged?.call(newHeight);
+          });
+        }
       },
       onDateChanged: (newDate) {
-        setState(() {
-          _selectedDay = newDate;
-          _focusedDay = newDate;
-        });
+        if (mounted) {
+          setState(() {
+            _selectedDay = newDate;
+            _focusedDay = newDate;
+          });
+        }
       },
       onDataChanged: _onDataChanged,
       onPageChanged: (pageIndex) {
-        setState(() {
-          _currentBottomSheetPage = pageIndex;
-        });
+        if (mounted) {
+          setState(() {
+            _currentBottomSheetPage = pageIndex;
+          });
+        }
       },
       dataVersion: _dataVersion,
     );
