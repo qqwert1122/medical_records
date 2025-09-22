@@ -8,6 +8,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/enum/bio_state.dart';
 import 'package:medical_records/services/database_service.dart';
+import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
@@ -491,7 +492,47 @@ class _SettingPageState extends State<SettingPage> {
                   ),
                 ),
               ),
+              ListTile(
+                leading: Container(
+                  padding: context.paddingXS,
+                  decoration: const BoxDecoration(
+                    color: Colors.blueAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    LucideIcons.star,
+                    color: AppColors.white,
+                    size: 16,
+                  ),
+                ),
+                title: Text(
+                  '별점 5점 남기기',
+                  style: AppTextStyle.body.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  final success = await ReviewService.requestReview();
+                  if (!mounted) return;
 
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('리뷰 요청을 열었어요 👍')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('앱스토어로 이동합니다.')),
+                    );
+                  }
+                },
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: AppColors.lightGrey,
+                  size: 24,
+                ),
+              ),
               _buildLinkTile(
                 icon: LucideIcons.bug,
                 iconBg: Colors.orange,

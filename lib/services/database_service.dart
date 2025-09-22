@@ -460,6 +460,14 @@ class DatabaseService {
     return db.rawQuery(sql, args);
   }
 
+  Future<int> getRecordsCount() async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM records WHERE deleted_at IS NULL',
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
   Future<List<Map<String, dynamic>>> getLiveRecords() async {
     final db = await database;
     return await db.query(

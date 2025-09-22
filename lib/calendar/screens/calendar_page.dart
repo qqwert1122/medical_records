@@ -9,6 +9,7 @@ import 'package:medical_records/calendar/widgets/weekly_record_overlay.dart';
 import 'package:medical_records/calendar/widgets/yearly_calendar.dart';
 import 'package:medical_records/records/screens/record_form_page.dart';
 import 'package:medical_records/services/database_service.dart';
+import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -264,6 +265,14 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
+  bool _isFutureDay(DateTime? d) {
+    if (d == null) return false;
+    final s = DateTime(d.year, d.month, d.day);
+    final now = DateTime.now();
+    final t = DateTime(now.year, now.month, now.day);
+    return s.isAfter(t); // 내일 이상만 true
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -349,8 +358,7 @@ class _CalendarPageState extends State<CalendarPage> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child:
-                  _currentBottomSheetPage == 0 &&
-                          !(_selectedDay?.isAfter(DateTime.now()) ?? false)
+                  _currentBottomSheetPage == 0 && !_isFutureDay(_selectedDay)
                       ? SizedBox(
                         height: 48,
                         width: 48,
@@ -380,6 +388,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
                             if (result == true) {
                               await _onDataChanged();
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                ReviewService.requestReviewIfEligible(context);
+                              });
                             }
                           },
                           backgroundColor: AppColors.primary,

@@ -10,6 +10,8 @@ PODS:
     - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
+  - in_app_review (2.0.0):
+    - Flutter
   - local_auth_darwin (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -32,6 +34,7 @@ DEPENDENCIES:
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - in_app_review (from `.symlinks/plugins/in_app_review/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -51,6 +54,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/fluttertoast/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  in_app_review:
+    :path: ".symlinks/plugins/in_app_review/ios"
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
   path_provider_foundation:
@@ -69,6 +74,7 @@ SPEC CHECKSUMS:
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
+  in_app_review: 7dd1ea365263f834b8464673f9df72c80c17c937
   local_auth_darwin: d2e8c53ef0c4f43c646462e3415432c4dab3ae19
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7

@@ -29,97 +29,20 @@ class CalendarDayCellBar extends StatelessWidget {
     this.recordEndDates,
   }) : super(key: key);
 
-  Widget _buildWeekRecordBars() {
-    if (weekRecordSlots == null || weekRecordSlots!.isEmpty) {
-      return const SizedBox();
-    }
-
-    final visibleSlots = weekRecordSlots!.entries.take(4).toList();
-    final extraCount = weekRecordSlots!.length - 4;
-    final dateKey = DateTime(day.year, day.month, day.day);
-
-    return Column(
-      children: [
-        Expanded(
-          child: Column(
-            children: List.generate(4, (index) {
-              final slot = visibleSlots.firstWhere(
-                (e) => e.key == index,
-                orElse:
-                    () => MapEntry(
-                      index,
-                      RecordInfo(
-                        recordId: '',
-                        title: '',
-                        color: Colors.transparent,
-                      ),
-                    ),
-              );
-
-              if (slot.value.recordId.isEmpty) {
-                return Expanded(child: SizedBox());
-              }
-
-              final recordId = slot.value.recordId;
-              final color = slot.value.color;
-
-              // 같은 record_id로 연결 여부 확인
-              final hasPrevConnection =
-                  previousDaySlots?.containsKey(index) == true &&
-                  previousDaySlots![index]!.recordId == recordId;
-              final hasNextConnection =
-                  nextDaySlots?.containsKey(index) == true &&
-                  nextDaySlots![index]!.recordId == recordId;
-
-              // 실제 시작/종료 날짜 확인
-              final isRecordStart = recordStartDates?[recordId] == dateKey;
-              final isRecordEnd = recordEndDates?[recordId] == dateKey;
-
-              return Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(
-                    top: 1,
-                    bottom: 1,
-                    left: (hasPrevConnection && day.weekday != 7) ? 0 : 2,
-                    right: (hasNextConnection && day.weekday != 6) ? 0 : 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.horizontal(
-                      left: Radius.circular(
-                        (isRecordStart || day.weekday == 7) ? 4 : 0,
-                      ),
-                      right: Radius.circular(
-                        (isRecordEnd || day.weekday == 6) ? 4 : 0,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-        SizedBox(
-          height: 12,
-          child: Text(
-            '+$extraCount',
-            style: TextStyle(
-              fontSize: 10,
-              color:
-                  extraCount > 0
-                      ? AppColors.textSecondary
-                      : AppColors.background,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // extraCount 계산
     final extraCount = (weekRecordSlots?.length ?? 0) - 4;
+
+    Color _getTextColor() {
+      if (isOutside) return AppColors.textSecondary;
+      if (isSelected) return AppColors.primary;
+      if (isToday) return Colors.blueAccent;
+      if (day.isAfter(DateTime.now().subtract(Duration(days: 1))) && !isToday) {
+        return AppColors.textSecondary;
+      }
+      return AppColors.textPrimary;
+    }
 
     return Column(
       children: [
@@ -143,14 +66,7 @@ class CalendarDayCellBar extends StatelessWidget {
                       isSelected || isToday
                           ? FontWeight.w900
                           : FontWeight.normal,
-                  color:
-                      isOutside
-                          ? AppColors.textSecondary
-                          : isSelected
-                          ? AppColors.primary
-                          : isToday
-                          ? Colors.blueAccent
-                          : AppColors.textPrimary,
+                  color: _getTextColor(),
                 ),
               ),
             ),

@@ -173,6 +173,16 @@ class CalendarDayCell extends StatelessWidget {
   }
 
   Widget _buildCell(double animationValue) {
+    Color _getTextColor() {
+      if (isOutside) return AppColors.textSecondary;
+      if (isSelected) return AppColors.primary;
+      if (isToday) return Colors.blueAccent;
+      if (day.isAfter(DateTime.now().subtract(Duration(days: 1))) && !isToday) {
+        return AppColors.textSecondary;
+      }
+      return AppColors.textPrimary;
+    }
+
     return Column(
       children: [
         Container(
@@ -189,14 +199,7 @@ class CalendarDayCell extends StatelessWidget {
             style: AppTextStyle.body.copyWith(
               fontWeight:
                   isSelected || isToday ? FontWeight.w900 : FontWeight.normal,
-              color:
-                  isOutside
-                      ? AppColors.textSecondary
-                      : isSelected
-                      ? AppColors.primary
-                      : isToday
-                      ? Colors.blueAccent
-                      : AppColors.textPrimary,
+              color: _getTextColor(),
             ),
           ),
         ),

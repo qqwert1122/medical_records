@@ -527,7 +527,7 @@ class _CorrelationTableState extends State<CorrelationTable> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '+ 값 : 함께 나타나지 않는 경향이 있음',
+                    '- 값 : 함께 나타나지 않는 경향이 있음',
                     style: AppTextStyle.caption.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -549,7 +549,7 @@ class _CorrelationTableState extends State<CorrelationTable> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '값이 0 ~ 0.19는 상관관계가 매우 약함',
+                    '값이 0.00 ~ 0.19는 상관관계가 매우 약함',
                     style: AppTextStyle.caption.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -637,7 +637,7 @@ class _CorrelationTableState extends State<CorrelationTable> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '값이 0.80 ~ 1.0은 상관관계가 매우 강함',
+                    '값이 0.80 ~ 1.00은 상관관계가 매우 강함',
                     style: AppTextStyle.caption.copyWith(
                       color: AppColors.textSecondary,
                     ),
