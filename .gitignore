@@ -45,4 +45,4 @@ app.*.map.json
 /android/app/release
 
 # appstore
-lib/config/store_secret.dart
+lib/config/store_secrets.dart

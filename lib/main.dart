@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:medical_records/analysis/screens/analysis_page.dart';
-import 'package:medical_records/calendar/screens/calendar_page.dart';
+import 'package:medical_records/features/analysis/screens/analysis_page.dart';
+import 'package:medical_records/features/calendar/screens/calendar_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:medical_records/images/screens/images_page.dart';
-import 'package:medical_records/records/screens/setting_page.dart';
+import 'package:medical_records/features/images/screens/images_page.dart';
+import 'package:medical_records/features/settings/screens/setting_page.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:medical_records/styles/app_text_style.dart';
-import 'package:medical_records/widgets/pin_code_dialog.dart';
+import 'package:medical_records/components/pin_code_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

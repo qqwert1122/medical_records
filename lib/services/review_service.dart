@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
-import 'package:medical_records/config/store_secret.dart';
+import 'package:medical_records/config/store_secrets.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqlite_api.dart';
