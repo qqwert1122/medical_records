@@ -3,17 +3,14 @@ import 'package:app_settings/app_settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:medical_records/enum/bio_state.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/utils/link_launcher.dart';
-import 'package:medical_records/components/pin_code_dialog.dart';
+import 'package:medical_records/features/security/services/security_service.dart';
 
 class SettingPage extends StatefulWidget {
   @override
@@ -21,12 +18,7 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  static const _kSecurityEnabledKey = 'security_enabled';
-  static const _kPinKey = 'pin_code';
-
-  final LocalAuthentication auth = LocalAuthentication();
-  final FlutterSecureStorage storage = const FlutterSecureStorage();
-
+  final SecurityService _securityService = SecurityService();
   bool _securityEnabled = false;
 
   // 생명주기
@@ -37,168 +29,14 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   Future<void> _loadSecurity() async {
-    final enabled = await storage.read(key: _kSecurityEnabledKey);
-    _securityEnabled = enabled == 'true';
+    await _securityService.initialize();
+    _securityEnabled = _securityService.securityEnabled;
     if (mounted) {
       setState(() {});
     }
   }
 
-  Future<BioState> _bioState() async {
-    final supported = await auth.isDeviceSupported();
-    if (!supported) return BioState.unsupported;
-    final types = await auth.getAvailableBiometrics();
-    return types.isEmpty ? BioState.notEnrolled : BioState.enrolled;
-  }
 
-  // 생체 인증
-  Future<bool> _authBiometric({
-    required String reason,
-    bool allowDeviceCredential = false, // disable에서 패턴/디바이스 PIN 허용하려면 true
-  }) async {
-    try {
-      return await auth.authenticate(
-        localizedReason: reason,
-        options: AuthenticationOptions(
-          biometricOnly: !allowDeviceCredential,
-          useErrorDialogs: false,
-          stickyAuth: true,
-        ),
-      );
-    } on PlatformException {
-      return false;
-    }
-  }
-
-  // PIN 다이얼로그
-  Future<String?> _promptPinSetup() async {
-    String? pin;
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (_) => PinCodeDialog(
-            isSetup: true,
-            onSubmit: (p) {
-              pin = p;
-              Navigator.pop(context);
-            },
-          ),
-    );
-    return pin;
-  }
-
-  Future<bool> _promptPinVerify(String expectedPin) async {
-    bool ok = false;
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (_) => PinCodeDialog(
-            isSetup: false,
-            expectedPin: expectedPin, // 다이얼로그 내부에서 검증/쿨다운 관리
-            onSubmit: (_) {
-              ok = true;
-              // 성공 시 다이얼로그 내부에서 pop
-            },
-          ),
-    );
-    return ok;
-  }
-
-  // 보안 설정 토글 저장
-  Future<void> _setSecurityEnabled(bool enabled) async {
-    await storage.write(
-      key: _kSecurityEnabledKey,
-      value: enabled ? 'true' : 'false',
-    );
-  }
-
-  // 안내/설정 이동
-  Future<bool?> _askBiometricEnroll() {
-    return showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder:
-          (_) => Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.shieldCheck,
-                  color: AppColors.primary,
-                  size: 28,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '더 안전하게 보호해요',
-                  style: AppTextStyle.subTitle.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '얼굴/지문을 등록하면 핀 분실 걱정 없이 잠금 해제할 수 있어요.',
-                  style: AppTextStyle.body.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pop(context, true),
-                    icon: const Icon(LucideIcons.scanFace),
-                    label: const Text('지금 등록 (추천)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text('다음에 하기', style: AppTextStyle.body),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Future<void> _openSecuritySettings() async {
-    try {
-      if (Theme.of(context).platform == TargetPlatform.android) {
-        await AppSettings.openAppSettings(
-          type: AppSettingsType.lockAndPassword,
-        );
-      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-        await AppSettings.openAppSettings(type: AppSettingsType.settings);
-      } else {
-        await AppSettings.openAppSettings();
-      }
-    } catch (_) {
-      try {
-        await AppSettings.openAppSettings();
-      } catch (_) {}
-    } finally {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('설정에서 생체인증을 등록한 뒤 다시 시도하세요.')),
-      );
-    }
-  }
 
   // 링크 타일 공통
   Widget _buildLinkTile({
@@ -233,106 +71,15 @@ class _SettingPageState extends State<SettingPage> {
   // 토글 처리
   Future<void> _handleToggle(bool next) async {
     if (next == _securityEnabled) return;
-    final ok = next ? await _enableSecurity() : await _disableSecurity();
-    if (ok && mounted) setState(() => _securityEnabled = next);
-  }
-
-  Future<bool> _enableSecurity() async {
-    final state = await _bioState();
-
-    // 0) 미지원 → PIN 폴백
-    if (state == BioState.unsupported) {
-      final pin = await _promptPinSetup();
-      if (pin == null) return false;
-      await storage.write(key: _kPinKey, value: pin);
-      await _setSecurityEnabled(true);
-      return true;
+    final ok = next
+        ? await _securityService.enableSecurity(context)
+        : await _securityService.disableSecurity(context);
+    if (ok && mounted) {
+      setState(() => _securityEnabled = next);
+    } else {
+      // 실패 시 UI 상태 되돌리기
+      if (mounted) setState(() {});
     }
-
-    // 1) 지원 + 미등록 → 등록 유도 or PIN 폴백
-    if (state == BioState.notEnrolled) {
-      final go = await _askBiometricEnroll();
-      if (go == true) {
-        await _openSecuritySettings();
-        return false; // 설정 갔다가 다시 시도
-      }
-      final pin = await _promptPinSetup();
-      if (pin == null) return false;
-      await storage.write(key: _kPinKey, value: pin);
-      await _setSecurityEnabled(true);
-      return true;
-    }
-
-    // 2) 등록됨 → 생체 인증
-    final ok = await _authBiometric(
-      reason: '보안 기능을 활성화하려면 인증이 필요합니다',
-      allowDeviceCredential: false,
-    );
-    if (!ok) return false;
-    await _setSecurityEnabled(true);
-    return true;
-  }
-
-  Future<bool> _disableSecurity() async {
-    final state = await _bioState();
-    final storedPin = await storage.read(key: _kPinKey);
-
-    // 1) 등록됨 → 생체/디바이스 인증으로 해제 우선
-    if (state == BioState.enrolled) {
-      final ok = await _authBiometric(
-        reason: '보안 기능을 해제하려면 인증이 필요합니다',
-        allowDeviceCredential: true, // 패턴/디바이스 PIN 허용
-      );
-      if (ok) {
-        await _setSecurityEnabled(false);
-        await storage.delete(key: _kPinKey);
-        return true;
-      }
-    }
-
-    // 2) PIN 폴백
-    if (storedPin != null) {
-      final ok = await _promptPinVerify(storedPin);
-      if (ok) {
-        await _setSecurityEnabled(false);
-        await storage.delete(key: _kPinKey);
-        return true;
-      }
-    }
-
-    // 3) 실패 안내
-    await _showAlert('해제 실패', '인증에 실패했습니다.');
-    return false;
-  }
-
-  Future<void> _showAlert(String title, String message) async {
-    await showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            backgroundColor: AppColors.background,
-            title: Text(
-              title,
-              style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),
-            ),
-            content: Text(
-              message,
-              style: AppTextStyle.body.copyWith(color: AppColors.textPrimary),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(
-                  '확인',
-                  style: AppTextStyle.body.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-    );
   }
 
   // 데이터 삭제
