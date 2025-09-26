@@ -785,4 +785,87 @@ class DatabaseService {
       limit: limit,
     );
   }
+
+  // Home page 최근 히스토리 메서드
+  Future<List<Map<String, dynamic>>> getRecentTimeline({int limit = 10}) async {
+    final db = await database;
+
+    String query = '''
+      SELECT
+        'symptom' as type,
+        r.start_date as date,
+        r.symptom_name as title,
+        r.spot_name as subtitle,
+        r.color,
+        NULL as memo,
+        r.record_id
+      FROM records r
+      WHERE r.deleted_at IS NULL
+      UNION ALL
+      SELECT
+        h.event_type as type,
+        h.record_date as date,
+        COALESCE(h.treatment_name, h.event_type) as title,
+        r.symptom_name as subtitle,
+        r.color,
+        h.memo,
+        r.record_id
+      FROM histories h
+      JOIN records r ON h.record_id = r.record_id
+      WHERE h.deleted_at IS NULL AND r.deleted_at IS NULL
+      ORDER BY date DESC
+      LIMIT ?
+    ''';
+
+    return await db.rawQuery(query, [limit]);
+  }
+
+  // History page 전체 타임라인 메서드
+  Future<List<Map<String, dynamic>>> getGlobalTimeline({String filterType = 'ALL'}) async {
+    final db = await database;
+
+    String query = '''
+      SELECT
+        'symptom' as type,
+        r.start_date as date,
+        r.symptom_name as title,
+        r.spot_name as subtitle,
+        r.color,
+        NULL as memo,
+        r.record_id
+      FROM records r
+      WHERE r.deleted_at IS NULL
+    ''';
+
+    if (filterType != 'SYMPTOMS') {
+      query += '''
+        UNION ALL
+        SELECT
+          h.event_type as type,
+          h.record_date as date,
+          COALESCE(h.treatment_name, h.event_type) as title,
+          r.symptom_name as subtitle,
+          r.color,
+          h.memo,
+          r.record_id
+        FROM histories h
+        JOIN records r ON h.record_id = r.record_id
+        WHERE h.deleted_at IS NULL AND r.deleted_at IS NULL
+      ''';
+    }
+
+    if (filterType == 'TREATMENTS') {
+      query += ''' AND h.event_type = 'TREATMENT' ''';
+    }
+
+    query += ''' ORDER BY date DESC ''';
+
+    // filterType이 SYMPTOMS인 경우는 증상만 반환
+    if (filterType == 'SYMPTOMS') {
+      return await db.rawQuery(query);
+    }
+
+    // ALL 또는 TREATMENTS인 경우 위의 쿼리 실행
+    return await db.rawQuery(query);
+  }
 }

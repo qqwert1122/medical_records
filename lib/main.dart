@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:medical_records/features/analysis/screens/analysis_page.dart';
 import 'package:medical_records/features/calendar/screens/calendar_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:medical_records/features/images/screens/images_page.dart';
 import 'package:medical_records/features/home/screens/home_page.dart';
+import 'package:medical_records/features/records/screens/list_page.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
-import 'package:medical_records/styles/app_size.dart';
-import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/features/security/components/security_lock_overlay.dart';
 import 'package:medical_records/features/security/services/security_service.dart';
 import 'package:medical_records/components/custom_toggle_navigation.dart';
@@ -55,7 +53,16 @@ class _MainNavigationState extends State<MainNavigation>
   final SecurityService _securityService = SecurityService();
 
   List<Widget> get pages => [
-    HomePage(),
+    HomePage(
+      onNavigateToTab: (tabIndex) {
+        if (mounted) {
+          setState(() {
+            selectedIndex = tabIndex;
+          });
+          pageController.jumpToPage(tabIndex);
+        }
+      },
+    ),
     CalendarPage(
       onBottomSheetHeightChanged: (height) {
         if (mounted) {
@@ -83,6 +90,7 @@ class _MainNavigationState extends State<MainNavigation>
         }
       },
     ),
+    ListPage(),
     ImagesPage(),
     AnalysisPage(),
   ];
@@ -136,7 +144,7 @@ class _MainNavigationState extends State<MainNavigation>
   }
 
   Future<void> _authenticate() async {
-    final success = await _securityService.authenticate(context);
+    await _securityService.authenticate(context);
     if (mounted) setState(() {});
   }
 
@@ -145,7 +153,7 @@ class _MainNavigationState extends State<MainNavigation>
 
     if (mounted) {
       setState(() {
-        // 캘린더로 이동할 때 이전 인덱스 저장
+        // 캘린더로 이동할 때 이전 인덱스 저장 (캘린더는 여전히 인덱스 1)
         if (index == 1 && selectedIndex != 1) {
           _previousIndex = selectedIndex;
         }
@@ -201,6 +209,11 @@ class _MainNavigationState extends State<MainNavigation>
                         icon: FontAwesomeIcons.calendar,
                         selectedIcon: FontAwesomeIcons.solidCalendar,
                         label: '캘린더',
+                      ),
+                      ToggleNavigationItem(
+                        icon: FontAwesomeIcons.list,
+                        selectedIcon: FontAwesomeIcons.list,
+                        label: '리스트',
                       ),
                       ToggleNavigationItem(
                         icon: FontAwesomeIcons.image,
