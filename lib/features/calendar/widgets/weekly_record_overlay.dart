@@ -35,7 +35,7 @@ class WeeklyRecordOverlay extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cellWidth = constraints.maxWidth / 7;
-        final rowHeight = context.hp(13); // TableCalendar rowHeight와 동일
+        final rowHeight = context.hp(11.5); // 기존 13에서 11.5로 감소
         final cellHeight = rowHeight;
         final daysOfWeekHeight = context.hp(2);
 
@@ -108,8 +108,8 @@ class WeeklyRecordOverlay extends StatelessWidget {
                 endDay == 6 || recordEndDates[recordId] == positions.last.date;
 
             if (isWeekStart && slot < 4) {
-              const dayNumberHeight = 28.0; // CalendarDayCellBar와 동일
-              const bottomHeight = 12.0; // +N 영역
+              const dayNumberHeight = 24.0; // 기존 28에서 24로 감소
+              const bottomHeight = 10.0; // 기존 12에서 10으로 감소
 
               final barAreaHeight = cellHeight - dayNumberHeight - bottomHeight;
               final barHeight = barAreaHeight / 4;
@@ -145,7 +145,7 @@ class WeeklyRecordOverlay extends StatelessWidget {
                       child: Text(
                         recordTitles[recordId] ?? '',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 9, // 기존 10에서 9로 감소
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),

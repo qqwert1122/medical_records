@@ -88,7 +88,7 @@ class _MonthlyCalendarState extends State<MonthlyCalendar>
     // context를 사용하는 애니메이션 초기화
     _heightAnimation = Tween<double>(
       begin: context.hp(5),
-      end: context.hp(13),
+      end: context.hp(11.5), // 기존 13에서 11.5로 감소
     ).animate(
       CurvedAnimation(parent: _heightController, curve: Curves.easeInOut),
     );

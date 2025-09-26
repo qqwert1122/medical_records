@@ -264,15 +264,32 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (index) {
                 return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8),
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color:
-                        index < currentPin.length
-                            ? AppColors.primary
-                            : AppColors.backgroundSecondary,
+                  margin: EdgeInsets.symmetric(horizontal: 12),
+                  width: 40,
+                  height: 40,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        height: 30,
+                        child: Center(
+                          child:
+                              index < currentPin.length
+                                  ? Text('*', style: AppTextStyle.subTitle)
+                                  : null,
+                        ),
+                      ),
+                      Container(
+                        height: 2,
+                        width: 40,
+                        color:
+                            index < currentPin.length
+                                ? AppColors.primary
+                                : AppColors.textSecondary.withValues(
+                                  alpha: 0.3,
+                                ),
+                      ),
+                    ],
                   ),
                 );
               }),
@@ -306,11 +323,11 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
   Widget _buildNumberButton(String number) {
     return InkWell(
       onTap: () => _onNumberTap(number),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(50),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.textPrimary, width: 1.5),
         ),
         child: Center(
           child: Text(
@@ -328,17 +345,17 @@ class _PinCodeDialogState extends State<PinCodeDialog> {
   Widget _buildDeleteButton() {
     return InkWell(
       onTap: _onDelete,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(50),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.textPrimary, width: 1.5),
         ),
         child: Center(
           child: Icon(
-            LucideIcons.delete,
-            color: AppColors.textSecondary,
-            size: 30,
+            LucideIcons.moveLeft,
+            color: AppColors.textPrimary,
+            size: 18,
           ),
         ),
       ),

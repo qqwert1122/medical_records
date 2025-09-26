@@ -755,4 +755,34 @@ class DatabaseService {
 
     await db.delete('images', where: 'history_id = ?', whereArgs: [historyId]);
   }
+
+  // Home page 대시보드용 메서드들
+  Future<List<Map<String, dynamic>>> getOngoingRecords() async {
+    final db = await database;
+    return await db.query(
+      'records',
+      where: 'end_date IS NULL AND deleted_at IS NULL',
+      orderBy: 'start_date DESC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getRecentRecords({int limit = 5}) async {
+    final db = await database;
+    return await db.query(
+      'records',
+      where: 'deleted_at IS NULL',
+      orderBy: 'created_at DESC',
+      limit: limit,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getRecentImages({int limit = 6}) async {
+    final db = await database;
+    return await db.query(
+      'images',
+      where: 'deleted_at IS NULL',
+      orderBy: 'created_at DESC',
+      limit: limit,
+    );
+  }
 }

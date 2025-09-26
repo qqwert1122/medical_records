@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:medical_records/features/analysis/screens/analysis_page.dart';
 import 'package:medical_records/features/calendar/screens/calendar_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:medical_records/features/images/screens/images_page.dart';
-import 'package:medical_records/features/settings/screens/setting_page.dart';
+import 'package:medical_records/features/home/screens/home_page.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/features/security/components/security_lock_overlay.dart';
 import 'package:medical_records/features/security/services/security_service.dart';
+import 'package:medical_records/components/custom_toggle_navigation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,40 +44,54 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation>
     with WidgetsBindingObserver {
   // Bottom Navigation Bar
-  int selectedIndex = 0;
+  int selectedIndex = 0; // 홈 페이지를 기본값으로 설정
+  int _previousIndex = 0; // 캘린더 진입 전 페이지 인덱스 추적
   late PageController pageController;
-  bool isMonthlyView = true; // Monthly Calendar || Yearly Calendar
   bool _showNavBar =
       true; // Calendar Page의 Bottom Sheet hegiht에 따라 Nav Bar show
-
-  // Bottom navigation bar circle animation
-  double _circleWidth = 30;
-  double _circleHeight = 30;
+  bool _isInCalendarMode = false; // Calendar 페이지 내부 네비게이션 모드
 
   // 보안 서비스
   final SecurityService _securityService = SecurityService();
 
   List<Widget> get pages => [
+    HomePage(),
     CalendarPage(
-      isMonthlyView: isMonthlyView,
       onBottomSheetHeightChanged: (height) {
         if (mounted) {
           setState(() {
-            _showNavBar = height == 0;
+            _showNavBar = height == 0 && !_isInCalendarMode;
           });
+        }
+      },
+      onCalendarModeChanged: (isInCalendarMode) {
+        if (mounted) {
+          setState(() {
+            _isInCalendarMode = isInCalendarMode;
+            _showNavBar = !isInCalendarMode;
+          });
+        }
+      },
+      onBackPressed: () {
+        if (mounted) {
+          setState(() {
+            selectedIndex = _previousIndex;
+            _isInCalendarMode = false;
+            _showNavBar = true;
+          });
+          pageController.jumpToPage(_previousIndex);
         }
       },
     ),
     ImagesPage(),
     AnalysisPage(),
-    SettingPage(),
   ];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    pageController = PageController();
+    pageController = PageController(initialPage: 0);
     _initSecurity();
   }
 
@@ -101,7 +117,9 @@ class _MainNavigationState extends State<MainNavigation>
       if (_securityService.locked && !_securityService.authInProgress) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Future.delayed(Duration(milliseconds: 500), () {
-            if (mounted && _securityService.locked && !_securityService.authInProgress) {
+            if (mounted &&
+                _securityService.locked &&
+                !_securityService.authInProgress) {
               _authenticate();
             }
           });
@@ -122,154 +140,20 @@ class _MainNavigationState extends State<MainNavigation>
     if (mounted) setState(() {});
   }
 
-  void _animateCircle(int index) {
-    if (mounted) {
-      setState(() {
-        _circleWidth = 30;
-        _circleHeight = 2;
-      });
-    }
-
-    Future.delayed(const Duration(milliseconds: 150), () {
-      if (mounted) {
-        setState(() {
-          _circleWidth = 30;
-          _circleHeight = 30;
-          selectedIndex = index;
-        });
-      }
-    });
-  }
-
   void onNavTap(int index) {
     HapticFeedback.lightImpact();
 
-    // 캘린더 아이콘 클릭 시
-    if (index == 0 && selectedIndex == 0 && mounted) {
-      setState(() {
-        isMonthlyView = !isMonthlyView;
-      });
-      return;
-    }
-
-    // 다른 탭에서 캘린더 탭으로 돌아올 때는 월간 뷰로 초기화
-    if (index == 0 && selectedIndex != 0 && mounted) {
-      setState(() {
-        isMonthlyView = true;
-      });
-    }
-
-    _animateCircle(index);
     if (mounted) {
-      setState(() => selectedIndex = index);
-    }
-    pageController.animateToPage(
-      index,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, int index) {
-    bool isSelected = selectedIndex == index;
-    if (index == 0) {
-      return Expanded(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => onNavTap(index),
-          child: SizedBox(
-            height: 48,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // 연간 캘린더 아이콘
-                AnimatedScale(
-                  duration: Duration(milliseconds: 300),
-                  scale: isMonthlyView ? 0.0 : 1.0,
-                  child: AnimatedRotation(
-                    duration: Duration(milliseconds: 300),
-                    turns: isMonthlyView ? 0.25 : 0.0,
-                    child: Icon(
-                      Icons.calendar_month, // 연간 뷰 아이콘
-                      size: 20,
-                      color:
-                          isSelected ? Colors.white : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                // 월간 캘린더 아이콘
-                AnimatedScale(
-                  duration: Duration(milliseconds: 300),
-                  scale: isMonthlyView ? 1.0 : 0.0,
-                  child: AnimatedRotation(
-                    duration: Duration(milliseconds: 300),
-                    turns: isMonthlyView ? 0.0 : -0.25,
-                    child: Icon(
-                      Icons.calendar_today, // 월간 뷰 아이콘
-                      size: 20,
-                      color:
-                          isSelected ? Colors.white : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                if (index == 0 && isSelected) ...[
-                  Positioned(
-                    bottom: 2,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          curve: Curves.easeInOut,
-                          width: isMonthlyView ? 10 : 5,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color:
-                                isMonthlyView
-                                    ? AppColors.primary
-                                    : AppColors.primary.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        SizedBox(width: 2),
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          width: isMonthlyView ? 5 : 10,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color:
-                                isMonthlyView
-                                    ? AppColors.primary.withValues(alpha: 0.4)
-                                    : AppColors.primary,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      );
+      setState(() {
+        // 캘린더로 이동할 때 이전 인덱스 저장
+        if (index == 1 && selectedIndex != 1) {
+          _previousIndex = selectedIndex;
+        }
+        selectedIndex = index;
+      });
     }
 
-    // 다른 아이콘들은 기존 방식대로
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onNavTap(index),
-        child: SizedBox(
-          height: 48,
-          child: Icon(
-            icon,
-            size: 20,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
+    pageController.jumpToPage(index);
   }
 
   Widget _buildLockOverlay() {
@@ -288,63 +172,66 @@ class _MainNavigationState extends State<MainNavigation>
         children: [
           PageView(
             controller: pageController,
-            physics: NeverScrollableScrollPhysics(), // 스와이프 비활성화
+            physics: NeverScrollableScrollPhysics(),
             children: pages,
           ),
-          AnimatedPositioned(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            bottom: _showNavBar ? 24 : -64,
-            left: context.wp(20),
-            right: context.wp(20),
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadow.withValues(alpha: 0.15),
-                    blurRadius: 20,
-                    offset: Offset(0, 8),
+          _buildLockOverlay(),
+          // 메인 바텀 네비게이션
+          if (_showNavBar)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 16,
+                    top: 8,
+                    left: 24,
+                    right: 24,
                   ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // 배경 원 애니메이션
-                  AnimatedPositioned(
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    top: (48 - _circleHeight) / 2,
-                    left:
-                        context.wp(60) / 4 * selectedIndex +
-                        (context.wp(60) / 8 - _circleHeight / 2),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      width: _circleWidth,
-                      height: _circleHeight,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(50),
+                  child: CustomToggleNavigation(
+                    items: [
+                      ToggleNavigationItem(
+                        icon: FontAwesomeIcons.house,
+                        selectedIcon: FontAwesomeIcons.house,
+                        label: '홈',
                       ),
-                    ),
-                  ),
-                  // 아이콘들
-                  Row(
-                    children: [
-                      _buildNavItem(LucideIcons.calendar, 0),
-                      _buildNavItem(LucideIcons.image, 1),
-                      _buildNavItem(LucideIcons.lineChart, 2),
-                      _buildNavItem(LucideIcons.settings, 3),
+                      ToggleNavigationItem(
+                        icon: FontAwesomeIcons.calendar,
+                        selectedIcon: FontAwesomeIcons.solidCalendar,
+                        label: '캘린더',
+                      ),
+                      ToggleNavigationItem(
+                        icon: FontAwesomeIcons.image,
+                        selectedIcon: FontAwesomeIcons.solidImage,
+                        label: '이미지',
+                      ),
+                      ToggleNavigationItem(
+                        icon: FontAwesomeIcons.chartPie,
+                        selectedIcon: FontAwesomeIcons.chartPie,
+                        label: '통계',
+                      ),
+                    ],
+                    currentIndex: selectedIndex,
+                    onTap: onNavTap,
+                    height: 56,
+                    iconSize: 20,
+                    fontSize: 11,
+                    margin: EdgeInsets.zero,
+                    selectedColor: AppColors.textPrimary,
+                    unselectedColor: AppColors.textSecondary,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 15,
+                        offset: Offset(0, -2),
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-          _buildLockOverlay(),
         ],
       ),
     );

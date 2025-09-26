@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:medical_records/features/calendar/widgets/calendar_bottom_sheet.dart';
 import 'package:medical_records/features/calendar/widgets/month_picker_bottom_sheet.dart';
 import 'package:medical_records/features/calendar/widgets/montly_calendar.dart';
@@ -11,22 +12,27 @@ import 'package:medical_records/features/form/screens/record_form_page.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
+import 'package:medical_records/styles/app_size.dart';
+import 'package:medical_records/components/custom_toggle_navigation.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarPage extends StatefulWidget {
-  final bool isMonthlyView;
   final Function(double)? onBottomSheetHeightChanged;
+  final Function(bool)? onCalendarModeChanged;
+  final VoidCallback? onBackPressed;
   const CalendarPage({
     Key? key,
-    required this.isMonthlyView,
     this.onBottomSheetHeightChanged,
+    this.onCalendarModeChanged,
+    this.onBackPressed,
   }) : super(key: key);
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
 }
 
-class _CalendarPageState extends State<CalendarPage> {
+class _CalendarPageState extends State<CalendarPage>
+    with TickerProviderStateMixin {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -36,6 +42,10 @@ class _CalendarPageState extends State<CalendarPage> {
   final Map<String, String> _recordTitles = {};
   Map<String, DateTime> _recordStartDates = {};
   Map<String, DateTime> _recordEndDates = {};
+
+  // 바텀 네비게이션 애니메이션 컨트롤러
+  late AnimationController _navAnimationController;
+  late Animation<double> _navAnimation;
 
   // CalendarBottomSheet에 전달할 콜백을 위한 GlobalKey
   final GlobalKey<CalendarBottomSheetState> _bottomSheetKey = GlobalKey();
@@ -47,12 +57,92 @@ class _CalendarPageState extends State<CalendarPage> {
   int _dataVersion = 0;
   bool _isRefreshing = false;
 
+  // 월간/연간 뷰 토글
+  bool _isMonthlyView = true;
+
+  // 내부 네비게이션 상태
+  int _calendarNavIndex = 1; // 0: 뒤로, 1: 월간, 2: 연간, 3: 추가
+
   @override
   void initState() {
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
     _loadRecords();
+
+    // 바텀 네비게이션 애니메이션 초기화
+    _navAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _navAnimation = Tween<double>(
+      begin: 0.0,
+      end: 100.0, // 네비게이션 바를 아래로 100px 이동
+    ).animate(CurvedAnimation(
+      parent: _navAnimationController,
+      curve: Curves.easeInOut,
+    ));
+
+    // 캘린더 페이지가 로드되면 캘린더 모드로 전환
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onCalendarModeChanged?.call(true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _navAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _handleNavigationTap(int index) {
+    switch (index) {
+      case 0: // 뒤로가기
+        widget.onBackPressed?.call();
+        break;
+      case 1: // 월간
+        if (mounted && !_isMonthlyView) {
+          setState(() {
+            _isMonthlyView = true;
+            _calendarNavIndex = 1;
+          });
+        }
+        break;
+      case 2: // 연간
+        if (mounted && _isMonthlyView) {
+          setState(() {
+            _isMonthlyView = false;
+            _calendarNavIndex = 2;
+          });
+        }
+        break;
+      case 3: // 추가
+        handleAddRecord();
+        break;
+    }
+  }
+
+  Future<void> handleAddRecord() async {
+    HapticFeedback.mediumImpact();
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: RecordFormPage(selectedDate: _selectedDay),
+          ),
+    );
+
+    if (result == true) {
+      await _onDataChanged();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ReviewService.requestReviewIfEligible(context);
+      });
+    }
   }
 
   Future<void> _loadRecords() async {
@@ -225,9 +315,19 @@ class _CalendarPageState extends State<CalendarPage> {
         _bottomSheetHeight = 0.5;
         _currentBottomSheetPage = 0;
       });
+      _updateNavigationAnimation(0.5);
     }
     widget.onBottomSheetHeightChanged?.call(0.5);
     _loadRecords();
+  }
+
+  // 바텀 시트 높이에 따른 네비게이션 애니메이션 업데이트
+  void _updateNavigationAnimation(double bottomSheetHeight) {
+    if (bottomSheetHeight > 0 && !_navAnimationController.isAnimating) {
+      _navAnimationController.forward();
+    } else if (bottomSheetHeight == 0 && !_navAnimationController.isAnimating) {
+      _navAnimationController.reverse();
+    }
   }
 
   void _showMonthPicker({bool isMonthlyView = true}) async {
@@ -286,7 +386,7 @@ class _CalendarPageState extends State<CalendarPage> {
               SafeArea(bottom: false, child: _buildHeader()),
               Expanded(
                 child:
-                    widget.isMonthlyView
+                    _isMonthlyView
                         ? _buildMonthlyCalendar()
                         : _buildYearlyCalendar(),
               ),
@@ -296,14 +396,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
           Positioned(
             bottom:
-                64 + 10, // nav height 48 + nav position bottom 16 + extra 10
+                64 + 20, // nav height 48 + nav position bottom 16 + extra 10
             left: 0,
             right: 0,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child:
                   _bottomSheetHeight == 0 &&
-                          widget.isMonthlyView &&
+                          _isMonthlyView &&
                           (_focusedDay.year != DateTime.now().year ||
                               _focusedDay.month != DateTime.now().month)
                       ? Center(
@@ -352,57 +452,11 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
 
-          Positioned(
-            bottom: 24,
-            right: 16,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child:
-                  _currentBottomSheetPage == 0 && !_isFutureDay(_selectedDay)
-                      ? SizedBox(
-                        height: 48,
-                        width: 48,
-                        child: FloatingActionButton(
-                          key: const ValueKey('add_fab'),
-                          elevation: 2,
-                          shape: const CircleBorder(),
-                          onPressed: () async {
-                            HapticFeedback.mediumImpact();
-                            final result = await showModalBottomSheet<bool>(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder:
-                                  (context) => Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom:
-                                          MediaQuery.of(
-                                            context,
-                                          ).viewInsets.bottom,
-                                    ),
-                                    child: RecordFormPage(
-                                      selectedDate: _selectedDay,
-                                    ),
-                                  ),
-                            );
+          // 바텀 시트가 열렸을 때 플로팅 + 버튼
+          _buildFloatingAddButton(),
 
-                            if (result == true) {
-                              await _onDataChanged();
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                ReviewService.requestReviewIfEligible(context);
-                              });
-                            }
-                          },
-                          backgroundColor: AppColors.primary,
-                          child: const Icon(
-                            LucideIcons.plus,
-                            color: Colors.white,
-                          ),
-                        ),
-                      )
-                      : const SizedBox.shrink(key: ValueKey('empty')),
-            ),
-          ),
+          // 캘린더 네비게이션
+          _buildCalendarNavigation(),
         ],
       ),
     );
@@ -410,9 +464,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildHeader() {
     return CalendarHeaderWidget(
-      isMonthlyView: widget.isMonthlyView,
+      isMonthlyView: _isMonthlyView,
       focusedDay: _focusedDay,
-      onDateTap: () => _showMonthPicker(isMonthlyView: widget.isMonthlyView),
+      onDateTap: () => _showMonthPicker(isMonthlyView: _isMonthlyView),
     );
   }
 
@@ -459,9 +513,22 @@ class _CalendarPageState extends State<CalendarPage> {
             _selectedDay = date;
             _bottomSheetHeight = 0.5;
           });
+          _updateNavigationAnimation(0.5);
         }
 
         widget.onBottomSheetHeightChanged?.call(0.5);
+      },
+      onMonthTap: (monthDate) {
+        // 월 클릭 시 월간 뷰로 전환하고 해당 월로 이동
+        if (mounted) {
+          setState(() {
+            _isMonthlyView = true;
+            _calendarNavIndex = 1;
+            _focusedDay = monthDate;
+            _selectedDay = monthDate;
+          });
+        }
+        _loadRecords();
       },
     );
   }
@@ -481,6 +548,7 @@ class _CalendarPageState extends State<CalendarPage> {
             }
             widget.onBottomSheetHeightChanged?.call(newHeight);
           });
+          _updateNavigationAnimation(newHeight);
         }
       },
       onDateChanged: (newDate) {
@@ -500,6 +568,118 @@ class _CalendarPageState extends State<CalendarPage> {
         }
       },
       dataVersion: _dataVersion,
+    );
+  }
+
+  Widget _buildFloatingAddButton() {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      bottom: _bottomSheetHeight > 0 && _currentBottomSheetPage == 0 ? 24 : -80,
+      right: 16,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: _bottomSheetHeight > 0 && _currentBottomSheetPage == 0 && !_isFutureDay(_selectedDay)
+            ? Container(
+                key: const ValueKey('floating_add_button'),
+                height: 56,
+                width: 56,
+                child: FloatingActionButton(
+                  elevation: 4,
+                  shape: const CircleBorder(),
+                  onPressed: () async {
+                    HapticFeedback.mediumImpact();
+                    final result = await showModalBottomSheet<bool>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: RecordFormPage(selectedDate: _selectedDay),
+                      ),
+                    );
+
+                    if (result == true) {
+                      await _onDataChanged();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        ReviewService.requestReviewIfEligible(context);
+                      });
+                    }
+                  },
+                  backgroundColor: AppColors.primary,
+                  child: const Icon(
+                    FontAwesomeIcons.plus,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              )
+            : const SizedBox.shrink(key: ValueKey('empty_fab')),
+      ),
+    );
+  }
+
+  Widget _buildCalendarNavigation() {
+    return AnimatedBuilder(
+      animation: _navAnimation,
+      builder: (context, child) {
+        return Positioned(
+          bottom: -_navAnimation.value, // 애니메이션에 따라 아래로 이동
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                bottom: 16,
+                top: 8,
+                left: 24,
+                right: 24,
+              ),
+              child: CustomToggleNavigation(
+            items: [
+              ToggleNavigationItem(
+                icon: FontAwesomeIcons.arrowLeft,
+                selectedIcon: FontAwesomeIcons.arrowLeft,
+                label: '뒤로',
+              ),
+              ToggleNavigationItem(
+                icon: FontAwesomeIcons.calendar,
+                selectedIcon: FontAwesomeIcons.solidCalendar,
+                label: '월간',
+              ),
+              ToggleNavigationItem(
+                icon: FontAwesomeIcons.calendarDays,
+                selectedIcon: FontAwesomeIcons.solidCalendarDays,
+                label: '연간',
+              ),
+              ToggleNavigationItem(
+                icon: FontAwesomeIcons.plus,
+                selectedIcon: FontAwesomeIcons.plus,
+                label: '추가',
+              ),
+            ],
+            currentIndex: _calendarNavIndex,
+            onTap: _handleNavigationTap,
+            height: 56,
+            iconSize: 20,
+            fontSize: 11,
+            margin: EdgeInsets.zero,
+            selectedColor: AppColors.textPrimary,
+            unselectedColor: AppColors.textSecondary,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 15,
+                offset: Offset(0, -2),
+              ),
+              ],
+            ),
+          ),
+        ),
+      );
+      },
     );
   }
 }
