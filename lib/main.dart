@@ -7,6 +7,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:medical_records/features/images/screens/images_page.dart';
 import 'package:medical_records/features/home/screens/home_page.dart';
 import 'package:medical_records/features/records/screens/list_page.dart';
+import 'package:medical_records/features/form/screens/record_form_page.dart';
+import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/features/security/components/security_lock_overlay.dart';
@@ -91,8 +93,6 @@ class _MainNavigationState extends State<MainNavigation>
       },
     ),
     ListPage(),
-    ImagesPage(),
-    AnalysisPage(),
   ];
 
   @override
@@ -151,6 +151,12 @@ class _MainNavigationState extends State<MainNavigation>
   void onNavTap(int index) {
     HapticFeedback.lightImpact();
 
+    // 추가 버튼(인덱스 3)을 눌렀을 때
+    if (index == 3) {
+      _showAddRecordForm();
+      return;
+    }
+
     if (mounted) {
       setState(() {
         // 캘린더로 이동할 때 이전 인덱스 저장 (캘린더는 여전히 인덱스 1)
@@ -162,6 +168,31 @@ class _MainNavigationState extends State<MainNavigation>
     }
 
     pageController.jumpToPage(index);
+  }
+
+  Future<void> _showAddRecordForm() async {
+    HapticFeedback.mediumImpact();
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: RecordFormPage(selectedDate: DateTime.now()),
+      ),
+    );
+
+    if (result == true) {
+      // 데이터 새로고침을 위해 현재 페이지 다시 빌드
+      if (mounted) {
+        setState(() {});
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ReviewService.requestReviewIfEligible(context);
+      });
+    }
   }
 
   Widget _buildLockOverlay() {
@@ -216,14 +247,9 @@ class _MainNavigationState extends State<MainNavigation>
                         label: '리스트',
                       ),
                       ToggleNavigationItem(
-                        icon: FontAwesomeIcons.image,
-                        selectedIcon: FontAwesomeIcons.solidImage,
-                        label: '이미지',
-                      ),
-                      ToggleNavigationItem(
-                        icon: FontAwesomeIcons.chartPie,
-                        selectedIcon: FontAwesomeIcons.chartPie,
-                        label: '통계',
+                        icon: FontAwesomeIcons.plus,
+                        selectedIcon: FontAwesomeIcons.plus,
+                        label: '추가',
                       ),
                     ],
                     currentIndex: selectedIndex,

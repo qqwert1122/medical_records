@@ -6,7 +6,7 @@ import 'package:medical_records/features/analysis/enum/analysis_range.dart';
 import 'package:medical_records/features/analysis/widgets/correlation_table.dart';
 import 'package:medical_records/features/analysis/widgets/donut_chart.dart';
 import 'package:medical_records/features/analysis/widgets/range_selector.dart';
-import 'package:medical_records/features/analysis/widgets/summary_card.dart';
+import 'package:medical_records/components/summary_card.dart';
 import 'package:medical_records/features/analysis/widgets/treatment_insight_section.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';

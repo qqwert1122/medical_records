@@ -80,9 +80,11 @@ class CalendarDayCellBar extends StatelessWidget {
           child: Text(
             '+$extraCount',
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 8,
               color:
-                  extraCount > 0 ? AppColors.lightGrey : AppColors.background,
+                  extraCount > 0
+                      ? AppColors.textSecondary.withValues(alpha: 0.8)
+                      : AppColors.background,
             ),
           ),
         ),
