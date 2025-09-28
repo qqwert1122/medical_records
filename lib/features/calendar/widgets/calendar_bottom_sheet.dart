@@ -254,24 +254,21 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
       right: 0,
       bottom: 0,
       height: (screenHeight * widget.bottomSheetHeight) + safeAreaBottom,
-      child: Material(
-        elevation: 100,
+      child: Container(
         color: AppColors.background,
-        child: SafeArea(
-          top: false, // 상단은 SafeArea 적용 안함
-          child: Column(
+        child: Column(
           children: [
-              Container(
-                padding: EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: AppColors.backgroundSecondary,
-                      width: 0.5,
-                    ),
+            Container(
+              padding: EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.backgroundSecondary,
+                    width: 0.5,
                   ),
                 ),
-                child: CalendarBottomSheetHandle(
+              ),
+              child: CalendarBottomSheetHandle(
                 dayRecords: _dayRecords,
                 selectedDay: widget.selectedDay,
                 selectedRecord: _selectedRecord,
@@ -331,8 +328,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                   ],
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

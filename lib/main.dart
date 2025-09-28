@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: '건강 로그', home: MainNavigation());
+    return MaterialApp(title: '마이델로지', home: MainNavigation());
   }
 }
 
@@ -287,9 +287,9 @@ class _MainNavigationState extends State<MainNavigation>
                           color: AppColors.primary,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 15,
-                              offset: Offset(0, -2),
+                              color: AppColors.shadow.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: Offset(0, 2),
                             ),
                           ],
                         ),
