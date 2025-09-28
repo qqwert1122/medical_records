@@ -4,44 +4,54 @@ import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/utils/time_format.dart';
+import 'package:medical_records/features/home/widgets/active_records_timeline.dart';
 
 class ProgressSection extends StatelessWidget {
   final int activeRecords;
+  final List<Map<String, dynamic>> activeRecordsList;
 
-  const ProgressSection({super.key, required this.activeRecords});
+  const ProgressSection({
+    super.key,
+    required this.activeRecords,
+    this.activeRecordsList = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24.0),
-          // color: AppColors.surface,
-          color: Colors.indigoAccent,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24.0),
+        color: AppColors.background,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: 0,
+          right: 16.0,
+          bottom: 16.0,
+          top: 16.0,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              spacing: 10.0,
-              children: [
-                Icon(
-                  LucideIcons.circleDashed,
-                  size: 24,
-                  color: AppColors.white,
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0),
+              child: Text(
+                '진행 중 증상 타임라인',
+                style: AppTextStyle.body.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w900,
                 ),
-                Text(
-                  '진행 중',
-                  style: AppTextStyle.body.copyWith(color: AppColors.white),
-                ),
-              ],
+              ),
             ),
-            Text(
-              activeRecords.toString(),
-              style: AppTextStyle.subTitle.copyWith(color: AppColors.white),
-            ),
+            SizedBox(height: context.hp(2)),
+            ActiveRecordsTimeline(activeRecords: activeRecordsList),
           ],
         ),
       ),

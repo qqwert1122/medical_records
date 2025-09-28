@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:medical_records/features/analysis/screens/analysis_page.dart';
-import 'package:medical_records/features/calendar/screens/calendar_page.dart';
+import 'package:medical_records/features/records/screens/records_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:medical_records/features/images/screens/images_page.dart';
 import 'package:medical_records/features/home/screens/home_page.dart';
-import 'package:medical_records/features/records/screens/list_page.dart';
 import 'package:medical_records/features/form/screens/record_form_page.dart';
 import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/services/database_service.dart';
@@ -47,9 +46,11 @@ class _MainNavigationState extends State<MainNavigation>
   int selectedIndex = 0; // 홈 페이지를 기본값으로 설정
   int _previousIndex = 0; // 캘린더 진입 전 페이지 인덱스 추적
   late PageController pageController;
-  bool _showNavBar =
-      true; // Calendar Page의 Bottom Sheet hegiht에 따라 Nav Bar show
-  bool _isInCalendarMode = false; // Calendar 페이지 내부 네비게이션 모드
+  bool _showNavBar = true;
+  bool _showFab = true;
+
+  bool _isDrawerOpen = false; // Drawer 열림 상태 추적
+  int _currentBottomSheetPage = 0; // Calendar bottom sheet 내부 페이지 추적
 
   // 보안 서비스
   final SecurityService _securityService = SecurityService();
@@ -64,35 +65,41 @@ class _MainNavigationState extends State<MainNavigation>
           pageController.jumpToPage(tabIndex);
         }
       },
+      onDrawerStateChanged: (isOpen) {
+        if (mounted) {
+          setState(() {
+            _isDrawerOpen = isOpen;
+          });
+        }
+      },
     ),
-    CalendarPage(
+    RecordsPage(
       onBottomSheetHeightChanged: (height) {
         if (mounted) {
           setState(() {
-            _showNavBar = height == 0 && !_isInCalendarMode;
+            if (height == 0) {
+              _showNavBar = true;
+              _showFab = true;
+            } else {
+              _showNavBar = false;
+            }
           });
         }
       },
-      onCalendarModeChanged: (isInCalendarMode) {
+      onBottomSheetPageChanged: (pageIndex) {
         if (mounted) {
           setState(() {
-            _isInCalendarMode = isInCalendarMode;
-            _showNavBar = !isInCalendarMode;
+            if (pageIndex == 0) {
+              _showFab = true;
+            } else {
+              _showFab = false;
+            }
           });
-        }
-      },
-      onBackPressed: () {
-        if (mounted) {
-          setState(() {
-            selectedIndex = _previousIndex;
-            _isInCalendarMode = false;
-            _showNavBar = true;
-          });
-          pageController.jumpToPage(_previousIndex);
         }
       },
     ),
-    ListPage(),
+    ImagesPage(),
+    AnalysisPage(),
   ];
 
   @override
@@ -151,12 +158,6 @@ class _MainNavigationState extends State<MainNavigation>
   void onNavTap(int index) {
     HapticFeedback.lightImpact();
 
-    // 추가 버튼(인덱스 3)을 눌렀을 때
-    if (index == 3) {
-      _showAddRecordForm();
-      return;
-    }
-
     if (mounted) {
       setState(() {
         // 캘린더로 이동할 때 이전 인덱스 저장 (캘린더는 여전히 인덱스 1)
@@ -176,12 +177,13 @@ class _MainNavigationState extends State<MainNavigation>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: RecordFormPage(selectedDate: DateTime.now()),
-      ),
+      builder:
+          (context) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: RecordFormPage(selectedDate: DateTime.now()),
+          ),
     );
 
     if (result == true) {
@@ -216,61 +218,105 @@ class _MainNavigationState extends State<MainNavigation>
           ),
           _buildLockOverlay(),
           // 메인 바텀 네비게이션
-          if (_showNavBar)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: 16,
-                    top: 8,
-                    left: 24,
-                    right: 24,
-                  ),
-                  child: CustomToggleNavigation(
-                    items: [
-                      ToggleNavigationItem(
-                        icon: FontAwesomeIcons.house,
-                        selectedIcon: FontAwesomeIcons.house,
-                        label: '홈',
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 16,
+                  top: 8,
+                  left: 24,
+                  right: 24,
+                ),
+                child: Row(
+                  children: [
+                    // 바텀 네비게이션
+                    Expanded(
+                      child:
+                          _showNavBar && !_isDrawerOpen
+                              ? Container(
+                                margin: EdgeInsets.only(right: 12),
+                                child: CustomToggleNavigation(
+                                  items: [
+                                    ToggleNavigationItem(
+                                      icon: FontAwesomeIcons.house,
+                                      selectedIcon: FontAwesomeIcons.house,
+                                      label: '홈',
+                                    ),
+                                    ToggleNavigationItem(
+                                      icon: FontAwesomeIcons.calendar,
+                                      selectedIcon:
+                                          FontAwesomeIcons.solidCalendar,
+                                      label: '기록',
+                                    ),
+                                    ToggleNavigationItem(
+                                      icon: FontAwesomeIcons.image,
+                                      selectedIcon: FontAwesomeIcons.solidImage,
+                                      label: '이미지',
+                                    ),
+                                    ToggleNavigationItem(
+                                      icon: FontAwesomeIcons.chartLine,
+                                      selectedIcon: FontAwesomeIcons.chartLine,
+                                      label: '통계',
+                                    ),
+                                  ],
+                                  currentIndex: selectedIndex,
+                                  onTap: onNavTap,
+                                  height: 56,
+                                  iconSize: 20,
+                                  fontSize: 11,
+                                  margin: EdgeInsets.zero,
+                                  selectedColor: AppColors.textPrimary,
+                                  unselectedColor: AppColors.textSecondary,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      blurRadius: 15,
+                                      offset: Offset(0, -2),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              : Container(),
+                    ),
+                    // FAB
+                    if (_showFab && !_isDrawerOpen)
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 15,
+                              offset: Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(28),
+                            onTap: _showAddRecordForm,
+                            child: Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                        ),
                       ),
-                      ToggleNavigationItem(
-                        icon: FontAwesomeIcons.calendar,
-                        selectedIcon: FontAwesomeIcons.solidCalendar,
-                        label: '캘린더',
-                      ),
-                      ToggleNavigationItem(
-                        icon: FontAwesomeIcons.list,
-                        selectedIcon: FontAwesomeIcons.list,
-                        label: '리스트',
-                      ),
-                      ToggleNavigationItem(
-                        icon: FontAwesomeIcons.plus,
-                        selectedIcon: FontAwesomeIcons.plus,
-                        label: '추가',
-                      ),
-                    ],
-                    currentIndex: selectedIndex,
-                    onTap: onNavTap,
-                    height: 56,
-                    iconSize: 20,
-                    fontSize: 11,
-                    margin: EdgeInsets.zero,
-                    selectedColor: AppColors.textPrimary,
-                    unselectedColor: AppColors.textSecondary,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 15,
-                        offset: Offset(0, -2),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),
+          ),
         ],
       ),
     );

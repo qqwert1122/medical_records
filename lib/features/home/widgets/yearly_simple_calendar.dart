@@ -339,6 +339,7 @@ class _YearlySimpleCalendarState extends State<YearlySimpleCalendar> {
     return CustomFilterChips(
       items: allSymptoms,
       selectedItem: _selectedSymptom,
+      color: Colors.pinkAccent,
       onItemSelected: (item) {
         setState(() {
           _selectedSymptom = item;
@@ -351,126 +352,136 @@ class _YearlySimpleCalendarState extends State<YearlySimpleCalendar> {
   Widget build(BuildContext context) {
     const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              children: [
-                // 월 헤더 (가로)
-                SizedBox(
-                  height: 20,
-                  child: SingleChildScrollView(
-                    controller: _headerScrollController,
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        SizedBox(width: 30), // 요일 라벨 공간
-                        ..._weekDays.asMap().entries.map((entry) {
-                          final weekIndex = entry.key;
-                          final monthLabel =
-                              weekIndex < _monthLabels.length
-                                  ? _monthLabels[weekIndex]
-                                  : '';
-
-                          return Container(
-                            width: 17,
-                            height: 20,
-                            alignment: Alignment.center,
-                            child:
-                                monthLabel.isNotEmpty
-                                    ? Text(
-                                      monthLabel,
-                                      style: AppTextStyle.caption.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
-                                    )
-                                    : null,
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadow.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '올해 증상 기록',
+                style: AppTextStyle.body.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w900,
                 ),
-                SizedBox(height: 4),
-                // 스크롤 가능한 캘린더 (행: 요일, 열: 주차)
-                SizedBox(
-                  height: 120,
+              ),
+              SizedBox(height: context.hp(2)),
+              // 월 헤더 (가로)
+              SizedBox(
+                height: 20,
+                child: SingleChildScrollView(
+                  controller: _headerScrollController,
+                  scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      // 요일 라벨 (고정)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children:
-                            weekdays
-                                .map(
-                                  (day) => Container(
-                                    width: 30,
-                                    height: 17,
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      day,
-                                      style: AppTextStyle.caption.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                      ),
-                      // 스크롤 가능한 캘린더 그리드
-                      Expanded(
-                        child: SingleChildScrollView(
-                          controller: _scrollController,
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children:
-                                _weekDays.asMap().entries.map((entry) {
-                                  final weekIndex = entry.key;
-                                  final week = entry.value;
+                      SizedBox(width: 30), // 요일 라벨 공간
+                      ..._weekDays.asMap().entries.map((entry) {
+                        final weekIndex = entry.key;
+                        final monthLabel =
+                            weekIndex < _monthLabels.length
+                                ? _monthLabels[weekIndex]
+                                : '';
 
-                                  return Column(
-                                    children:
-                                        week.asMap().entries.map((dayEntry) {
-                                          final dayIndex = dayEntry.key;
-                                          final day = dayEntry.value;
-                                          return _buildDayCell(
-                                            day,
-                                            weekIndex,
-                                            dayIndex,
-                                          );
-                                        }).toList(),
-                                  );
-                                }).toList(),
-                          ),
-                        ),
-                      ),
+                        return Container(
+                          width: 17,
+                          height: 20,
+                          alignment: Alignment.center,
+                          child:
+                              monthLabel.isNotEmpty
+                                  ? Text(
+                                    monthLabel,
+                                    style: AppTextStyle.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                                  )
+                                  : null,
+                        );
+                      }),
                     ],
                   ),
                 ),
-                SizedBox(height: 10),
-                _buildScrollIndicator(),
-              ],
-            ),
+              ),
+              SizedBox(height: 4),
+              // 스크롤 가능한 캘린더 (행: 요일, 열: 주차)
+              SizedBox(
+                height: 120,
+                child: Row(
+                  children: [
+                    // 요일 라벨 (고정)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children:
+                          weekdays
+                              .map(
+                                (day) => Container(
+                                  width: 30,
+                                  height: 17,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    day,
+                                    style: AppTextStyle.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                    // 스크롤 가능한 캘린더 그리드
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children:
+                              _weekDays.asMap().entries.map((entry) {
+                                final weekIndex = entry.key;
+                                final week = entry.value;
+
+                                return Column(
+                                  children:
+                                      week.asMap().entries.map((dayEntry) {
+                                        final dayIndex = dayEntry.key;
+                                        final day = dayEntry.value;
+                                        return _buildDayCell(
+                                          day,
+                                          weekIndex,
+                                          dayIndex,
+                                        );
+                                      }).toList(),
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: context.hp(1)),
+              _buildScrollIndicator(),
+              SizedBox(height: context.hp(1)),
+              _buildSymptomChips(),
+            ],
           ),
-
-          // 스크롤 인디케이터
-          SizedBox(height: 8),
-
-          _buildSymptomChips(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

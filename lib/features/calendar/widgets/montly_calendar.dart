@@ -50,6 +50,14 @@ class _MonthlyCalendarState extends State<MonthlyCalendar>
   late Animation<double> _dotsAnimation;
   late Animation<double> _heightAnimation;
 
+  bool _isFutureDay(DateTime? day) {
+    if (day == null) return false;
+    final dayOnly = DateTime(day.year, day.month, day.day);
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    return dayOnly.isAfter(todayOnly);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -136,8 +144,10 @@ class _MonthlyCalendarState extends State<MonthlyCalendar>
                       selectedDayPredicate:
                           (day) => isSameDay(widget.selectedDay, day),
                       onDaySelected: (selectedDay, focusedDay) {
-                        widget.onDaySelected(selectedDay, focusedDay);
-                        widget.onHeightChanged?.call(0.5);
+                        if (!_isFutureDay(selectedDay)) {
+                          widget.onDaySelected(selectedDay, focusedDay);
+                          widget.onHeightChanged?.call(0.5);
+                        }
                       },
                       onPageChanged: widget.onPageChanged,
                       headerVisible: false,

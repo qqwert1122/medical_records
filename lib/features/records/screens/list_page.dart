@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:medical_records/features/form/screens/record_form_page.dart';
 import 'package:medical_records/services/database_service.dart';
+import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
@@ -297,5 +300,27 @@ class _ListPageState extends State<ListPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _showAddRecordForm() async {
+    HapticFeedback.mediumImpact();
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: RecordFormPage(selectedDate: DateTime.now()),
+      ),
+    );
+
+    if (result == true) {
+      _loadRecords();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ReviewService.requestReviewIfEligible(context);
+      });
+    }
   }
 }

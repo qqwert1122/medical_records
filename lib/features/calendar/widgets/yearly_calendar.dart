@@ -162,12 +162,12 @@ class YearlyCalendarState extends State<YearlyCalendar> {
 
     // 3x4 그리드로 12개월 표시 (스크롤 없이 한눈에)
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16.0),
       child: GridView.builder(
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          childAspectRatio: 0.8, // 약간 세로로 긴 형태
+          childAspectRatio: 0.9, // 약간 세로로 긴 형태
           mainAxisSpacing: context.wp(3),
           crossAxisSpacing: context.wp(3),
         ),
@@ -197,9 +197,9 @@ class YearlyCalendarState extends State<YearlyCalendar> {
           // 월 제목
           Text(
             '$month월',
-            style: AppTextStyle.subTitle.copyWith(
+            style: AppTextStyle.body.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.textSecondary,
             ),
           ),
           SizedBox(height: 4),

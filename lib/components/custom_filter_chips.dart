@@ -6,12 +6,14 @@ class CustomFilterChips extends StatelessWidget {
   final List<String> items;
   final String selectedItem;
   final Function(String) onItemSelected;
+  final Color? color;
 
   const CustomFilterChips({
     super.key,
     required this.items,
     required this.selectedItem,
     required this.onItemSelected,
+    this.color,
   });
 
   @override
@@ -29,11 +31,11 @@ class CustomFilterChips extends StatelessWidget {
                 onItemSelected(item);
               },
               backgroundColor: AppColors.backgroundSecondary,
-              selectedColor: AppColors.textPrimary,
+              selectedColor: color ?? AppColors.textPrimary,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide.none,
+                borderRadius: BorderRadius.circular(24),
               ),
+              side: BorderSide.none,
               checkmarkColor: AppColors.background,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,

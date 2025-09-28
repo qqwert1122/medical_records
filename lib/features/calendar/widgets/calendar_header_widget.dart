@@ -10,12 +10,14 @@ class CalendarHeaderWidget extends StatefulWidget {
   final bool isMonthlyView;
   final DateTime focusedDay;
   final Function() onDateTap;
+  final Function(bool)? onViewModeChanged;
 
   const CalendarHeaderWidget({
     Key? key,
     required this.isMonthlyView,
     required this.focusedDay,
     required this.onDateTap,
+    this.onViewModeChanged,
   }) : super(key: key);
 
   @override
@@ -131,7 +133,7 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -171,7 +173,7 @@ class _CalendarHeaderWidgetState extends State<CalendarHeaderWidget> {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
