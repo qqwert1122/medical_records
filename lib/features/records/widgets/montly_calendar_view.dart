@@ -13,12 +13,16 @@ class MontlyCalendarView extends StatefulWidget {
   final Function(double)? onBottomSheetHeightChanged;
   final Function(int)? onBottomSheetPageChanged;
   final DateTime? initialFocusedMonth;
+  final bool showBottomSheet;
+  final bool showOnlyBottomSheet;
 
   const MontlyCalendarView({
     super.key,
     this.onBottomSheetHeightChanged,
     this.onBottomSheetPageChanged,
     this.initialFocusedMonth,
+    this.showBottomSheet = true,
+    this.showOnlyBottomSheet = false,
   });
 
   @override
@@ -312,6 +316,46 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
 
   @override
   Widget build(BuildContext context) {
+    // 오직 bottom sheet만 표시하는 경우
+    if (widget.showOnlyBottomSheet) {
+      return CalendarBottomSheet(
+        key: _bottomSheetKey,
+        bottomSheetHeight: _bottomSheetHeight,
+        selectedDay: _selectedDay,
+        selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
+        onHeightChanged: (newHeight) {
+          if (mounted) {
+            setState(() {
+              _bottomSheetHeight = newHeight;
+              if (newHeight == 0) {
+                _currentBottomSheetPage = 0;
+              }
+              widget.onBottomSheetHeightChanged?.call(newHeight);
+            });
+            _updateNavigationAnimation(newHeight);
+          }
+        },
+        onDateChanged: (newDate) {
+          if (mounted) {
+            setState(() {
+              _selectedDay = newDate;
+              _focusedDay = newDate;
+            });
+          }
+        },
+        onDataChanged: _onDataChanged,
+        onPageChanged: (pageIndex) {
+          if (mounted) {
+            setState(() {
+              _currentBottomSheetPage = pageIndex;
+            });
+            widget.onBottomSheetPageChanged?.call(pageIndex);
+          }
+        },
+        dataVersion: _dataVersion,
+      );
+    }
+
     return Stack(
       children: [
         Column(
@@ -355,44 +399,6 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
               ),
             ),
           ],
-        ),
-
-        // Bottom Sheet
-        CalendarBottomSheet(
-          key: _bottomSheetKey,
-          bottomSheetHeight: _bottomSheetHeight,
-          selectedDay: _selectedDay,
-          selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
-          onHeightChanged: (newHeight) {
-            if (mounted) {
-              setState(() {
-                _bottomSheetHeight = newHeight;
-                if (newHeight == 0) {
-                  _currentBottomSheetPage = 0;
-                }
-                widget.onBottomSheetHeightChanged?.call(newHeight);
-              });
-              _updateNavigationAnimation(newHeight);
-            }
-          },
-          onDateChanged: (newDate) {
-            if (mounted) {
-              setState(() {
-                _selectedDay = newDate;
-                _focusedDay = newDate;
-              });
-            }
-          },
-          onDataChanged: _onDataChanged,
-          onPageChanged: (pageIndex) {
-            if (mounted) {
-              setState(() {
-                _currentBottomSheetPage = pageIndex;
-              });
-              widget.onBottomSheetPageChanged?.call(pageIndex);
-            }
-          },
-          dataVersion: _dataVersion,
         ),
 
         Positioned(
@@ -448,6 +454,45 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
                     : const SizedBox.shrink(key: ValueKey('empty')),
           ),
         ),
+
+        // Bottom Sheet - showBottomSheet가 true일 때만 표시
+        if (widget.showBottomSheet)
+          CalendarBottomSheet(
+            key: _bottomSheetKey,
+            bottomSheetHeight: _bottomSheetHeight,
+            selectedDay: _selectedDay,
+            selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
+            onHeightChanged: (newHeight) {
+              if (mounted) {
+                setState(() {
+                  _bottomSheetHeight = newHeight;
+                  if (newHeight == 0) {
+                    _currentBottomSheetPage = 0;
+                  }
+                  widget.onBottomSheetHeightChanged?.call(newHeight);
+                });
+                _updateNavigationAnimation(newHeight);
+              }
+            },
+            onDateChanged: (newDate) {
+              if (mounted) {
+                setState(() {
+                  _selectedDay = newDate;
+                  _focusedDay = newDate;
+                });
+              }
+            },
+            onDataChanged: _onDataChanged,
+            onPageChanged: (pageIndex) {
+              if (mounted) {
+                setState(() {
+                  _currentBottomSheetPage = pageIndex;
+                });
+                widget.onBottomSheetPageChanged?.call(pageIndex);
+              }
+            },
+            dataVersion: _dataVersion,
+          ),
       ],
     );
   }

@@ -245,6 +245,8 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final tabSelectorHeight = 40.0;
+    final maxHeight = screenHeight - tabSelectorHeight;
 
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 200),
@@ -252,18 +254,10 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
       left: 0,
       right: 0,
       bottom: 0,
-      height: screenHeight * widget.bottomSheetHeight,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadow.withValues(alpha: 0.1),
-              blurRadius: 1,
-              offset: const Offset(0, -1),
-            ),
-          ],
-        ),
+      height: maxHeight * widget.bottomSheetHeight,
+      child: Material(
+        elevation: 16,
+        color: AppColors.background,
         child: Column(
           children: [
             Container(

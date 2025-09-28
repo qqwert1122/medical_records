@@ -56,6 +56,8 @@ class _RecordsPageState extends State<RecordsPage>
     setState(() {
       _currentTabIndex = index;
     });
+    // tab 변경 시 bottom sheet를 닫아서 navigation bar가 다시 보이도록 함
+    widget.onBottomSheetHeightChanged?.call(0.0);
   }
 
   void _navigateToMonthlyView(DateTime monthDate) {

@@ -11,12 +11,16 @@ class YearlyCalendarView extends StatefulWidget {
   final Function(double)? onBottomSheetHeightChanged;
   final Function(int)? onBottomSheetPageChanged;
   final Function(DateTime)? onMonthTap;
+  final bool showBottomSheet;
+  final bool showOnlyBottomSheet;
 
   const YearlyCalendarView({
     Key? key,
     this.onBottomSheetHeightChanged,
     this.onBottomSheetPageChanged,
     this.onMonthTap,
+    this.showBottomSheet = true,
+    this.showOnlyBottomSheet = false,
   }) : super(key: key);
 
   @override
@@ -96,6 +100,11 @@ class _YearlyCalendarViewState extends State<YearlyCalendarView>
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
+    // 오직 bottom sheet만 표시하는 경우
+    if (widget.showOnlyBottomSheet) {
+      return _buildBottomSheet(screenHeight);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -106,7 +115,9 @@ class _YearlyCalendarViewState extends State<YearlyCalendarView>
               Expanded(child: _buildYearlyCalendar()),
             ],
           ),
-          _buildBottomSheet(screenHeight),
+          // showBottomSheet가 true일 때만 표시
+          if (widget.showBottomSheet)
+            _buildBottomSheet(screenHeight),
         ],
       ),
     );

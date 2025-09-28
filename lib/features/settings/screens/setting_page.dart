@@ -36,8 +36,6 @@ class _SettingPageState extends State<SettingPage> {
     }
   }
 
-
-
   // 링크 타일 공통
   Widget _buildLinkTile({
     required IconData icon,
@@ -71,9 +69,10 @@ class _SettingPageState extends State<SettingPage> {
   // 토글 처리
   Future<void> _handleToggle(bool next) async {
     if (next == _securityEnabled) return;
-    final ok = next
-        ? await _securityService.enableSecurity(context)
-        : await _securityService.disableSecurity(context);
+    final ok =
+        next
+            ? await _securityService.enableSecurity(context)
+            : await _securityService.disableSecurity(context);
     if (ok && mounted) {
       setState(() => _securityEnabled = next);
     } else {
@@ -343,7 +342,7 @@ class _SettingPageState extends State<SettingPage> {
                 ),
                 onTap: HapticFeedback.lightImpact,
                 trailing: Text(
-                  '0.0.1',
+                  '1.0.3',
                   style: AppTextStyle.subTitle.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
