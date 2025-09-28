@@ -234,6 +234,7 @@ class _ListRecordsViewState extends State<ListRecordsView> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildFilterTabs(), // 필터
         // 필터 결과 요약
@@ -277,11 +278,11 @@ class _ListRecordsViewState extends State<ListRecordsView> {
 
   Widget _buildFilterTabs() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16.0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             _buildFilterTab('전체', 'ALL'),
             SizedBox(width: 8),

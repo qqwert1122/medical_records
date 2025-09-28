@@ -18,6 +18,10 @@ class ProgressSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (activeRecordsList.isEmpty) {
+      return SizedBox.shrink();
+    }
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24.0),
