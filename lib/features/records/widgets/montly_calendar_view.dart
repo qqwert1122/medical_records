@@ -1,54 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:medical_records/features/calendar/widgets/calendar_header_widget.dart';
 import 'package:medical_records/features/calendar/widgets/month_picker_bottom_sheet.dart';
-import 'package:medical_records/features/calendar/widgets/montly_calendar.dart';
-import 'package:medical_records/features/calendar/widgets/calendar_bottom_sheet.dart';
+import 'package:medical_records/features/calendar/widgets/monthly_calendar.dart';
 import 'package:medical_records/features/calendar/widgets/weekly_record_overlay.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/services.dart';
 
-class MontlyCalendarView extends StatefulWidget {
-  final Function(double)? onBottomSheetHeightChanged;
-  final Function(int)? onBottomSheetPageChanged;
+class MonthlyCalendarView extends StatefulWidget {
   final DateTime? initialFocusedMonth;
-  final bool showBottomSheet;
-  final bool showOnlyBottomSheet;
+  final Function(DateTime)? onDaySelected;
+  final double? bottomSheetHeight;
 
-  const MontlyCalendarView({
+  const MonthlyCalendarView({
     super.key,
-    this.onBottomSheetHeightChanged,
-    this.onBottomSheetPageChanged,
     this.initialFocusedMonth,
-    this.showBottomSheet = true,
-    this.showOnlyBottomSheet = false,
+    this.onDaySelected,
+    this.bottomSheetHeight,
   });
 
   @override
-  State<MontlyCalendarView> createState() => _MontlyCalendarViewState();
+  State<MonthlyCalendarView> createState() => _MonthlyCalendarViewState();
 }
 
-class _MontlyCalendarViewState extends State<MontlyCalendarView>
+class _MonthlyCalendarViewState extends State<MonthlyCalendarView>
     with TickerProviderStateMixin {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
   final CalendarFormat _calendarFormat = CalendarFormat.month;
-  double _bottomSheetHeight = 0;
   final Map<DateTime, List<Color>> _dayRecords = {};
   final Map<DateTime, Map<int, RecordInfo>> _weekRecordSlots = {};
   final Map<String, String> _recordTitles = {};
   Map<String, DateTime> _recordStartDates = {};
   Map<String, DateTime> _recordEndDates = {};
-
-  // 바텀 네비게이션 애니메이션 컨트롤러
-  late AnimationController _navAnimationController;
-  late Animation<double> _navAnimation;
-
-  // CalendarBottomSheet에 전달할 콜백을 위한 GlobalKey
-  final GlobalKey<CalendarBottomSheetState> _bottomSheetKey = GlobalKey();
-
-  int _currentBottomSheetPage = 0;
 
   // rebuild를 위한 버젼 관리
   int _dataVersion = 0;
@@ -60,22 +45,10 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
     _focusedDay = widget.initialFocusedMonth ?? DateTime.now();
     _selectedDay = widget.initialFocusedMonth ?? DateTime.now();
     _loadRecords();
-
-    // 바텀 네비게이션 애니메이션 초기화
-    _navAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _navAnimation = Tween<double>(
-      begin: 0.0,
-      end: 100.0, // 네비게이션 바를 아래로 100px 이동
-    ).animate(
-      CurvedAnimation(parent: _navAnimationController, curve: Curves.easeInOut),
-    );
   }
 
   @override
-  void didUpdateWidget(MontlyCalendarView oldWidget) {
+  void didUpdateWidget(MonthlyCalendarView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialFocusedMonth != widget.initialFocusedMonth &&
         widget.initialFocusedMonth != null) {
@@ -254,23 +227,13 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
       setState(() {
         _selectedDay = selectedDay;
         _focusedDay = focusedDay;
-        _bottomSheetHeight = 0.5;
-        _currentBottomSheetPage = 0;
       });
-      _updateNavigationAnimation(0.5);
     }
-    widget.onBottomSheetHeightChanged?.call(0.5);
+    // 상위로 day selection 전달
+    widget.onDaySelected?.call(selectedDay);
     _loadRecords();
   }
 
-  // 바텀 시트 높이에 따른 네비게이션 애니메이션 업데이트
-  void _updateNavigationAnimation(double bottomSheetHeight) {
-    if (bottomSheetHeight > 0 && !_navAnimationController.isAnimating) {
-      _navAnimationController.forward();
-    } else if (bottomSheetHeight == 0 && !_navAnimationController.isAnimating) {
-      _navAnimationController.reverse();
-    }
-  }
 
   void _showMonthPicker({bool isMonthlyView = true}) async {
     HapticFeedback.lightImpact();
@@ -316,59 +279,17 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
 
   @override
   Widget build(BuildContext context) {
-    // 오직 bottom sheet만 표시하는 경우
-    if (widget.showOnlyBottomSheet) {
-      return CalendarBottomSheet(
-        key: _bottomSheetKey,
-        bottomSheetHeight: _bottomSheetHeight,
-        selectedDay: _selectedDay,
-        selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
-        onHeightChanged: (newHeight) {
-          if (mounted) {
-            setState(() {
-              _bottomSheetHeight = newHeight;
-              if (newHeight == 0) {
-                _currentBottomSheetPage = 0;
-              }
-              widget.onBottomSheetHeightChanged?.call(newHeight);
-            });
-            _updateNavigationAnimation(newHeight);
-          }
-        },
-        onDateChanged: (newDate) {
-          if (mounted) {
-            setState(() {
-              _selectedDay = newDate;
-              _focusedDay = newDate;
-            });
-          }
-        },
-        onDataChanged: _onDataChanged,
-        onPageChanged: (pageIndex) {
-          if (mounted) {
-            setState(() {
-              _currentBottomSheetPage = pageIndex;
-            });
-            widget.onBottomSheetPageChanged?.call(pageIndex);
-          }
-        },
-        dataVersion: _dataVersion,
-      );
-    }
-
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            CalendarHeaderWidget(
-              isMonthlyView: true,
-              focusedDay: _focusedDay,
-              onDateTap: () => _showMonthPicker(isMonthlyView: true),
-            ),
-
-            // 달력
-            Expanded(
-              child: MonthlyCalendar(
+        CalendarHeaderWidget(
+          isMonthlyView: true,
+          focusedDay: _focusedDay,
+          onDateTap: () => _showMonthPicker(isMonthlyView: true),
+        ),
+        Expanded(
+          child: Stack(
+            children: [
+              MonthlyCalendar(
                 focusedDay: _focusedDay,
                 selectedDay: _selectedDay,
                 calendarFormat: _calendarFormat,
@@ -377,7 +298,7 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
                 recordTitles: _recordTitles,
                 recordStartDates: _recordStartDates,
                 recordEndDates: _recordEndDates,
-                bottomSheetHeight: _bottomSheetHeight,
+                bottomSheetHeight: widget.bottomSheetHeight ?? 0, // 외부에서 전달받은 값 사용
                 onDaySelected: _onDaySelected,
                 onPageChanged: (focusedDay) {
                   HapticFeedback.lightImpact();
@@ -389,110 +310,64 @@ class _MontlyCalendarViewState extends State<MontlyCalendarView>
                   _loadRecords();
                 },
                 onHeightChanged: (factor) {
-                  if (mounted) {
-                    setState(() {
-                      _bottomSheetHeight = factor;
-                      widget.onBottomSheetHeightChanged?.call(factor);
-                    });
-                  }
+                  // bottom sheet는 외부에서 관리하므로 콜백만 전달
                 },
               ),
-            ),
-          ],
-        ),
-
-        Positioned(
-          bottom: 64 + 20, // nav height 48 + nav position bottom 16 + extra 10
-          left: 0,
-          right: 0,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child:
-                _bottomSheetHeight == 0 &&
-                        (_focusedDay.year != DateTime.now().year ||
-                            _focusedDay.month != DateTime.now().month)
-                    ? Center(
-                      key: const ValueKey('today_badge'),
-                      child: GestureDetector(
-                        onTap: () {
-                          final today = DateTime.now();
-                          if (mounted) {
-                            setState(() {
-                              _focusedDay = today;
-                              _selectedDay = today;
-                            });
-                          }
-                          _loadRecords();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.shadow.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+              // 오늘 버튼
+              Positioned(
+                bottom: 84, // bottom navigation 높이 고려
+                left: 0,
+                right: 0,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: (_focusedDay.year != DateTime.now().year ||
+                          _focusedDay.month != DateTime.now().month)
+                      ? Center(
+                        key: const ValueKey('today_badge'),
+                        child: GestureDetector(
+                          onTap: () {
+                            final today = DateTime.now();
+                            if (mounted) {
+                              setState(() {
+                                _focusedDay = today;
+                                _selectedDay = today;
+                              });
+                            }
+                            _loadRecords();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.shadow.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '오늘',
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            '오늘',
-                            style: TextStyle(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
                             ),
                           ),
                         ),
-                      ),
-                    )
-                    : const SizedBox.shrink(key: ValueKey('empty')),
+                      )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
+                ),
+              ),
+            ],
           ),
         ),
-
-        // Bottom Sheet - showBottomSheet가 true일 때만 표시
-        if (widget.showBottomSheet)
-          CalendarBottomSheet(
-            key: _bottomSheetKey,
-            bottomSheetHeight: _bottomSheetHeight,
-            selectedDay: _selectedDay,
-            selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
-            onHeightChanged: (newHeight) {
-              if (mounted) {
-                setState(() {
-                  _bottomSheetHeight = newHeight;
-                  if (newHeight == 0) {
-                    _currentBottomSheetPage = 0;
-                  }
-                  widget.onBottomSheetHeightChanged?.call(newHeight);
-                });
-                _updateNavigationAnimation(newHeight);
-              }
-            },
-            onDateChanged: (newDate) {
-              if (mounted) {
-                setState(() {
-                  _selectedDay = newDate;
-                  _focusedDay = newDate;
-                });
-              }
-            },
-            onDataChanged: _onDataChanged,
-            onPageChanged: (pageIndex) {
-              if (mounted) {
-                setState(() {
-                  _currentBottomSheetPage = pageIndex;
-                });
-                widget.onBottomSheetPageChanged?.call(pageIndex);
-              }
-            },
-            dataVersion: _dataVersion,
-          ),
       ],
     );
   }

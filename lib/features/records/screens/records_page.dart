@@ -4,6 +4,8 @@ import 'package:medical_records/features/records/widgets/list_records_view.dart'
 import 'package:medical_records/features/records/widgets/history_records_view.dart';
 import 'package:medical_records/features/records/widgets/montly_calendar_view.dart';
 import 'package:medical_records/features/records/widgets/yearly_calendar_view.dart';
+import 'package:medical_records/features/calendar/widgets/calendar_bottom_sheet.dart';
+import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 
@@ -27,6 +29,12 @@ class _RecordsPageState extends State<RecordsPage>
   late Animation<double> _tabAnimation;
   int _currentTabIndex = 0;
   DateTime? _selectedMonthForMonthlyView;
+
+  // Bottom sheet 상태 관리
+  double _bottomSheetHeight = 0.0;
+  DateTime? _selectedDay;
+  int _bottomSheetPageIndex = 0;
+  int _dataVersion = 0;
 
   final List<String> _tabLabels = [
     '월간', '연간', '목록',
@@ -55,8 +63,8 @@ class _RecordsPageState extends State<RecordsPage>
     HapticFeedback.lightImpact();
     setState(() {
       _currentTabIndex = index;
+      _bottomSheetHeight = 0.0; // tab 변경 시 bottom sheet 닫기
     });
-    // tab 변경 시 bottom sheet를 닫아서 navigation bar가 다시 보이도록 함
     widget.onBottomSheetHeightChanged?.call(0.0);
   }
 
@@ -67,16 +75,63 @@ class _RecordsPageState extends State<RecordsPage>
     });
   }
 
+  void _onDaySelected(DateTime selectedDay) {
+    setState(() {
+      _selectedDay = selectedDay;
+      _bottomSheetHeight = 0.5; // bottom sheet 열기
+    });
+    widget.onBottomSheetHeightChanged?.call(0.5);
+  }
+
+  void _onBottomSheetHeightChanged(double height) {
+    setState(() {
+      _bottomSheetHeight = height;
+    });
+    widget.onBottomSheetHeightChanged?.call(height);
+  }
+
+  void _onBottomSheetPageChanged(int pageIndex) {
+    setState(() {
+      _bottomSheetPageIndex = pageIndex;
+    });
+    widget.onBottomSheetPageChanged?.call(pageIndex);
+  }
+
+  void _onDataChanged() {
+    setState(() {
+      _dataVersion++;
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> _getDayRecords(DateTime? day) async {
+    if (day == null) return [];
+
+    final startOfDay = DateTime(day.year, day.month, day.day);
+    final endOfDay = startOfDay
+        .add(Duration(days: 1))
+        .subtract(Duration(microseconds: 1));
+
+    return await DatabaseService().getOverlappingRecords(
+      startDate: startOfDay,
+      endDate: endOfDay,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            _buildTabSelector(),
-            Expanded(child: _buildCurrentTabContent()),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTabSelector(),
+                Expanded(child: _buildCurrentTabContent()),
+              ],
+            ),
+            _buildBottomSheetOverlay(),
           ],
         ),
       ),
@@ -86,26 +141,25 @@ class _RecordsPageState extends State<RecordsPage>
   Widget _buildCurrentTabContent() {
     switch (_currentTabIndex) {
       case 0:
-        return MontlyCalendarView(
-          onBottomSheetHeightChanged: widget.onBottomSheetHeightChanged,
-          onBottomSheetPageChanged: widget.onBottomSheetPageChanged,
+        return MonthlyCalendarView(
           initialFocusedMonth: _selectedMonthForMonthlyView,
+          onDaySelected: _onDaySelected,
+          bottomSheetHeight: _bottomSheetHeight,
         );
       case 1:
         return YearlyCalendarView(
-          onBottomSheetHeightChanged: widget.onBottomSheetHeightChanged,
-          onBottomSheetPageChanged: widget.onBottomSheetPageChanged,
           onMonthTap: _navigateToMonthlyView,
+          onDaySelected: _onDaySelected,
         );
       case 2:
         return ListRecordsView();
       // case 3:
       //   return HistoryRecordsView();
       default:
-        return MontlyCalendarView(
-          onBottomSheetHeightChanged: widget.onBottomSheetHeightChanged,
-          onBottomSheetPageChanged: widget.onBottomSheetPageChanged,
+        return MonthlyCalendarView(
           initialFocusedMonth: _selectedMonthForMonthlyView,
+          onDaySelected: _onDaySelected,
+          bottomSheetHeight: _bottomSheetHeight,
         );
     }
   }
@@ -175,6 +229,28 @@ class _RecordsPageState extends State<RecordsPage>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBottomSheetOverlay() {
+    // calendar 탭(월간, 연간)에서만 bottom sheet 표시
+    if (_currentTabIndex != 0 && _currentTabIndex != 1) {
+      return SizedBox.shrink();
+    }
+
+    return CalendarBottomSheet(
+      bottomSheetHeight: _bottomSheetHeight,
+      selectedDay: _selectedDay,
+      selectedDayRecordsFetcher: () => _getDayRecords(_selectedDay),
+      onHeightChanged: _onBottomSheetHeightChanged,
+      onDateChanged: (newDate) {
+        setState(() {
+          _selectedDay = newDate;
+        });
+      },
+      onDataChanged: _onDataChanged,
+      onPageChanged: _onBottomSheetPageChanged,
+      dataVersion: _dataVersion,
     );
   }
 }

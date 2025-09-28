@@ -232,7 +232,7 @@ class _YearlySimpleCalendarState extends State<YearlySimpleCalendar> {
     final dayKey = DateTime(day.year, day.month, day.day);
     final symptomCounts = _daySymptomCounts[dayKey] ?? {};
 
-    Color cellColor = AppColors.background;
+    Color cellColor = AppColors.surface; // 기본값을 surface로 변경
 
     if (_selectedSymptom == '전체') {
       final totalCount = symptomCounts.values.fold(
@@ -251,6 +251,7 @@ class _YearlySimpleCalendarState extends State<YearlySimpleCalendar> {
         alpha: 0.2 + (count * 0.2).clamp(0.0, 0.8),
       );
     }
+    // 특정 증상 선택 시 데이터가 없으면 surface 색상 유지
 
     return Container(
       width: 16,
@@ -264,7 +265,7 @@ class _YearlySimpleCalendarState extends State<YearlySimpleCalendar> {
   }
 
   Color _getTotalColor(int count) {
-    if (count == 0) return AppColors.surface.withValues(alpha: 0.3);
+    if (count == 0) return AppColors.surface;
     if (count == 1) return Colors.green.withValues(alpha: 0.3);
     if (count == 2) return Colors.green.withValues(alpha: 0.5);
     if (count == 3) return Colors.green.withValues(alpha: 0.7);

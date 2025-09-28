@@ -13,6 +13,7 @@ class YearlyCalendarView extends StatefulWidget {
   final Function(DateTime)? onMonthTap;
   final bool showBottomSheet;
   final bool showOnlyBottomSheet;
+  final Function(DateTime)? onDaySelected;
 
   const YearlyCalendarView({
     Key? key,
@@ -21,6 +22,7 @@ class YearlyCalendarView extends StatefulWidget {
     this.onMonthTap,
     this.showBottomSheet = true,
     this.showOnlyBottomSheet = false,
+    this.onDaySelected,
   }) : super(key: key);
 
   @override
@@ -140,10 +142,16 @@ class _YearlyCalendarViewState extends State<YearlyCalendarView>
         if (mounted) {
           setState(() {
             _selectedDay = date;
-            _bottomSheetHeight = 0.5;
+            if (widget.showBottomSheet) {
+              _bottomSheetHeight = 0.5;
+            }
           });
         }
-        widget.onBottomSheetHeightChanged?.call(0.5);
+        if (widget.showBottomSheet) {
+          widget.onBottomSheetHeightChanged?.call(0.5);
+        }
+        // 상위로 day selection 전달
+        widget.onDaySelected?.call(date);
       },
       onMonthTap: (monthDate) {
         // 월 클릭 시 월간 탭으로 이동

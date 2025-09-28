@@ -198,9 +198,11 @@ class _CalendarBottomSheetHandleState extends State<CalendarBottomSheetHandle> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              _formatDateHeader(
-                                                widget.selectedDay!,
-                                              ),
+                                              widget.selectedDay != null
+                                                  ? _formatDateHeader(
+                                                      widget.selectedDay!,
+                                                    )
+                                                  : '날짜 선택',
                                               style: AppTextStyle.subTitle
                                                   .copyWith(
                                                     color:

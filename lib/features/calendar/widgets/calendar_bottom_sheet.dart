@@ -245,8 +245,7 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final tabSelectorHeight = 40.0;
-    final maxHeight = screenHeight - tabSelectorHeight;
+    final safeAreaBottom = MediaQuery.of(context).padding.bottom;
 
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 200),
@@ -254,23 +253,25 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
       left: 0,
       right: 0,
       bottom: 0,
-      height: maxHeight * widget.bottomSheetHeight,
+      height: (screenHeight * widget.bottomSheetHeight) + safeAreaBottom,
       child: Material(
-        elevation: 16,
+        elevation: 100,
         color: AppColors.background,
-        child: Column(
+        child: SafeArea(
+          top: false, // 상단은 SafeArea 적용 안함
+          child: Column(
           children: [
-            Container(
-              padding: EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppColors.backgroundSecondary,
-                    width: 0.5,
+              Container(
+                padding: EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppColors.backgroundSecondary,
+                      width: 0.5,
+                    ),
                   ),
                 ),
-              ),
-              child: CalendarBottomSheetHandle(
+                child: CalendarBottomSheetHandle(
                 dayRecords: _dayRecords,
                 selectedDay: widget.selectedDay,
                 selectedRecord: _selectedRecord,
@@ -330,7 +331,8 @@ class CalendarBottomSheetState extends State<CalendarBottomSheet> {
                   ],
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
