@@ -20,11 +20,13 @@ class RangeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <(String, AnalysisRange)>[
-      ('전체', AnalysisRange.all),
+      ('오늘', AnalysisRange.today),
       ('최근 1주일', AnalysisRange.week),
       ('최근 1개월', AnalysisRange.month),
       ('최근 3개월', AnalysisRange.threeMonths),
       ('최근 1년', AnalysisRange.year),
+      ('기간 선택', AnalysisRange.custom),
+      ('전체', AnalysisRange.all),
     ];
 
     return DropdownButtonHideUnderline(
@@ -51,13 +53,37 @@ class RangeSelector extends StatelessWidget {
           onChanged(v);
         },
 
+        // 커스텀 버튼 표시 (calendar 아이콘 포함)
+        selectedItemBuilder: (context) {
+          return items.map((item) {
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendar,
+                  size: 12,
+                  color: AppColors.textSecondary,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  item.$1,
+                  style: AppTextStyle.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            );
+          }).toList();
+        },
+
         // 버튼(닫혀 있을 때) 스타일
         buttonStyleData: ButtonStyleData(
           height: 36,
           padding: EdgeInsets.symmetric(horizontal: context.wp(3)),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
           ),
         ),
 
@@ -74,7 +100,7 @@ class RangeSelector extends StatelessWidget {
         dropdownStyleData: DropdownStyleData(
           decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
           ),
           padding: const EdgeInsets.symmetric(vertical: 6),
           offset: const Offset(0, -4),

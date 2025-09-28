@@ -25,39 +25,6 @@ class NavigationDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Header
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppColors.textSecondary.withOpacity(0.1),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '마이델로지',
-                    style: AppTextStyle.title.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '의료 기록 관리',
-                    style: AppTextStyle.caption.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             // Menu items
             Expanded(
               child: ListView(
@@ -159,21 +126,17 @@ class NavigationDrawer extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: AppColors.primary,
-        size: 22,
-      ),
+      leading: Icon(icon, color: AppColors.textSecondary, size: 22),
       title: Text(
         title,
         style: AppTextStyle.subTitle.copyWith(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.bold,
         ),
       ),
       onTap: onTap,
-      horizontalTitleGap: 12,
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      horizontalTitleGap: 10,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
     );
   }
 }

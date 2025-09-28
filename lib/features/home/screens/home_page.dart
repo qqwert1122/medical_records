@@ -139,23 +139,23 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.surface,
-      drawer: CustomDrawer.NavigationDrawer(
-        onAddRecord: _showAddRecordForm,
-        onNavigateToRecordsList: _navigateToRecordsList,
-      ),
-      onDrawerChanged: (isOpened) {
-        widget.onDrawerStateChanged?.call(isOpened);
-      },
+      // drawer: CustomDrawer.NavigationDrawer(
+      //   onAddRecord: _showAddRecordForm,
+      //   onNavigateToRecordsList: _navigateToRecordsList,
+      // ),
+      // onDrawerChanged: (isOpened) {
+      //   widget.onDrawerStateChanged?.call(isOpened);
+      // },
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer();
-            widget.onDrawerStateChanged?.call(true);
-          },
-          icon: Icon(Icons.menu, color: AppColors.textPrimary),
-        ),
+        // leading: IconButton(
+        //   onPressed: () {
+        //     _scaffoldKey.currentState?.openDrawer();
+        //     widget.onDrawerStateChanged?.call(true);
+        //   },
+        //   icon: Icon(Icons.menu, color: AppColors.textPrimary),
+        // ),
         actions: [
           IconButton(
             onPressed: () {
@@ -186,7 +186,6 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // _buildMenuSection(),
                       // Summary Cards 섹션
                       _buildSummaryCards(),
                       SizedBox(height: context.hp(2)),
@@ -201,18 +200,6 @@ class _HomePageState extends State<HomePage> {
                       // 연간 심플 캘린더 섹션
                       YearlySimpleCalendar(currentYear: DateTime.now()),
 
-                      // // 최근 기록 리스트
-                      // RecentRecordsSection(
-                      //   recentRecords: _recentRecords,
-                      //   onMorePressed: _navigateToRecordsList,
-                      // ),
-                      // SizedBox(height: 24),
-
-                      // // 최근 히스토리 섹션
-                      // RecentHistoryTimeline(
-                      //   recentHistory: _recentHistory,
-                      //   onMorePressed: _navigateToHistory,
-                      // ),
                       SizedBox(height: context.hp(15)),
                     ],
                   ),

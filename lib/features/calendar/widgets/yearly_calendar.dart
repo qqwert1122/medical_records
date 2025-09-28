@@ -197,7 +197,7 @@ class YearlyCalendarState extends State<YearlyCalendar> {
           // 월 제목
           Text(
             '$month월',
-            style: AppTextStyle.body.copyWith(
+            style: AppTextStyle.caption.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textSecondary,
             ),

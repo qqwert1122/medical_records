@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:medical_records/features/analysis/enum/analysis_range.dart';
+import 'package:medical_records/features/analysis/widgets/range_selector.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
+import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
 import 'package:medical_records/utils/time_format.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 
 class HistoryPage extends StatefulWidget {
@@ -18,6 +22,9 @@ class _HistoryPageState extends State<HistoryPage> {
   List<Map<String, dynamic>> _timelineEvents = [];
   bool _isLoading = true;
   String _filterType = 'ALL'; // ALL, SYMPTOMS, TREATMENTS
+  AnalysisRange _dateRange = AnalysisRange.month; // 기본값: 최근 1개월
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
 
   @override
   void initState() {
@@ -25,10 +32,111 @@ class _HistoryPageState extends State<HistoryPage> {
     _loadTimelineData();
   }
 
+  DateTime? _getStartDateFromRange(AnalysisRange range) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    switch (range) {
+      case AnalysisRange.today:
+        return today;
+      case AnalysisRange.week:
+        return now.subtract(Duration(days: 7));
+      case AnalysisRange.month:
+        return DateTime(now.year, now.month - 1, now.day);
+      case AnalysisRange.threeMonths:
+        return DateTime(now.year, now.month - 3, now.day);
+      case AnalysisRange.year:
+        return DateTime(now.year - 1, now.month, now.day);
+      case AnalysisRange.custom:
+        return _customStartDate;
+      case AnalysisRange.all:
+        return null; // 전체 기간
+    }
+  }
+
+  Future<void> _showDateRangePicker() async {
+    final now = DateTime.now();
+    final firstDate = DateTime(2020);
+    final lastDate = now;
+
+    // 시작일 선택
+    final startDate = await showDatePicker(
+      context: context,
+      initialDate: _customStartDate ?? now.subtract(Duration(days: 30)),
+      firstDate: firstDate,
+      lastDate: lastDate,
+      helpText: '시작일 선택',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (startDate == null) return;
+
+    // 종료일 선택 (시작일 이후만 선택 가능)
+    final endDate = await showDatePicker(
+      context: context,
+      initialDate: _customEndDate ?? now,
+      firstDate: startDate,
+      lastDate: lastDate,
+      helpText: '종료일 선택',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (endDate == null) return;
+
+    setState(() {
+      _customStartDate = startDate;
+      _customEndDate = endDate;
+      _dateRange = AnalysisRange.custom;
+    });
+
+    _loadTimelineData();
+  }
+
   Future<void> _loadTimelineData() async {
     setState(() => _isLoading = true);
     try {
-      final events = await DatabaseService().getGlobalTimeline(filterType: _filterType);
+      final startDate = _getStartDateFromRange(_dateRange);
+      final endDate = (_dateRange == AnalysisRange.custom && _customEndDate != null)
+          ? DateTime(
+              _customEndDate!.year,
+              _customEndDate!.month,
+              _customEndDate!.day,
+              23,
+              59,
+              59,
+            )
+          : DateTime.now();
+
+      final events = await DatabaseService().getGlobalTimeline(
+        filterType: _filterType,
+        startDate: startDate,
+        endDate: (_dateRange == AnalysisRange.all) ? null : endDate,
+      );
+
       if (mounted) {
         setState(() {
           _timelineEvents = events;
@@ -88,13 +196,66 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildFilterTabs() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Column(
         children: [
-          _buildFilterTab('전체', 'ALL'),
-          SizedBox(width: 8),
-          _buildFilterTab('증상', 'SYMPTOMS'),
-          SizedBox(width: 8),
-          _buildFilterTab('치료', 'TREATMENTS'),
+          // 타입 필터
+          Row(
+            children: [
+              _buildFilterTab('전체', 'ALL'),
+              SizedBox(width: 8),
+              _buildFilterTab('증상', 'SYMPTOMS'),
+              SizedBox(width: 8),
+              _buildFilterTab('치료', 'TREATMENTS'),
+            ],
+          ),
+          SizedBox(height: 12),
+          // 기간 필터
+          Row(
+            children: [
+              Container(
+                width: 140,
+                child: RangeSelector(
+                  value: _dateRange,
+                  onChanged: (newRange) {
+                    if (newRange == AnalysisRange.custom) {
+                      _showDateRangePicker();
+                    } else {
+                      setState(() {
+                        _dateRange = newRange;
+                        _customStartDate = null;
+                        _customEndDate = null;
+                      });
+                      _loadTimelineData();
+                    }
+                  },
+                ),
+              ),
+              // 커스텀 기간이 선택된 경우 날짜 범위 표시
+              if (_dateRange == AnalysisRange.custom &&
+                  _customStartDate != null &&
+                  _customEndDate != null) ...[
+                SizedBox(width: 8),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    '${DateFormat('MM/dd').format(_customStartDate!)} ~ ${DateFormat('MM/dd').format(_customEndDate!)}',
+                    style: AppTextStyle.caption.copyWith(
+                      color: AppColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );

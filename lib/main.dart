@@ -44,13 +44,11 @@ class _MainNavigationState extends State<MainNavigation>
     with WidgetsBindingObserver {
   // Bottom Navigation Bar
   int selectedIndex = 0; // 홈 페이지를 기본값으로 설정
-  int _previousIndex = 0; // 캘린더 진입 전 페이지 인덱스 추적
   late PageController pageController;
   bool _showNavBar = true;
   bool _showFab = true;
 
   bool _isDrawerOpen = false; // Drawer 열림 상태 추적
-  int _currentBottomSheetPage = 0; // Calendar bottom sheet 내부 페이지 추적
 
   // 보안 서비스
   final SecurityService _securityService = SecurityService();
@@ -160,10 +158,6 @@ class _MainNavigationState extends State<MainNavigation>
 
     if (mounted) {
       setState(() {
-        // 캘린더로 이동할 때 이전 인덱스 저장 (캘린더는 여전히 인덱스 1)
-        if (index == 1 && selectedIndex != 1) {
-          _previousIndex = selectedIndex;
-        }
         selectedIndex = index;
       });
     }

@@ -12,6 +12,8 @@ import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
+import 'package:medical_records/components/date_range_picker_bottom_sheet.dart';
+import 'package:intl/intl.dart';
 
 class AnalysisPage extends StatefulWidget {
   const AnalysisPage({super.key});
@@ -25,6 +27,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
   // 필터 상태
   AnalysisRange _selectedRange = AnalysisRange.month;
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
 
   // 통계 데이터
   int _totalRecords = 0;
@@ -53,11 +57,24 @@ class _AnalysisPageState extends State<AnalysisPage> {
       final now = DateTime.now();
       final from = _rangeFrom(now, _selectedRange);
 
+      // 커스텀 기간의 경우 종료일 설정, 그 외에는 현재 시간
+      final to =
+          (_selectedRange == AnalysisRange.custom && _customEndDate != null)
+              ? DateTime(
+                _customEndDate!.year,
+                _customEndDate!.month,
+                _customEndDate!.day,
+                23,
+                59,
+                59,
+              )
+              : now;
+
       // 1) 기간에 겹치는 레코드들만 가져오기 (DB 레벨에서 필터)
       final records =
           (from == null)
               ? await _db.getRecords()
-              : await _db.getOverlappingRecords(startDate: from, endDate: now);
+              : await _db.getOverlappingRecords(startDate: from, endDate: to);
 
       // 2) 기본 통계
       _totalRecords = records.length;
@@ -104,6 +121,9 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
   DateTime? _rangeFrom(DateTime now, AnalysisRange range) {
     switch (range) {
+      case AnalysisRange.today:
+        final today = DateTime(now.year, now.month, now.day);
+        return today;
       case AnalysisRange.week:
         return now.subtract(const Duration(days: 7));
       case AnalysisRange.month:
@@ -112,6 +132,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
         return now.subtract(const Duration(days: 90));
       case AnalysisRange.year:
         return now.subtract(const Duration(days: 365));
+      case AnalysisRange.custom:
+        return _customStartDate;
       case AnalysisRange.all:
         return null;
     }
@@ -174,6 +196,19 @@ class _AnalysisPageState extends State<AnalysisPage> {
     return Map.fromEntries(entries);
   }
 
+  Future<void> _showDateRangePicker() async {
+    final selectedRange = await DateRangePickerBottomSheet.show(context);
+
+    if (selectedRange != null) {
+      setState(() {
+        _customStartDate = selectedRange.start;
+        _customEndDate = selectedRange.end;
+        _selectedRange = AnalysisRange.custom;
+      });
+      _loadAnalysis();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -186,17 +221,30 @@ class _AnalysisPageState extends State<AnalysisPage> {
         actions: [
           Padding(
             padding: context.paddingHorizSM,
-            child: SizedBox(
-              width: 140,
-              child: RangeSelector(
-                value: _selectedRange,
-                onChanged: (v) {
-                  if (mounted) {
-                    setState(() => _selectedRange = v);
-                  }
-                  _loadAnalysis();
-                },
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 140,
+                  child: RangeSelector(
+                    value: _selectedRange,
+                    onChanged: (v) {
+                      if (v == AnalysisRange.custom) {
+                        _showDateRangePicker();
+                      } else {
+                        if (mounted) {
+                          setState(() {
+                            _selectedRange = v;
+                            _customStartDate = null;
+                            _customEndDate = null;
+                          });
+                        }
+                        _loadAnalysis();
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -219,6 +267,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildDateRangeDisplay(), // 필터된 기간 표시
+
                         Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: _buildSummaryCards(),
@@ -309,6 +359,62 @@ class _AnalysisPageState extends State<AnalysisPage> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDateRangeDisplay() {
+    String dateRangeText = '';
+    final now = DateTime.now();
+
+    switch (_selectedRange) {
+      case AnalysisRange.today:
+        dateRangeText = DateFormat('yyyy.MM.dd').format(now);
+        break;
+      case AnalysisRange.week:
+        final weekAgo = now.subtract(Duration(days: 7));
+        dateRangeText =
+            '${DateFormat('yyyy.MM.dd').format(weekAgo)} ~ ${DateFormat('yyyy.MM.dd').format(now)}';
+        break;
+      case AnalysisRange.month:
+        final monthAgo = now.subtract(Duration(days: 30));
+        dateRangeText =
+            '${DateFormat('yyyy.MM.dd').format(monthAgo)} ~ ${DateFormat('yyyy.MM.dd').format(now)}';
+        break;
+      case AnalysisRange.threeMonths:
+        final threeMonthsAgo = now.subtract(Duration(days: 90));
+        dateRangeText =
+            '${DateFormat('yyyy.MM.dd').format(threeMonthsAgo)} ~ ${DateFormat('yyyy.MM.dd').format(now)}';
+        break;
+      case AnalysisRange.year:
+        final yearAgo = now.subtract(Duration(days: 365));
+        dateRangeText =
+            '${DateFormat('yyyy.MM.dd').format(yearAgo)} ~ ${DateFormat('yyyy.MM.dd').format(now)}';
+        break;
+      case AnalysisRange.custom:
+        if (_customStartDate != null && _customEndDate != null) {
+          dateRangeText =
+              '${DateFormat('yyyy.MM.dd').format(_customStartDate!)} ~ ${DateFormat('yyyy.MM.dd').format(_customEndDate!)}';
+        }
+        break;
+      case AnalysisRange.all:
+        dateRangeText = '전체';
+        break;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Text(
+            '기간: $dateRangeText',
+            style: AppTextStyle.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

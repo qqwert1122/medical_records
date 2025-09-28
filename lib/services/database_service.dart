@@ -821,8 +821,25 @@ class DatabaseService {
   }
 
   // History page 전체 타임라인 메서드
-  Future<List<Map<String, dynamic>>> getGlobalTimeline({String filterType = 'ALL'}) async {
+  Future<List<Map<String, dynamic>>> getGlobalTimeline({
+    String filterType = 'ALL',
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     final db = await database;
+
+    String dateCondition = '';
+    List<Object?> args = [];
+
+    // 기간 필터 조건 추가
+    if (startDate != null) {
+      dateCondition += ' AND r.start_date >= ?';
+      args.add(startDate.toIso8601String());
+    }
+    if (endDate != null) {
+      dateCondition += ' AND r.start_date <= ?';
+      args.add(endDate.toIso8601String());
+    }
 
     String query = '''
       SELECT
@@ -834,10 +851,20 @@ class DatabaseService {
         NULL as memo,
         r.record_id
       FROM records r
-      WHERE r.deleted_at IS NULL
+      WHERE r.deleted_at IS NULL $dateCondition
     ''';
 
     if (filterType != 'SYMPTOMS') {
+      String historyDateCondition = '';
+      if (startDate != null) {
+        historyDateCondition += ' AND h.record_date >= ?';
+        args.add(startDate.toIso8601String());
+      }
+      if (endDate != null) {
+        historyDateCondition += ' AND h.record_date <= ?';
+        args.add(endDate.toIso8601String());
+      }
+
       query += '''
         UNION ALL
         SELECT
@@ -850,7 +877,7 @@ class DatabaseService {
           r.record_id
         FROM histories h
         JOIN records r ON h.record_id = r.record_id
-        WHERE h.deleted_at IS NULL AND r.deleted_at IS NULL
+        WHERE h.deleted_at IS NULL AND r.deleted_at IS NULL $historyDateCondition
       ''';
     }
 
@@ -862,10 +889,10 @@ class DatabaseService {
 
     // filterType이 SYMPTOMS인 경우는 증상만 반환
     if (filterType == 'SYMPTOMS') {
-      return await db.rawQuery(query);
+      return await db.rawQuery(query, args.isNotEmpty ? args : null);
     }
 
     // ALL 또는 TREATMENTS인 경우 위의 쿼리 실행
-    return await db.rawQuery(query);
+    return await db.rawQuery(query, args.isNotEmpty ? args : null);
   }
 }

@@ -1,1 +1,1 @@
-enum AnalysisRange { week, month, threeMonths, year, all }
+enum AnalysisRange { today, week, month, threeMonths, year, custom, all }
