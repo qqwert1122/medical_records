@@ -115,7 +115,7 @@ class DatabaseService {
         heatmap_id INTEGER PRIMARY KEY AUTOINCREMENT,
         record_id INTEGER NOT NULL,
         body_part_type TEXT NOT NULL,
-        svg_file_name TEXT NOT NULL,
+        bodymap_name TEXT NOT NULL,
         coordinate_x REAL NOT NULL,
         coordinate_y REAL NOT NULL,
         intensity INTEGER DEFAULT 1,
@@ -136,7 +136,7 @@ class DatabaseService {
           heatmap_id INTEGER PRIMARY KEY AUTOINCREMENT,
           record_id INTEGER NOT NULL,
           body_part_type TEXT NOT NULL,
-          svg_file_name TEXT NOT NULL,
+          bodymap_name TEXT NOT NULL,
           coordinate_x REAL NOT NULL,
           coordinate_y REAL NOT NULL,
           intensity INTEGER DEFAULT 1,
@@ -148,7 +148,7 @@ class DatabaseService {
 
       // Add indexes for heatmap_records
       await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_heatmap_body_part ON heatmap_records(body_part_type, svg_file_name)',
+        'CREATE INDEX IF NOT EXISTS idx_heatmap_body_part ON heatmap_records(body_part_type, bodymap_name)',
       );
       await db.execute(
         'CREATE INDEX IF NOT EXISTS idx_heatmap_record ON heatmap_records(record_id)',
@@ -189,7 +189,7 @@ class DatabaseService {
     );
     // heatmap_records
     await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_heatmap_body_part ON heatmap_records(body_part_type, svg_file_name)',
+      'CREATE INDEX IF NOT EXISTS idx_heatmap_body_part ON heatmap_records(body_part_type, bodymap_name)',
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_heatmap_record ON heatmap_records(record_id)',
@@ -263,13 +263,28 @@ class DatabaseService {
     if (prefs.getBool(seedKeyV2) != true) {
       // 기존 부위 목록 가져오기
       final existingSpots = await getSpots();
-      final existingNames = existingSpots.map((s) => s['spot_name'] as String).toSet();
+      final existingNames =
+          existingSpots.map((s) => s['spot_name'] as String).toSet();
 
       // 중복되지 않은 부위만 생성
       final bodymapSpots = [
-        '이마', '눈', '귀', '볼', '입', '턱', '목', '얼굴',
-        '윗입술', '아랫입술', '입천장', '윗잇몸', '윗이빨',
-        '아랫잇몸', '아랫이빨', '목젖', '볼 안쪽',
+        '이마',
+        '눈',
+        '귀',
+        '볼',
+        '입',
+        '턱',
+        '목',
+        '얼굴',
+        '윗입술',
+        '아랫입술',
+        '입천장',
+        '윗잇몸',
+        '윗이빨',
+        '아랫잇몸',
+        '아랫이빨',
+        '목젖',
+        '볼 안쪽',
       ];
 
       for (final spotName in bodymapSpots) {
@@ -986,7 +1001,7 @@ class DatabaseService {
   Future<int> insertHeatmapRecord({
     required int recordId,
     required String bodyPartType,
-    required String svgFileName,
+    required String bodymapName,
     required double coordinateX,
     required double coordinateY,
     required String recordDate,
@@ -998,7 +1013,7 @@ class DatabaseService {
     return await db.insert('heatmap_records', {
       'record_id': recordId,
       'body_part_type': bodyPartType,
-      'svg_file_name': svgFileName,
+      'bodymap_name': bodymapName,
       'coordinate_x': coordinateX,
       'coordinate_y': coordinateY,
       'intensity': intensity,
@@ -1010,7 +1025,7 @@ class DatabaseService {
   // Get heatmap records by body part and date range
   Future<List<Map<String, dynamic>>> getHeatmapRecords({
     String? bodyPartType,
-    String? svgFileName,
+    String? bodymapName,
     DateTime? startDate,
     DateTime? endDate,
   }) async {
@@ -1023,9 +1038,9 @@ class DatabaseService {
       args.add(bodyPartType);
     }
 
-    if (svgFileName != null) {
-      query += ' AND svg_file_name = ?';
-      args.add(svgFileName);
+    if (bodymapName != null) {
+      query += ' AND bodymap_name = ?';
+      args.add(bodymapName);
     }
 
     if (startDate != null) {
@@ -1067,7 +1082,7 @@ class DatabaseService {
 
   // Get heatmap data aggregated for visualization
   Future<List<Map<String, dynamic>>> getHeatmapAggregated({
-    required String svgFileName,
+    required String bodymapName,
     DateTime? startDate,
     DateTime? endDate,
   }) async {
@@ -1079,9 +1094,9 @@ class DatabaseService {
         SUM(intensity) as total_intensity,
         COUNT(*) as count
       FROM heatmap_records
-      WHERE svg_file_name = ?
+      WHERE bodymap_name = ?
     ''';
-    List<dynamic> args = [svgFileName];
+    List<dynamic> args = [bodymapName];
 
     if (startDate != null) {
       query += ' AND record_date >= ?';

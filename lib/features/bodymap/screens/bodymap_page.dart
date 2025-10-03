@@ -53,13 +53,13 @@ class _BodyMapPageState extends State<BodyMapPage> {
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: Text(
           '바디맵',
           style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),
         ),
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.surface,
         elevation: 0,
       ),
       body: Padding(
@@ -88,7 +88,7 @@ class _BodyMapPageState extends State<BodyMapPage> {
               },
               child: Card(
                 elevation: 1,
-                color: AppColors.surface,
+                color: AppColors.background,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),

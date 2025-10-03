@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/features/analysis/screens/analysis_page.dart';
 import 'package:medical_records/features/records/screens/records_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -35,9 +36,7 @@ class MyApp extends StatelessWidget {
       title: '마이델로지',
       theme: ThemeData(
         fontFamily: 'Pretendard',
-        textTheme: ThemeData.light().textTheme.apply(
-          fontFamily: 'Pretendard',
-        ),
+        textTheme: ThemeData.light().textTheme.apply(fontFamily: 'Pretendard'),
       ),
       home: MainNavigation(),
     );
@@ -192,13 +191,13 @@ class _MainNavigationState extends State<MainNavigation>
         type: BottomNavigationBarType.fixed,
         currentIndex: selectedIndex,
         onTap: onNavTap,
-        selectedItemColor: AppColors.textPrimary,
+        selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 8,
-        iconSize: 20,
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
+        iconSize: 18,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
         items: [
           BottomNavigationBarItem(
             icon: Icon(FontAwesomeIcons.house),
@@ -206,23 +205,23 @@ class _MainNavigationState extends State<MainNavigation>
             label: '홈',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.calendar),
+            icon: Icon(FontAwesomeIcons.solidCalendar),
             activeIcon: Icon(FontAwesomeIcons.solidCalendar),
             label: '기록',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.personRays),
-            activeIcon: Icon(FontAwesomeIcons.personRays),
+            icon: Icon(FontAwesomeIcons.streetView),
+            activeIcon: Icon(FontAwesomeIcons.streetView),
             label: '바디맵',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.image),
+            icon: Icon(FontAwesomeIcons.solidImage),
             activeIcon: Icon(FontAwesomeIcons.solidImage),
             label: '이미지',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.chartLine),
-            activeIcon: Icon(FontAwesomeIcons.chartLine),
+            icon: Icon(FontAwesomeIcons.chartPie),
+            activeIcon: Icon(FontAwesomeIcons.chartPie),
             label: '통계',
           ),
         ],
@@ -231,7 +230,7 @@ class _MainNavigationState extends State<MainNavigation>
         onPressed: _showAddRecordForm,
         backgroundColor: AppColors.primary,
         shape: CircleBorder(),
-        child: Icon(Icons.add, color: Colors.white),
+        child: Icon(LucideIcons.plus, color: AppColors.background, size: 20),
       ),
     );
   }

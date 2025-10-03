@@ -355,22 +355,6 @@ class _RecordFormPageState extends State<RecordFormPage> {
     }
   }
 
-  Widget _buildTitle(String title) {
-    return Padding(
-      padding: EdgeInsets.only(top: 5, bottom: 10),
-      child: Align(
-        alignment: Alignment.center,
-        child: Text(
-          title,
-          style: AppTextStyle.body.copyWith(
-            color: AppColors.textSecondary.withValues(alpha: 0.5),
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -444,11 +428,17 @@ class _RecordFormPageState extends State<RecordFormPage> {
                         padding: EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.primary,
+                          color:
+                              _isFormValid
+                                  ? AppColors.primary
+                                  : AppColors.backgroundSecondary,
                         ),
                         child: Icon(
-                          LucideIcons.plus,
-                          color: AppColors.white,
+                          LucideIcons.check,
+                          color:
+                              _isFormValid
+                                  ? AppColors.white
+                                  : AppColors.textSecondary,
                           size: 20,
                         ),
                       ),

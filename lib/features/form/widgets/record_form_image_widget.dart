@@ -90,39 +90,6 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
     }
   }
 
-  Widget _buildEmptyState() {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        HapticFeedback.lightImpact();
-        _pickImages();
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        padding: EdgeInsets.all(12.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          spacing: 10,
-          children: [
-            Icon(LucideIcons.image, size: 16, color: AppColors.textSecondary),
-            Text(
-              '사진 추가',
-              style: AppTextStyle.body.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -136,7 +103,7 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
           child: Container(
             padding: EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24.0),
+              borderRadius: BorderRadius.circular(20.0),
               color: AppColors.background,
             ),
             child: Row(

@@ -71,7 +71,7 @@ class RecordFormColorWidgetState extends State<RecordFormColorWidget> {
       child: Container(
         padding: EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24.0),
+          borderRadius: BorderRadius.circular(20.0),
           color: AppColors.background,
         ),
         child: Row(
