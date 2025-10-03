@@ -35,46 +35,34 @@ class RecordFormMemoWidgetState extends State<RecordFormMemoWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: context.wp(15),
-          child: Text(
-            '메모',
-            style: AppTextStyle.body.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(24.0)),
+        color: AppColors.background,
+      ),
+      child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).requestFocus(_focusNode);
+        },
+        child: TextField(
+          autofocus: false,
+          focusNode: _focusNode,
+          onEditingComplete: () {
+            _focusNode.unfocus();
+          },
+          style: AppTextStyle.body.copyWith(color: AppColors.textPrimary),
+          controller: _controller,
+          decoration: InputDecoration(
+            hintText: '메모',
+            hintStyle: AppTextStyle.body.copyWith(
+              color: AppColors.textSecondary,
             ),
+            border: OutlineInputBorder(borderSide: BorderSide.none),
           ),
+          maxLines: 2,
         ),
-        Flexible(
-          child: GestureDetector(
-            onTap: () {
-              FocusScope.of(context).requestFocus(_focusNode);
-            },
-            child: TextField(
-              autofocus: false,
-              focusNode: _focusNode,
-              onEditingComplete: () {
-                _focusNode.unfocus();
-              },
-              style: AppTextStyle.body.copyWith(color: AppColors.textPrimary),
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: '(선택) 증상에 대해 자세히 기록해주세요',
-                hintStyle: AppTextStyle.hint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: AppColors.surface,
-              ),
-              maxLines: 3,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

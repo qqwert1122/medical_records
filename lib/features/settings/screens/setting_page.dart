@@ -342,7 +342,7 @@ class _SettingPageState extends State<SettingPage> {
                 ),
                 onTap: HapticFeedback.lightImpact,
                 trailing: Text(
-                  '1.0.3',
+                  '1.0.5',
                   style: AppTextStyle.subTitle.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,

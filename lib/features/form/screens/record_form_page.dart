@@ -18,8 +18,14 @@ import 'package:uuid/uuid.dart';
 class RecordFormPage extends StatefulWidget {
   final Map<String, dynamic>? recordData;
   final DateTime? selectedDate;
+  final Map<String, dynamic>? selectedSpot;
 
-  const RecordFormPage({super.key, this.recordData, this.selectedDate});
+  const RecordFormPage({
+    super.key,
+    this.recordData,
+    this.selectedDate,
+    this.selectedSpot,
+  });
 
   @override
   _RecordFormPageState createState() => _RecordFormPageState();
@@ -37,6 +43,18 @@ class _RecordFormPageState extends State<RecordFormPage> {
   final GlobalKey<RecordFormColorWidgetState> _colorKey = GlobalKey();
   final GlobalKey<RecordFormMemoWidgetState> _memoKey = GlobalKey();
   final GlobalKey<RecordFormImageWidgetState> _imageKey = GlobalKey();
+
+  bool get _isFormValid {
+    final spot = _spotKey.currentState?.getSelectedSpot();
+    final symptom = _symptomKey.currentState?.getSelectedSymptom();
+    final startDate = _startDateKey.currentState?.getSelectedDate();
+    final color = _colorKey.currentState?.getSelectedColor();
+
+    return spot != null &&
+        symptom != null &&
+        startDate != null &&
+        color != null;
+  }
 
   @override
   void initState() {
@@ -357,9 +375,9 @@ class _RecordFormPageState extends State<RecordFormPage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Container(
-        height: MediaQuery.of(context).size.height * 0.9,
+        height: context.hp(95),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: AppColors.backgroundSecondary,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Center(
@@ -377,52 +395,61 @@ class _RecordFormPageState extends State<RecordFormPage> {
       },
 
       child: Material(
-        color: AppColors.background,
+        color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         child: SizedBox(
-          height: context.hp(90),
+          height: context.hp(95),
           child: Column(
             children: [
               DragHandle(),
-              SizedBox(
-                height: 40,
-                width: double.infinity,
-                child: Stack(
-                  alignment: Alignment.center,
+              Padding(
+                padding: context.paddingSM,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.backgroundSecondary,
+                        ),
+                        child: Icon(
+                          LucideIcons.x,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
                     Text(
                       isEditMode ? '기록 수정' : '기록 추가',
                       style: AppTextStyle.subTitle.copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    Positioned(
-                      right: 16,
-                      top: 0,
-                      bottom: 0,
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          saveRecord();
-                        },
-                        child: Center(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 8.0,
-                              horizontal: 16.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            child: Text(
-                              '저장',
-                              style: AppTextStyle.body.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
-                              ),
-                            ),
-                          ),
+                    GestureDetector(
+                      onTap: () {
+                        _isFormValid
+                            ? () {
+                              HapticFeedback.lightImpact();
+                              saveRecord();
+                            }
+                            : null;
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                        ),
+                        child: Icon(
+                          LucideIcons.plus,
+                          color: AppColors.white,
+                          size: 20,
                         ),
                       ),
                     ),
@@ -439,23 +466,28 @@ class _RecordFormPageState extends State<RecordFormPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTitle('증상 및 부위'),
                         RecordFormSymptomWidget(
                           key: _symptomKey,
                           initialSymptomId:
                               isEditMode
                                   ? widget.recordData!['symptom_id']
                                   : null,
+                          onChanged: () => setState(() {}),
                         ),
-                        SizedBox(height: context.hp(1)),
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColors.surface,
+                        ),
                         RecordFormSpotWidget(
                           key: _spotKey,
                           initialSpotId:
-                              isEditMode ? widget.recordData!['spot_id'] : null,
+                              isEditMode
+                                  ? widget.recordData!['spot_id']
+                                  : widget.selectedSpot?['spot_id'],
+                          onChanged: () => setState(() {}),
                         ),
-                        SizedBox(height: context.hp(3)),
-
-                        _buildTitle('날짜'),
+                        SizedBox(height: 16),
                         // 시작일
                         RecordFormDateWidget(
                           key: _startDateKey,
@@ -464,7 +496,7 @@ class _RecordFormPageState extends State<RecordFormPage> {
                                   ? DateTime.parse(
                                     widget.recordData!['start_date'],
                                   )
-                                  : widget.selectedDate,
+                                  : null,
                           boundsResolver: () async {
                             DateTime? maxByNext =
                                 await _getEarliestAfterInitialDate();
@@ -500,9 +532,14 @@ class _RecordFormPageState extends State<RecordFormPage> {
                                 _endDateKey.currentState?.setSelectedDate(date);
                               }
                             }
+                            setState(() {});
                           },
                         ),
-                        SizedBox(height: context.hp(1)),
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColors.surface,
+                        ),
                         // 종료일 (선택사항)
                         RecordFormDateWidget(
                           key: _endDateKey,
@@ -540,15 +577,14 @@ class _RecordFormPageState extends State<RecordFormPage> {
                             return (minDate, maxDate);
                           },
                         ),
-                        SizedBox(height: context.hp(3)),
+                        SizedBox(height: 16),
 
-                        _buildTitle('상세'),
                         RecordFormMemoWidget(
                           key: _memoKey,
                           initialMemo:
                               isEditMode ? widget.recordData!['memo'] : null,
                         ),
-                        SizedBox(height: context.hp(1)),
+                        SizedBox(height: 16),
 
                         // 색상
                         RecordFormColorWidget(
@@ -558,45 +594,15 @@ class _RecordFormPageState extends State<RecordFormPage> {
                                   ? Color(
                                     int.parse(widget.recordData!['color']),
                                   )
-                                  : null,
+                                  : Colors.pinkAccent.shade400,
+                          onChanged: () => setState(() {}),
                         ),
-                        SizedBox(height: context.hp(1)),
+                        SizedBox(height: 16),
 
                         // 이미지
                         RecordFormImageWidget(
                           key: _imageKey,
                           initialImagePaths: _existingImages,
-                        ),
-                        SizedBox(height: context.hp(2)),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  HapticFeedback.lightImpact();
-                                  saveRecord();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: AppColors.background,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  '저장',
-                                  style: AppTextStyle.body.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),

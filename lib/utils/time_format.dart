@@ -13,6 +13,20 @@ class TimeFormat {
     }
   }
 
+  static String getSimpleDateTime(String? dateTimeString) {
+    if (dateTimeString == null) return '';
+    try {
+      final dt = DateTime.parse(dateTimeString);
+      final ampm = dt.hour < 12 ? '오전' : '오후';
+      final hour12 = (dt.hour % 12 == 0) ? 12 : (dt.hour % 12);
+      final mm = dt.minute.toString().padLeft(2, '0');
+
+      return '${dt.year}. ${dt.month}. ${dt.day}. $ampm ${hour12.toString().padLeft(2, '0')}:$mm';
+    } catch (e) {
+      return '미사용';
+    }
+  }
+
   static String getDate(String? dateTimeString) {
     if (dateTimeString == null) return '';
     try {

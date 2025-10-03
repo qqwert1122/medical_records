@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
 import 'package:medical_records/styles/app_text_style.dart';
@@ -183,302 +184,323 @@ class _DateTimePickerBottomSheetState extends State<DateTimePickerBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       height: context.hp(40),
+      padding: context.paddingHorizSM,
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
       ),
-      padding: context.paddingHorizSM,
       child: Column(
         children: [
           const DragHandle(),
           _buildTitle(),
-          SizedBox(height: context.hp(2)),
+          SizedBox(height: 16.0),
           Expanded(
-            child: Row(
-              children: [
-                // 날짜
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    children: [
-                      Text(
-                        '날짜',
-                        style: AppTextStyle.caption.copyWith(
-                          color: AppColors.textPrimary,
+            child: Container(
+              padding: EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: [
+                  // 날짜
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      children: [
+                        Text(
+                          '날짜',
+                          style: AppTextStyle.caption.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: context.hp(1)),
-                      Expanded(
-                        child: CupertinoPicker(
-                          scrollController: _dayController,
-                          itemExtent: 50,
-                          onSelectedItemChanged: (index) {
-                            HapticFeedback.lightImpact();
-                            final newDay = _dateOnly(
-                              _startBound.add(Duration(days: index)),
-                            );
-                            if (mounted) {
-                              setState(() {
-                                _dayIndex = index;
-                                _applyAndSync(
-                                  newDay,
-                                  _selectedHour,
-                                  _selectedMinute,
-                                );
-                              });
-                            }
-                          },
-                          children: List.generate(_dayCount, (i) {
-                            final day = _startBound.add(Duration(days: i));
-                            final isToday = _isSameDay(day, DateTime.now());
-                            final isSelected = i == _dayIndex;
-                            return Center(
-                              child: Wrap(
-                                alignment: WrapAlignment.center,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 6,
-                                children: [
-                                  Text(
-                                    '${day.year.toString().padLeft(4, '0')}년 ${day.month}월 ${day.day}일',
-                                    style: AppTextStyle.body.copyWith(
-                                      fontWeight:
-                                          isSelected
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                      color:
-                                          isSelected
-                                              ? AppColors.textPrimary
-                                              : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  if (isToday)
+                        SizedBox(height: context.hp(1)),
+                        Expanded(
+                          child: CupertinoPicker(
+                            scrollController: _dayController,
+                            itemExtent: 50,
+                            selectionOverlay: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onSelectedItemChanged: (index) {
+                              HapticFeedback.lightImpact();
+                              final newDay = _dateOnly(
+                                _startBound.add(Duration(days: index)),
+                              );
+                              if (mounted) {
+                                setState(() {
+                                  _dayIndex = index;
+                                  _applyAndSync(
+                                    newDay,
+                                    _selectedHour,
+                                    _selectedMinute,
+                                  );
+                                });
+                              }
+                            },
+                            children: List.generate(_dayCount, (i) {
+                              final day = _startBound.add(Duration(days: i));
+                              final isToday = _isSameDay(day, DateTime.now());
+                              final isSelected = i == _dayIndex;
+                              final weekdays = [
+                                '월',
+                                '화',
+                                '수',
+                                '목',
+                                '금',
+                                '토',
+                                '일',
+                              ];
+                              final weekday = weekdays[day.weekday - 1];
+                              return Center(
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 6,
+                                  children: [
                                     Text(
-                                      '오늘',
-                                      style: AppTextStyle.caption.copyWith(
+                                      '${day.year.toString().padLeft(4, '0')}. ${day.month}. ${day.day}. $weekday',
+                                      style: AppTextStyle.body.copyWith(
                                         fontWeight:
                                             isSelected
                                                 ? FontWeight.bold
                                                 : FontWeight.normal,
-                                        color: AppColors.primary,
+                                        color:
+                                            isSelected
+                                                ? AppColors.textPrimary
+                                                : AppColors.textSecondary,
                                       ),
                                     ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: context.wp(2)),
-                // 시간
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    children: [
-                      Text(
-                        '시',
-                        style: AppTextStyle.caption.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: context.hp(1)),
-                      Expanded(
-                        child: CupertinoPicker(
-                          scrollController: _hourController,
-                          itemExtent: 50,
-                          onSelectedItemChanged: (index) {
-                            HapticFeedback.lightImpact();
-
-                            // 경계일이면 허용 범위로 클램프
-                            int newHour = index;
-
-                            if (_isSameDay(_selectedDate, _startBound) &&
-                                newHour < _startBound.hour) {
-                              newHour = _startBound.hour;
-                            }
-                            if (_isSameDay(_selectedDate, _endBound) &&
-                                newHour > _endBound.hour) {
-                              newHour = _endBound.hour;
-                            }
-
-                            if (mounted) {
-                              setState(() {
-                                _applyAndSync(
-                                  _dateOnly(_selectedDate),
-                                  newHour,
-                                  _selectedMinute,
-                                );
-                              });
-                            }
-                          },
-                          children: List.generate(24, (h) {
-                            final isSelected = _selectedHour == h;
-                            return Center(
-                              child: Text(
-                                h.toString().padLeft(2, '0'),
-                                style: AppTextStyle.body.copyWith(
-                                  fontWeight:
-                                      isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                  color:
-                                      isSelected
-                                          ? AppColors.textPrimary
-                                          : AppColors.textSecondary,
+                                    if (isToday)
+                                      Text(
+                                        '오늘',
+                                        style: AppTextStyle.caption.copyWith(
+                                          fontWeight:
+                                              isSelected
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: context.wp(2)),
-                // 분
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    children: [
-                      Text(
-                        '분',
-                        style: AppTextStyle.caption.copyWith(
-                          color: AppColors.textPrimary,
+                  SizedBox(width: context.wp(2)),
+                  // 시간
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        Text(
+                          '시',
+                          style: AppTextStyle.caption.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: context.hp(1)),
-                      Expanded(
-                        child: CupertinoPicker(
-                          scrollController: _minuteController,
-                          itemExtent: 50,
-                          onSelectedItemChanged: (index) {
-                            HapticFeedback.lightImpact();
+                        SizedBox(height: context.hp(1)),
+                        Expanded(
+                          child: CupertinoPicker(
+                            scrollController: _hourController,
+                            itemExtent: 50,
+                            selectionOverlay: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onSelectedItemChanged: (index) {
+                              HapticFeedback.lightImpact();
 
-                            int newMinute = index;
+                              // 경계일이면 허용 범위로 클램프
+                              int newHour = index;
 
-                            // 경계일 + 경계시간이면 분 제한
-                            final onMinBoundaryHour =
-                                _isSameDay(_selectedDate, _startBound) &&
-                                _selectedHour == _startBound.hour;
-                            final onMaxBoundaryHour =
-                                _isSameDay(_selectedDate, _endBound) &&
-                                _selectedHour == _endBound.hour;
+                              if (_isSameDay(_selectedDate, _startBound) &&
+                                  newHour < _startBound.hour) {
+                                newHour = _startBound.hour;
+                              }
+                              if (_isSameDay(_selectedDate, _endBound) &&
+                                  newHour > _endBound.hour) {
+                                newHour = _endBound.hour;
+                              }
 
-                            if (onMinBoundaryHour &&
-                                newMinute < _startBound.minute) {
-                              newMinute = _startBound.minute;
-                            }
-                            if (onMaxBoundaryHour &&
-                                newMinute > _endBound.minute) {
-                              newMinute = _endBound.minute;
-                            }
-
-                            if (mounted) {
-                              setState(() {
-                                _applyAndSync(
-                                  _dateOnly(_selectedDate),
-                                  _selectedHour,
-                                  newMinute,
-                                );
-                              });
-                            }
-                          },
-                          children: List.generate(60, (m) {
-                            final isSelected = _selectedMinute == m;
-                            return Center(
-                              child: Text(
-                                m.toString().padLeft(2, '0'),
-                                style: AppTextStyle.body.copyWith(
-                                  fontWeight:
-                                      isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                  color:
-                                      isSelected
-                                          ? AppColors.textPrimary
-                                          : AppColors.textSecondary,
+                              if (mounted) {
+                                setState(() {
+                                  _applyAndSync(
+                                    _dateOnly(_selectedDate),
+                                    newHour,
+                                    _selectedMinute,
+                                  );
+                                });
+                              }
+                            },
+                            children: List.generate(24, (h) {
+                              final isSelected = _selectedHour == h;
+                              return Center(
+                                child: Text(
+                                  h.toString().padLeft(2, '0'),
+                                  style: AppTextStyle.body.copyWith(
+                                    fontWeight:
+                                        isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                    color:
+                                        isSelected
+                                            ? AppColors.textPrimary
+                                            : AppColors.textSecondary,
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(width: context.wp(2)),
+                  // 분
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        Text(
+                          '분',
+                          style: AppTextStyle.caption.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: context.hp(1)),
+                        Expanded(
+                          child: CupertinoPicker(
+                            scrollController: _minuteController,
+                            itemExtent: 50,
+                            selectionOverlay: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onSelectedItemChanged: (index) {
+                              HapticFeedback.lightImpact();
+
+                              int newMinute = index;
+
+                              // 경계일 + 경계시간이면 분 제한
+                              final onMinBoundaryHour =
+                                  _isSameDay(_selectedDate, _startBound) &&
+                                  _selectedHour == _startBound.hour;
+                              final onMaxBoundaryHour =
+                                  _isSameDay(_selectedDate, _endBound) &&
+                                  _selectedHour == _endBound.hour;
+
+                              if (onMinBoundaryHour &&
+                                  newMinute < _startBound.minute) {
+                                newMinute = _startBound.minute;
+                              }
+                              if (onMaxBoundaryHour &&
+                                  newMinute > _endBound.minute) {
+                                newMinute = _endBound.minute;
+                              }
+
+                              if (mounted) {
+                                setState(() {
+                                  _applyAndSync(
+                                    _dateOnly(_selectedDate),
+                                    _selectedHour,
+                                    newMinute,
+                                  );
+                                });
+                              }
+                            },
+                            children: List.generate(60, (m) {
+                              final isSelected = _selectedMinute == m;
+                              return Center(
+                                child: Text(
+                                  m.toString().padLeft(2, '0'),
+                                  style: AppTextStyle.body.copyWith(
+                                    fontWeight:
+                                        isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                    color:
+                                        isSelected
+                                            ? AppColors.textPrimary
+                                            : AppColors.textSecondary,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          _buildButtons(),
-          SizedBox(height: context.hp(1)),
+          SizedBox(height: 16.0),
         ],
       ),
     );
   }
 
   Widget _buildTitle() {
-    return Text(
-      '날짜 선택',
-      style: AppTextStyle.subTitle.copyWith(color: AppColors.textPrimary),
-    );
-  }
+    return Padding(
+      padding: context.paddingSM,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
-  Widget _buildButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
+        children: [
+          GestureDetector(
+            onTap: () {
               HapticFeedback.lightImpact();
               Navigator.of(context).pop();
             },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.surface,
-              foregroundColor: AppColors.textPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.backgroundSecondary,
               ),
-            ),
-            child: Text(
-              '취소',
-              style: AppTextStyle.body.copyWith(
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
+              child: Icon(
+                LucideIcons.x,
+                color: AppColors.textSecondary,
+                size: 20,
               ),
             ),
           ),
-        ),
-        SizedBox(width: context.wp(4)),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
+          Text(
+            '날짜 선택',
+            style: AppTextStyle.subTitle.copyWith(color: AppColors.textPrimary),
+          ),
+          GestureDetector(
+            onTap: () {
               HapticFeedback.lightImpact();
               Navigator.of(context).pop(_selectedDate);
             },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary,
               ),
-            ),
-            child: Text(
-              '확인',
-              style: AppTextStyle.body.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.white,
-              ),
+              child: Icon(LucideIcons.plus, color: AppColors.white, size: 20),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

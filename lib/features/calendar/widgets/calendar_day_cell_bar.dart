@@ -60,8 +60,7 @@ class CalendarDayCellBar extends StatelessWidget {
               ),
               child: Text(
                 '${day.day}',
-                style: TextStyle(
-                  fontSize: 12,
+                style: AppTextStyle.caption.copyWith(
                   fontWeight:
                       isSelected || isToday
                           ? FontWeight.w900
@@ -79,7 +78,7 @@ class CalendarDayCellBar extends StatelessWidget {
           height: 12,
           child: Text(
             '+$extraCount',
-            style: TextStyle(
+            style: AppTextStyle.caption.copyWith(
               fontSize: 8,
               color:
                   extraCount > 0

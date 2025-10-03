@@ -5,6 +5,7 @@ import 'package:medical_records/features/calendar/widgets/monthly_calendar.dart'
 import 'package:medical_records/features/calendar/widgets/weekly_record_overlay.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
+import 'package:medical_records/styles/app_text_style.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/services.dart';
 
@@ -353,10 +354,9 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView>
                             ),
                             child: Text(
                               '오늘',
-                              style: TextStyle(
+                              style: AppTextStyle.caption.copyWith(
                                 color: AppColors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
                               ),
                             ),
                           ),

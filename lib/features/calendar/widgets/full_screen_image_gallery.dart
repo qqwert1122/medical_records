@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:medical_records/styles/app_text_style.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -111,7 +112,7 @@ class _FullScreenImageGalleryState extends State<FullScreenImageGallery> {
                       ),
                       child: Text(
                         '${_currentIndex + 1} / ${_displayImages.length}',
-                        style: const TextStyle(color: Colors.white),
+                        style: AppTextStyle.body.copyWith(color: Colors.white),
                       ),
                     ),
                 ],

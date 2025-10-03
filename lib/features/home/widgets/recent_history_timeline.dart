@@ -58,7 +58,7 @@ class RecentHistoryTimeline extends StatelessWidget {
               ),
               child: Text(
                 '더 보기',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                style: AppTextStyle.body.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),

@@ -143,16 +143,15 @@ class _RecordDetailImageWidgetState extends State<RecordDetailImageWidget> {
                                       if (eventType.isNotEmpty)
                                         Text(
                                           eventName,
-                                          style: TextStyle(
+                                          style: AppTextStyle.caption.copyWith(
                                             color: Colors.white,
-                                            fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       if (treatmentName.isNotEmpty)
                                         Text(
                                           treatmentName,
-                                          style: TextStyle(
+                                          style: AppTextStyle.caption.copyWith(
                                             color: Colors.white,
                                             fontSize: 11,
                                           ),
@@ -160,7 +159,7 @@ class _RecordDetailImageWidgetState extends State<RecordDetailImageWidget> {
                                       if (recordDate.isNotEmpty)
                                         Text(
                                           TimeFormat.getDate(recordDate),
-                                          style: TextStyle(
+                                          style: AppTextStyle.caption.copyWith(
                                             color: Colors.white.withValues(
                                               alpha: 0.9,
                                             ),

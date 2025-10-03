@@ -10,8 +10,13 @@ import 'package:medical_records/features/form/widgets/symptom_bottom_sheet.dart'
 
 class RecordFormSymptomWidget extends StatefulWidget {
   final int? initialSymptomId;
+  final VoidCallback? onChanged;
 
-  const RecordFormSymptomWidget({super.key, this.initialSymptomId});
+  const RecordFormSymptomWidget({
+    super.key,
+    this.initialSymptomId,
+    this.onChanged,
+  });
 
   @override
   State<RecordFormSymptomWidget> createState() =>
@@ -44,20 +49,21 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
           setState(() {
             selectedSymptom = symptom;
           });
+          widget.onChanged?.call();
         }
       } catch (e) {
-        // 해당 symptom을 찾지 못한 경우 첫 번째 symptom 선택
-        if (symptoms.isNotEmpty && mounted) {
+        // 해당 symptom을 찾지 못한 경우 null 상태
+        if (mounted) {
           setState(() {
-            selectedSymptom = symptoms.first;
+            selectedSymptom = null;
           });
         }
       }
     } else {
-      // 추가 모드: 첫 번째 symptom 선택
-      if (symptoms.isNotEmpty && mounted) {
+      // 추가 모드: null 상태로 시작
+      if (mounted) {
         setState(() {
-          selectedSymptom = symptoms.first;
+          selectedSymptom = null;
         });
       }
     }
@@ -65,14 +71,21 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: context.wp(15),
-          child: Row(
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(24.0),
+          topLeft: Radius.circular(24.0),
+        ),
+        color: AppColors.background,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 4,
+            spacing: 8,
             children: [
               Text(
                 '증상',
@@ -82,37 +95,33 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
                 ),
               ),
               Container(
-                width: 5,
-                height: 5,
+                width: 6,
+                height: 6,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: AppColors.primary.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
               ),
             ],
           ),
-        ),
-        Flexible(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              _showSymptomBottomSheet();
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: EdgeInsets.all(12.0),
+          SizedBox(width: 16),
+          Flexible(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _showSymptomBottomSheet();
+              },
               child: Row(
                 children: [
+                  Spacer(),
                   Text(
-                    selectedSymptom?['symptom_name'] ?? '증상을 선택하세요',
+                    selectedSymptom?['symptom_name'] ?? '없음',
                     style: AppTextStyle.body.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.textSecondary,
                     ),
                   ),
-                  Spacer(),
+                  SizedBox(width: 16),
                   Icon(
                     LucideIcons.chevronDown,
                     size: 16,
@@ -122,8 +131,8 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -136,6 +145,7 @@ class RecordFormSymptomWidgetState extends State<RecordFormSymptomWidget> {
       setState(() {
         selectedSymptom = result;
       });
+      widget.onChanged?.call();
     }
   }
 }

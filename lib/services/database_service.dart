@@ -21,12 +21,13 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'medical_records.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
         await db.rawQuery('PRAGMA journal_mode = WAL');
       },
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -109,7 +110,53 @@ class DatabaseService {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE heatmap_records (
+        heatmap_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        record_id INTEGER NOT NULL,
+        body_part_type TEXT NOT NULL,
+        svg_file_name TEXT NOT NULL,
+        coordinate_x REAL NOT NULL,
+        coordinate_y REAL NOT NULL,
+        intensity INTEGER DEFAULT 1,
+        record_date TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (record_id) REFERENCES records (record_id) ON DELETE CASCADE
+      )
+    ''');
+
     await _createIndexes(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add heatmap_records table for version 2
+      await db.execute('''
+        CREATE TABLE heatmap_records (
+          heatmap_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          record_id INTEGER NOT NULL,
+          body_part_type TEXT NOT NULL,
+          svg_file_name TEXT NOT NULL,
+          coordinate_x REAL NOT NULL,
+          coordinate_y REAL NOT NULL,
+          intensity INTEGER DEFAULT 1,
+          record_date TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (record_id) REFERENCES records (record_id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Add indexes for heatmap_records
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_heatmap_body_part ON heatmap_records(body_part_type, svg_file_name)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_heatmap_record ON heatmap_records(record_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_heatmap_record_date ON heatmap_records(record_date)',
+      );
+    }
   }
 
   // INDEXING
@@ -139,6 +186,16 @@ class DatabaseService {
     // histories
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_histories_record_id ON histories(record_id)',
+    );
+    // heatmap_records
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_heatmap_body_part ON heatmap_records(body_part_type, svg_file_name)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_heatmap_record ON heatmap_records(record_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_heatmap_record_date ON heatmap_records(record_date)',
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_histories_treatment_id ON histories(treatment_id)',
@@ -175,29 +232,54 @@ class DatabaseService {
   // 초기값 부여
   Future<void> ensureSeeded() async {
     final prefs = await SharedPreferences.getInstance();
-    const seedKey = 'db_seeded_v1'; // 나중에 기본값 변경 시 v2 등으로 키만 올리면 됨
 
-    if (prefs.getBool(seedKey) == true) return;
+    // v1: 초기 데이터 (신규 유저만)
+    const seedKeyV1 = 'db_seeded_v1';
+    if (prefs.getBool(seedKeyV1) != true) {
+      // 기존 spot
+      await createSpot(name: '입술 주변');
+      await createSpot(name: '혓바닥');
+      await createSpot(name: '목구멍');
+      await createSpot(name: '코');
+      await createSpot(name: '소장/대장');
 
-    await createSpot(name: '입술 주변');
-    await createSpot(name: '혓바닥');
-    await createSpot(name: '목구멍');
-    await createSpot(name: '코');
-    await createSpot(name: '소장/대장');
+      await createSymptom('구내염');
+      await createSymptom('소화불량');
+      await createSymptom('복통');
+      await createSymptom('포진');
+      await createSymptom('발열');
 
-    await createSymptom('구내염');
-    await createSymptom('소화불량');
-    await createSymptom('복통');
-    await createSymptom('포진');
-    await createSymptom('발열');
+      await createTreatment('진통제 복용');
+      await createTreatment('해열제 복용');
+      await createTreatment('물리치료');
+      await createTreatment('온/냉찜질');
+      await createTreatment('소독/드레싱');
 
-    await createTreatment('진통제 복용');
-    await createTreatment('해열제 복용');
-    await createTreatment('물리치료');
-    await createTreatment('온/냉찜질');
-    await createTreatment('소독/드레싱');
+      await prefs.setBool(seedKeyV1, true);
+    }
 
-    await prefs.setBool(seedKey, true);
+    // v2: 바디맵 부위 추가 (모든 유저)
+    const seedKeyV2 = 'db_seeded_v2';
+    if (prefs.getBool(seedKeyV2) != true) {
+      // 기존 부위 목록 가져오기
+      final existingSpots = await getSpots();
+      final existingNames = existingSpots.map((s) => s['spot_name'] as String).toSet();
+
+      // 중복되지 않은 부위만 생성
+      final bodymapSpots = [
+        '이마', '눈', '귀', '볼', '입', '턱', '목', '얼굴',
+        '윗입술', '아랫입술', '입천장', '윗잇몸', '윗이빨',
+        '아랫잇몸', '아랫이빨', '목젖', '볼 안쪽',
+      ];
+
+      for (final spotName in bodymapSpots) {
+        if (!existingNames.contains(spotName)) {
+          await createSpot(name: spotName);
+        }
+      }
+
+      await prefs.setBool(seedKeyV2, true);
+    }
   }
 
   // spots CRUD
@@ -894,5 +976,125 @@ class DatabaseService {
 
     // ALL 또는 TREATMENTS인 경우 위의 쿼리 실행
     return await db.rawQuery(query, args.isNotEmpty ? args : null);
+  }
+
+  // ============================================================
+  // HEATMAP RECORDS CRUD
+  // ============================================================
+
+  // Create heatmap record
+  Future<int> insertHeatmapRecord({
+    required int recordId,
+    required String bodyPartType,
+    required String svgFileName,
+    required double coordinateX,
+    required double coordinateY,
+    required String recordDate,
+    int intensity = 1,
+  }) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    return await db.insert('heatmap_records', {
+      'record_id': recordId,
+      'body_part_type': bodyPartType,
+      'svg_file_name': svgFileName,
+      'coordinate_x': coordinateX,
+      'coordinate_y': coordinateY,
+      'intensity': intensity,
+      'record_date': recordDate,
+      'created_at': now,
+    });
+  }
+
+  // Get heatmap records by body part and date range
+  Future<List<Map<String, dynamic>>> getHeatmapRecords({
+    String? bodyPartType,
+    String? svgFileName,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final db = await database;
+    String query = 'SELECT * FROM heatmap_records WHERE 1=1';
+    List<dynamic> args = [];
+
+    if (bodyPartType != null) {
+      query += ' AND body_part_type = ?';
+      args.add(bodyPartType);
+    }
+
+    if (svgFileName != null) {
+      query += ' AND svg_file_name = ?';
+      args.add(svgFileName);
+    }
+
+    if (startDate != null) {
+      query += ' AND record_date >= ?';
+      args.add(startDate.toIso8601String());
+    }
+
+    if (endDate != null) {
+      query += ' AND record_date <= ?';
+      args.add(endDate.toIso8601String());
+    }
+
+    query += ' ORDER BY record_date DESC';
+
+    return await db.rawQuery(query, args.isNotEmpty ? args : null);
+  }
+
+  // Get heatmap records by record_id
+  Future<List<Map<String, dynamic>>> getHeatmapRecordsByRecordId(
+    int recordId,
+  ) async {
+    final db = await database;
+    return await db.query(
+      'heatmap_records',
+      where: 'record_id = ?',
+      whereArgs: [recordId],
+    );
+  }
+
+  // Delete heatmap record
+  Future<int> deleteHeatmapRecord(int heatmapId) async {
+    final db = await database;
+    return await db.delete(
+      'heatmap_records',
+      where: 'heatmap_id = ?',
+      whereArgs: [heatmapId],
+    );
+  }
+
+  // Get heatmap data aggregated for visualization
+  Future<List<Map<String, dynamic>>> getHeatmapAggregated({
+    required String svgFileName,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final db = await database;
+    String query = '''
+      SELECT
+        coordinate_x,
+        coordinate_y,
+        SUM(intensity) as total_intensity,
+        COUNT(*) as count
+      FROM heatmap_records
+      WHERE svg_file_name = ?
+    ''';
+    List<dynamic> args = [svgFileName];
+
+    if (startDate != null) {
+      query += ' AND record_date >= ?';
+      args.add(startDate.toIso8601String());
+    }
+
+    if (endDate != null) {
+      query += ' AND record_date <= ?';
+      args.add(endDate.toIso8601String());
+    }
+
+    query += ' GROUP BY coordinate_x, coordinate_y';
+
+    return await db.rawQuery(query, args);
   }
 }

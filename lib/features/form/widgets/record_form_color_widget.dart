@@ -7,15 +7,16 @@ import 'package:medical_records/styles/app_text_style.dart';
 
 class RecordFormColorWidget extends StatefulWidget {
   final Color? initialColor;
+  final VoidCallback? onChanged;
 
-  const RecordFormColorWidget({super.key, this.initialColor});
+  const RecordFormColorWidget({super.key, this.initialColor, this.onChanged});
 
   @override
   State<RecordFormColorWidget> createState() => RecordFormColorWidgetState();
 }
 
 class RecordFormColorWidgetState extends State<RecordFormColorWidget> {
-  late Color selectedColor;
+  Color? selectedColor;
 
   final List<Color> colors = [
     Colors.red.shade800,
@@ -56,117 +57,155 @@ class RecordFormColorWidgetState extends State<RecordFormColorWidget> {
   @override
   void initState() {
     super.initState();
-    selectedColor = widget.initialColor ?? Colors.pinkAccent.shade100;
+    selectedColor = widget.initialColor;
   }
 
-  Color getSelectedColor() {
+  Color? getSelectedColor() {
     return selectedColor;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: context.wp(15),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 4,
-            children: [
-              Text(
-                '색상',
-                style: AppTextStyle.body.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+    return GestureDetector(
+      onTap: () => _showColorPickerModal(context),
+      child: Container(
+        padding: EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24.0),
+          color: AppColors.background,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              spacing: 8,
+              children: [
+                Text(
+                  '색상',
+                  style: AppTextStyle.body.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
                 ),
+              ],
+            ),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: selectedColor ?? AppColors.surface,
+                shape: BoxShape.circle,
+                border:
+                    selectedColor == null
+                        ? Border.all(
+                          color: AppColors.textSecondary.withValues(alpha: 0.3),
+                          width: 1,
+                        )
+                        : null,
               ),
-            ],
-          ),
-        ),
-        GestureDetector(
-          onTap: () => _showColorPickerModal(context),
-          child: Container(
-            width: 35,
-            height: 35,
-            decoration: BoxDecoration(
-              color: selectedColor,
-              borderRadius: BorderRadius.circular(8.0),
+              child: null,
             ),
-          ),
+          ],
         ),
-        SizedBox(width: 10),
-        GestureDetector(
-          onTap: () => _showColorPickerModal(context),
-          child: Container(
-            height: 35,
-            width: 35,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Center(
-              child: Icon(
-                LucideIcons.chevronDown,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   void _showColorPickerModal(BuildContext context) {
     HapticFeedback.mediumImpact();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: AppColors.background,
-          title: Text(
-            '색상 선택',
-            style: AppTextStyle.title.copyWith(color: AppColors.textPrimary),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 6,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+          child: Container(
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
-              itemCount: colors.length,
-              itemBuilder: (context, index) {
-                final color = colors[index];
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    if (mounted) {
-                      setState(() {
-                        selectedColor = color;
-                      });
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.backgroundSecondary,
+                        ),
+                        child: Icon(
+                          LucideIcons.x,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                      ),
                     ),
+                    Text(
+                      '색상 선택',
+                      style: AppTextStyle.subTitle.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(width: 36),
+                  ],
+                ),
+                SizedBox(height: 24),
+                GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 8,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
-                );
-              },
+                  itemCount: colors.length,
+                  itemBuilder: (context, index) {
+                    final color = colors[index];
+                    return GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        if (mounted) {
+                          setState(() {
+                            selectedColor = color;
+                          });
+                          widget.onChanged?.call();
+                        }
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         );

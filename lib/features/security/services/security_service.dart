@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:medical_records/features/security/enums/bio_state.dart';
 import 'package:medical_records/features/security/components/pin_code_dialog.dart';
+import 'package:medical_records/styles/app_text_style.dart';
 
 class SecurityService {
   static const _kSecurityEnabledKey = 'security_enabled';
@@ -92,7 +93,7 @@ class SecurityService {
       }
 
       final ok = await _auth.authenticate(
-        localizedReason: '건강 로그 잠금 해제',
+        localizedReason: '마이델로지 잠금 해제',
         options: const AuthenticationOptions(
           biometricOnly: false,
           useErrorDialogs: true,
@@ -104,7 +105,6 @@ class SecurityService {
         _locked = false;
       }
       return ok;
-
     } on PlatformException catch (e) {
       if (e.code == 'NotAvailable' || e.code == 'NotEnrolled') {
         _authInProgress = false;
@@ -124,26 +124,27 @@ class SecurityService {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => PinCodeDialog(
-        isSetup: stored == null,
-        onSubmit: (pin) async {
-          if (stored == null) {
-            await _storage.write(key: _kPinCodeKey, value: pin);
-            _locked = false;
-            success = true;
-            Navigator.pop(context);
-          } else if (stored == pin) {
-            _locked = false;
-            success = true;
-            Navigator.pop(context);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('잘못된 PIN입니다')),
-            );
-          }
-        },
-        expectedPin: stored,
-      ),
+      builder:
+          (context) => PinCodeDialog(
+            isSetup: stored == null,
+            onSubmit: (pin) async {
+              if (stored == null) {
+                await _storage.write(key: _kPinCodeKey, value: pin);
+                _locked = false;
+                success = true;
+                Navigator.pop(context);
+              } else if (stored == pin) {
+                _locked = false;
+                success = true;
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('잘못된 PIN입니다')));
+              }
+            },
+            expectedPin: stored,
+          ),
     );
 
     return success;
@@ -182,13 +183,14 @@ class SecurityService {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => PinCodeDialog(
-        isSetup: true,
-        onSubmit: (p) {
-          pin = p;
-          Navigator.pop(context);
-        },
-      ),
+      builder:
+          (_) => PinCodeDialog(
+            isSetup: true,
+            onSubmit: (p) {
+              pin = p;
+              Navigator.pop(context);
+            },
+          ),
     );
     return pin;
   }
@@ -199,14 +201,15 @@ class SecurityService {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => PinCodeDialog(
-        isSetup: false,
-        expectedPin: expectedPin,
-        onSubmit: (_) {
-          ok = true;
-          Navigator.pop(context);
-        },
-      ),
+      builder:
+          (_) => PinCodeDialog(
+            isSetup: false,
+            expectedPin: expectedPin,
+            onSubmit: (_) {
+              ok = true;
+              Navigator.pop(context);
+            },
+          ),
     );
     return ok;
   }
@@ -296,33 +299,40 @@ class SecurityService {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.security, size: 28),
-            const SizedBox(height: 10),
-            const Text('더 안전하게 보호해요', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            const Text('얼굴/지문을 등록하면 핀 분실 걱정 없이 잠금 해제할 수 있어요.', textAlign: TextAlign.center),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context, true),
-                icon: const Icon(Icons.face),
-                label: const Text('지금 등록 (추천)'),
-              ),
+      builder:
+          (_) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.security, size: 28),
+                const SizedBox(height: 10),
+                Text(
+                  '더 안전하게 보호해요',
+                  style: AppTextStyle.subTitle.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '얼굴/지문을 등록하면 핀 분실 걱정 없이 잠금 해제할 수 있어요.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pop(context, true),
+                    icon: const Icon(Icons.face),
+                    label: const Text('지금 등록 (추천)'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('다음에 하기'),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('다음에 하기'),
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -330,7 +340,9 @@ class SecurityService {
   Future<void> _openSecuritySettings(BuildContext context) async {
     try {
       if (Theme.of(context).platform == TargetPlatform.android) {
-        await AppSettings.openAppSettings(type: AppSettingsType.lockAndPassword);
+        await AppSettings.openAppSettings(
+          type: AppSettingsType.lockAndPassword,
+        );
       } else if (Theme.of(context).platform == TargetPlatform.iOS) {
         await AppSettings.openAppSettings(type: AppSettingsType.settings);
       } else {

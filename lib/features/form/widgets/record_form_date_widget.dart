@@ -123,14 +123,23 @@ class RecordFormDateWidgetState extends State<RecordFormDateWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: context.wp(15),
-          child: Row(
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(widget.isOptional ? 0 : 24.0),
+          topLeft: Radius.circular(widget.isOptional ? 0 : 24.0),
+          bottomRight: Radius.circular(widget.isOptional ? 24.0 : 0),
+          bottomLeft: Radius.circular(widget.isOptional ? 24.0 : 0),
+        ),
+        color: AppColors.background,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 4,
+            spacing: 8,
             children: [
               Text(
                 !widget.isOptional ? '시작일' : '종료일',
@@ -141,67 +150,77 @@ class RecordFormDateWidgetState extends State<RecordFormDateWidget> {
               ),
               !widget.isOptional
                   ? Container(
-                    width: 5,
-                    height: 5,
+                    width: 6,
+                    height: 6,
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: AppColors.primary.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                     ),
                   )
-                  : SizedBox(),
+                  : SizedBox(width: 6, height: 6),
             ],
           ),
-        ),
-        Flexible(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              _showDatePicker();
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: EdgeInsets.all(12.0),
+          SizedBox(width: 16),
+          Flexible(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _showDatePicker();
+              },
               child: Row(
                 children: [
-                  Icon(
-                    LucideIcons.calendarDays,
-                    size: context.xl,
-                    color: AppColors.textSecondary,
-                  ),
-                  SizedBox(width: context.wp(2)),
+                  Spacer(),
+                  _selectedDate != null
+                      ? Icon(
+                        LucideIcons.calendarDays,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      )
+                      : SizedBox(),
+                  SizedBox(width: 8),
                   Text(
                     _selectedDate != null
-                        ? TimeFormat.getDateTime(
+                        ? TimeFormat.getSimpleDateTime(
                           _selectedDate!.toIso8601String(),
                         )
-                        : '선택 안함',
+                        : '없음',
                     style: AppTextStyle.body.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.textSecondary,
                     ),
                   ),
-                  if (widget.isOptional && _selectedDate != null) ...[
-                    Spacer(),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        _clearDate();
-                      },
-                      child: Icon(
-                        LucideIcons.x,
-                        size: context.lg,
-                        color: AppColors.lightGrey,
+                  SizedBox(width: 8),
+                  _selectedDate != null && widget.isOptional
+                      ? GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          _clearDate();
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(2.0),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.backgroundSecondary,
+                          ),
+                          child: Icon(
+                            LucideIcons.x,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      )
+                      : Icon(
+                        LucideIcons.chevronDown,
+                        size: 16,
+                        color: AppColors.textSecondary,
                       ),
-                    ),
-                  ],
                 ],
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

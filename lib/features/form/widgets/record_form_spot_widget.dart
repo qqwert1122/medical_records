@@ -9,8 +9,9 @@ import 'package:medical_records/features/form/widgets/spot_bottom_sheet.dart';
 
 class RecordFormSpotWidget extends StatefulWidget {
   final int? initialSpotId;
+  final VoidCallback? onChanged;
 
-  const RecordFormSpotWidget({super.key, this.initialSpotId});
+  const RecordFormSpotWidget({super.key, this.initialSpotId, this.onChanged});
 
   @override
   State<RecordFormSpotWidget> createState() => RecordFormSpotWidgetState();
@@ -33,7 +34,7 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
     final spots = await DatabaseService().getSpots();
 
     if (widget.initialSpotId != null) {
-      // 수정 모드: 특정 spot_id로 찾기
+      // spot_id로 찾기
       try {
         final spot = spots.firstWhere(
           (spot) => spot['spot_id'] == widget.initialSpotId,
@@ -42,20 +43,21 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
           setState(() {
             selectedSpot = spot;
           });
+          widget.onChanged?.call();
         }
       } catch (e) {
-        // 해당 spot을 찾지 못한 경우 첫 번째 spot 선택
-        if (spots.isNotEmpty && mounted) {
+        // 해당 spot을 찾지 못한 경우 null 상태
+        if (mounted) {
           setState(() {
-            selectedSpot = spots.first;
+            selectedSpot = null;
           });
         }
       }
     } else {
-      // 추가 모드: 첫 번째 spot 선택
-      if (spots.isNotEmpty && mounted) {
+      // 추가 모드: null 상태로 시작
+      if (mounted) {
         setState(() {
-          selectedSpot = spots.first;
+          selectedSpot = null;
         });
       }
     }
@@ -63,14 +65,21 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: context.wp(15),
-          child: Row(
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24.0),
+          bottomRight: Radius.circular(24.0),
+        ),
+        color: AppColors.background,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 4,
+            spacing: 8,
             children: [
               Text(
                 '위치',
@@ -80,37 +89,33 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
                 ),
               ),
               Container(
-                width: 5,
-                height: 5,
+                width: 6,
+                height: 6,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: AppColors.primary.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
               ),
             ],
           ),
-        ),
-        Flexible(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              _showSpotBottomSheet();
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: EdgeInsets.all(12.0),
+          SizedBox(width: 16),
+          Flexible(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _showSpotBottomSheet();
+              },
               child: Row(
                 children: [
+                  Spacer(),
                   Text(
-                    selectedSpot?['spot_name'] ?? '위치를 선택하세요',
+                    selectedSpot?['spot_name'] ?? '없음',
                     style: AppTextStyle.body.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.textSecondary,
                     ),
                   ),
-                  Spacer(),
+                  SizedBox(width: 16),
                   Icon(
                     LucideIcons.chevronDown,
                     size: 16,
@@ -120,8 +125,8 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -134,6 +139,7 @@ class RecordFormSpotWidgetState extends State<RecordFormSpotWidget> {
       setState(() {
         selectedSpot = result;
       });
+      widget.onChanged?.call();
     }
   }
 }

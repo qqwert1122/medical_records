@@ -7,12 +7,12 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:medical_records/features/images/screens/images_page.dart';
 import 'package:medical_records/features/home/screens/home_page.dart';
 import 'package:medical_records/features/form/screens/record_form_page.dart';
+import 'package:medical_records/features/bodymap/screens/bodymap_page.dart';
 import 'package:medical_records/services/review_service.dart';
 import 'package:medical_records/services/database_service.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/features/security/components/security_lock_overlay.dart';
 import 'package:medical_records/features/security/services/security_service.dart';
-import 'package:medical_records/components/custom_toggle_navigation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +31,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: '마이델로지', home: MainNavigation());
+    return MaterialApp(
+      title: '마이델로지',
+      theme: ThemeData(
+        fontFamily: 'Pretendard',
+        textTheme: ThemeData.light().textTheme.apply(
+          fontFamily: 'Pretendard',
+        ),
+      ),
+      home: MainNavigation(),
+    );
   }
 }
 
@@ -45,10 +54,6 @@ class _MainNavigationState extends State<MainNavigation>
   // Bottom Navigation Bar
   int selectedIndex = 0; // 홈 페이지를 기본값으로 설정
   late PageController pageController;
-  bool _showNavBar = true;
-  bool _showFab = true;
-
-  bool _isDrawerOpen = false; // Drawer 열림 상태 추적
 
   // 보안 서비스
   final SecurityService _securityService = SecurityService();
@@ -63,39 +68,9 @@ class _MainNavigationState extends State<MainNavigation>
           pageController.jumpToPage(tabIndex);
         }
       },
-      onDrawerStateChanged: (isOpen) {
-        if (mounted) {
-          setState(() {
-            _isDrawerOpen = isOpen;
-          });
-        }
-      },
     ),
-    RecordsPage(
-      onBottomSheetHeightChanged: (height) {
-        if (mounted) {
-          setState(() {
-            if (height == 0) {
-              _showNavBar = true;
-              _showFab = true;
-            } else {
-              _showNavBar = false;
-            }
-          });
-        }
-      },
-      onBottomSheetPageChanged: (pageIndex) {
-        if (mounted) {
-          setState(() {
-            if (pageIndex == 0) {
-              _showFab = true;
-            } else {
-              _showFab = false;
-            }
-          });
-        }
-      },
-    ),
+    RecordsPage(),
+    BodyMapPage(),
     ImagesPage(),
     AnalysisPage(),
   ];
@@ -211,107 +186,52 @@ class _MainNavigationState extends State<MainNavigation>
             children: pages,
           ),
           _buildLockOverlay(),
-          // 메인 바텀 네비게이션
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 16,
-                  top: 8,
-                  left: 24,
-                  right: 24,
-                ),
-                child: Row(
-                  children: [
-                    // 바텀 네비게이션
-                    Expanded(
-                      child:
-                          _showNavBar && !_isDrawerOpen
-                              ? Container(
-                                margin: EdgeInsets.only(right: 12),
-                                child: CustomToggleNavigation(
-                                  items: [
-                                    ToggleNavigationItem(
-                                      icon: FontAwesomeIcons.house,
-                                      selectedIcon: FontAwesomeIcons.house,
-                                      label: '홈',
-                                    ),
-                                    ToggleNavigationItem(
-                                      icon: FontAwesomeIcons.calendar,
-                                      selectedIcon:
-                                          FontAwesomeIcons.solidCalendar,
-                                      label: '기록',
-                                    ),
-                                    ToggleNavigationItem(
-                                      icon: FontAwesomeIcons.image,
-                                      selectedIcon: FontAwesomeIcons.solidImage,
-                                      label: '이미지',
-                                    ),
-                                    ToggleNavigationItem(
-                                      icon: FontAwesomeIcons.chartLine,
-                                      selectedIcon: FontAwesomeIcons.chartLine,
-                                      label: '통계',
-                                    ),
-                                  ],
-                                  currentIndex: selectedIndex,
-                                  onTap: onNavTap,
-                                  height: 56,
-                                  iconSize: 20,
-                                  fontSize: 11,
-                                  margin: EdgeInsets.zero,
-                                  selectedColor: AppColors.textPrimary,
-                                  unselectedColor: AppColors.textSecondary,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      blurRadius: 15,
-                                      offset: Offset(0, -2),
-                                    ),
-                                  ],
-                                ),
-                              )
-                              : Container(),
-                    ),
-                    // FAB
-                    if (_showFab && !_isDrawerOpen)
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow.withValues(alpha: 0.3),
-                              blurRadius: 10,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(28),
-                            onTap: _showAddRecordForm,
-                            child: Icon(
-                              Icons.add,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: selectedIndex,
+        onTap: onNavTap,
+        selectedItemColor: AppColors.textPrimary,
+        unselectedItemColor: AppColors.textSecondary,
+        backgroundColor: Colors.white,
+        elevation: 8,
+        iconSize: 20,
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(FontAwesomeIcons.house),
+            activeIcon: Icon(FontAwesomeIcons.house),
+            label: '홈',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(FontAwesomeIcons.calendar),
+            activeIcon: Icon(FontAwesomeIcons.solidCalendar),
+            label: '기록',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(FontAwesomeIcons.personRays),
+            activeIcon: Icon(FontAwesomeIcons.personRays),
+            label: '바디맵',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(FontAwesomeIcons.image),
+            activeIcon: Icon(FontAwesomeIcons.solidImage),
+            label: '이미지',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(FontAwesomeIcons.chartLine),
+            activeIcon: Icon(FontAwesomeIcons.chartLine),
+            label: '통계',
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddRecordForm,
+        backgroundColor: AppColors.primary,
+        shape: CircleBorder(),
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }

@@ -310,10 +310,10 @@ class _MonthlyCalendarState extends State<MonthlyCalendar>
                               );
                         },
                       ),
-                      calendarStyle: const CalendarStyle(
+                      calendarStyle: CalendarStyle(
                         outsideDaysVisible: true,
                         outsideDecoration: BoxDecoration(),
-                        weekendTextStyle: TextStyle(color: Colors.redAccent),
+                        weekendTextStyle: AppTextStyle.body.copyWith(color: Colors.redAccent),
                         cellMargin: EdgeInsets.all(0),
                       ),
                       locale: 'ko_KR',

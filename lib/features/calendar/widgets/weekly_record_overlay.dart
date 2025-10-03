@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medical_records/styles/app_colors.dart';
 import 'package:medical_records/styles/app_size.dart';
+import 'package:medical_records/styles/app_text_style.dart';
 
 class WeeklyRecordOverlay extends StatelessWidget {
   final Map<DateTime, Map<int, RecordInfo>> weekRecordSlots;
@@ -144,8 +145,8 @@ class WeeklyRecordOverlay extends StatelessWidget {
                       padding: EdgeInsets.only(left: 4),
                       child: Text(
                         recordTitles[recordId] ?? '',
-                        style: TextStyle(
-                          fontSize: 9, // 기존 10에서 9로 감소
+                        style: AppTextStyle.caption.copyWith(
+                          fontSize: 9,
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),

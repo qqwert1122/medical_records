@@ -128,22 +128,31 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            SizedBox(
-              width: context.wp(15),
-              child: Text(
-                '사진',
-                style: AppTextStyle.body.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            _pickImages();
+          },
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24.0),
+              color: AppColors.background,
             ),
-            if (_allImagePaths.isEmpty) _buildEmptyState(),
-          ],
+            child: Row(
+              children: [
+                Text(
+                  '사진 추가',
+                  style: AppTextStyle.body.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        SizedBox(height: context.hp(1)),
+        SizedBox(height: 8),
 
         if (_allImagePaths.isNotEmpty)
           CarouselSlider(
@@ -264,9 +273,8 @@ class RecordFormImageWidgetState extends State<RecordFormImageWidget> {
                               ),
                               child: Text(
                                 '${_currentIndex + 1} / ${_allImagePaths.length}',
-                                style: TextStyle(
+                                style: AppTextStyle.body.copyWith(
                                   color: AppColors.white,
-                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

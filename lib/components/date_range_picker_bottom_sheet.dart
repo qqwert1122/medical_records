@@ -110,7 +110,7 @@ class _DateRangePickerBottomSheetState
             calendarStyle: CalendarStyle(
               cellMargin: const EdgeInsets.all(10),
               cellPadding: const EdgeInsets.all(0),
-              rangeHighlightColor: AppColors.primary.withOpacity(0.2),
+              rangeHighlightColor: AppColors.primary.withValues(alpha: 0.2),
               rangeStartDecoration: BoxDecoration(
                 color: AppColors.primary,
                 shape: BoxShape.circle,
@@ -120,7 +120,7 @@ class _DateRangePickerBottomSheetState
                 shape: BoxShape.circle,
               ),
               todayDecoration: const BoxDecoration(shape: BoxShape.circle),
-              todayTextStyle: const TextStyle(
+              todayTextStyle: AppTextStyle.body.copyWith(
                 color: Colors.blueAccent,
                 fontWeight: FontWeight.w900,
               ),

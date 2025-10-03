@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:medical_records/styles/app_colors.dart';
+import 'package:medical_records/styles/app_text_style.dart';
 
 class ToggleNavigationItem {
   final IconData icon;
@@ -155,7 +156,7 @@ class _CustomToggleNavigationState extends State<CustomToggleNavigation>
                         SizedBox(height: 2),
                         Text(
                           item.label,
-                          style: TextStyle(
+                          style: AppTextStyle.body.copyWith(
                             fontSize: widget.fontSize,
                             color:
                                 isSelected

@@ -251,9 +251,8 @@ class RecordFormImageWidgetV2State extends State<RecordFormImageWidgetV2>
                       ),
                       child: Text(
                         '${(_currentIndex % _allImagePaths.length) + 1} / ${_allImagePaths.length}',
-                        style: TextStyle(
+                        style: AppTextStyle.subTitle.copyWith(
                           color: AppColors.white,
-                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
